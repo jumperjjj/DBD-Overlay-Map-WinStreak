@@ -1,7 +1,7 @@
 {
   "name": "dbd-overlay-map-winstreak",
-  "version": "1.1.1-beta.1",
-  "description": "DBD Overlay Map & WinStreak - lightweight lower-left OCR detector",
+  "version": "1.1.2-beta.1",
+  "description": "DBD Overlay Map & WinStreak - lower-left OCR detector",
   "main": "main.js",
   "author": "SA Ranked",
   "license": "MIT",
@@ -20,11 +20,21 @@
   "build": {
     "appId": "com.saranked.dbdoverlaymapwinstreak",
     "productName": "DBD Overlay Map & WinStreak",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/sharp/**/*",
+      "node_modules/@img/**/*",
+      "node_modules/tesseract.js/**/*"
+    ],
     "files": [
       "main.js",
       "preload.js",
       "index.html",
-      "maps.js"
+      "maps.js",
+      "node_modules/tesseract.js/**/*",
+      "node_modules/tesseract.js-core/**/*",
+      "node_modules/sharp/**/*",
+      "node_modules/@img/**/*"
     ],
     "win": {
       "target": [
@@ -35,7 +45,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-1.1.1-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-1.1.2-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,

@@ -1,13 +1,8 @@
-# DBD Overlay Map & WinStreak — Beta 1.1.1
-
-Correções:
-- remove `screenshot-desktop`, eliminando o erro do `screenCapture_1.3.2.bat`;
-- usa `desktopCapturer` nativo do Electron;
-- OCR focado somente no canto inferior esquerdo, onde o DBD mostra o nome do mapa;
-- frequência reduzida para uma tentativa a cada 1,5 s;
-- para imediatamente se a captura falhar;
-- para ao detectar o mapa ou após 45 s;
-- exibe CPU, RAM, capturas e tentativas OCR.
-
-## Teste
-Abra o programa antes da Trial. Clique em **Iniciar detecção** pouco antes da tela em que o nome do mapa aparece.
+# Beta 1.1.2
+- Corrige o OCR preso em "Carregando".
+- Empacota/descompacta explicitamente Tesseract e Sharp.
+- Timeout de 20 s no carregamento do OCR.
+- Botão Iniciar só habilita quando aparecer `OCR pronto ✓`.
+- Botão para tentar carregar novamente em caso de erro.
+- Mantém captura nativa do Electron e recorte no canto inferior esquerdo.
+- 1 captura a cada 1,5 s e timeout de detecção em 45 s.
