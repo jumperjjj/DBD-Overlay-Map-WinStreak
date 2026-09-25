@@ -1,17 +1,13 @@
-# DBD Overlay Map & WinStreak — Beta 1.1.0
+# DBD Overlay Map & WinStreak — Beta 1.1.1
 
-Beta de OCR leve e desempenho.
-
-- 1 captura aproximadamente a cada 1,2 segundo.
-- OCR somente em uma faixa da tela.
-- Timeout automático de 45 segundos.
-- Para imediatamente ao detectar um mapa.
-- Screenshots ficam apenas em memória.
-- Mostra RAM, tentativas e estado do OCR.
-- Não lê memória do DBD, não injeta DLL e não usa o log criptografado.
+Correções:
+- remove `screenshot-desktop`, eliminando o erro do `screenCapture_1.3.2.bat`;
+- usa `desktopCapturer` nativo do Electron;
+- OCR focado somente no canto inferior esquerdo, onde o DBD mostra o nome do mapa;
+- frequência reduzida para uma tentativa a cada 1,5 s;
+- para imediatamente se a captura falhar;
+- para ao detectar o mapa ou após 45 s;
+- exibe CPU, RAM, capturas e tentativas OCR.
 
 ## Teste
-Abra o programa antes da Trial. Quando estiver entrando/carregando para a partida, clique em **Iniciar detecção**.
-Deixe o título do mapa aparecer normalmente. Depois confira o nome reconhecido e se houve qualquer impacto perceptível no jogo.
-
-Observação: esta é uma beta diagnóstica. A lista de mapas será validada/atualizada antes da versão final.
+Abra o programa antes da Trial. Clique em **Iniciar detecção** pouco antes da tela em que o nome do mapa aparece.
