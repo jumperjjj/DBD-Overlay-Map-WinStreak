@@ -1,8 +1,11 @@
-# Beta 1.1.2
-- Corrige o OCR preso em "Carregando".
-- Empacota/descompacta explicitamente Tesseract e Sharp.
-- Timeout de 20 s no carregamento do OCR.
-- Botão Iniciar só habilita quando aparecer `OCR pronto ✓`.
-- Botão para tentar carregar novamente em caso de erro.
-- Mantém captura nativa do Electron e recorte no canto inferior esquerdo.
-- 1 captura a cada 1,5 s e timeout de detecção em 45 s.
+# Beta 1.1.3
+Foco: reduzir CPU e falsos positivos.
+
+- recorte reduzido para a faixa do título no canto inferior esquerdo;
+- OCR a cada 2,2 segundos;
+- largura processada limitada a 700 px;
+- sem upscale pesado da 1.1.2;
+- threshold de candidato aumentado para 88%;
+- detecção normalmente exige duas leituras consecutivas;
+- correspondência quase exata (>=97%) pode confirmar imediatamente;
+- mantém timeout e captura nativa do Electron.
