@@ -1,7 +1,7 @@
 {
   "name": "dbd-overlay-map-winstreak",
-  "version": "1.0.0-beta.1",
-  "description": "DBD Map Detector Beta - diagnostic proof of concept",
+  "version": "1.0.1-beta.1",
+  "description": "DBD Overlay Map & WinStreak - diagnostic beta",
   "main": "main.js",
   "author": "SA Ranked",
   "license": "MIT",
@@ -14,12 +14,12 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "com.saranked.dbdmapdetector",
-    "productName": "DBD Map Detector Beta",
+    "appId": "com.saranked.dbdoverlaymapwinstreak",
+    "productName": "DBD Overlay Map & WinStreak",
     "files": ["main.js", "preload.js", "index.html"],
     "win": {
       "target": [{"target":"nsis","arch":["x64"]}],
-      "artifactName": "DBD-Map-Detector-Beta-1.0.0-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-1.0.1-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,

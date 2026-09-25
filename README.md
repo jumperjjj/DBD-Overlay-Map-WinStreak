@@ -1,42 +1,23 @@
-# DBD Overlay Map / WinStreak
+# DBD Overlay Map & WinStreak — Beta 1.0.1
 
-## Map Detector — Beta 1.0.0
+Beta diagnóstica para descobrir como a versão atual do Dead by Daylight registra o carregamento da Trial/mapa.
 
-Esta primeira beta existe para testar se a versão atual do Dead by Daylight expõe informação suficiente no log local para identificarmos automaticamente o mapa da partida.
+## Mudanças da 1.0.1
+- Novo nome: DBD Overlay Map & WinStreak.
+- Corrigido o diagnóstico gigantesco da 1.0.0.
+- A captura começa no fim do log e lê somente eventos novos.
+- O TXT exportado guarda no máximo 4.000 linhas relevantes.
+- Também guarda amostras periódicas para encontrar eventos que não usam palavras óbvias como "map".
+- Contadores de linhas, dados lidos, eventos relevantes e amostras.
+- Workflow já inclui `--publish never`.
 
-### Segurança da prova de conceito
+## Atualização no GitHub
+Substitua `package.json`, `main.js`, `preload.js`, `index.html` e `.github/workflows/build-windows.yml` pelos arquivos desta versão. Faça commit na `main`. O Actions gerará o artifact `DBD-Overlay-Map-WinStreak-Beta-1.0.1`.
 
-A beta:
-- lê somente o arquivo local `DeadByDaylight.log`;
-- não injeta DLL no jogo;
-- não lê memória do processo;
-- não altera arquivos do Dead by Daylight.
-
-## Como gerar o EXE pelo GitHub
-
-1. Extraia este ZIP.
-2. Abra seu repositório `DBD-Overlay-Map-WinStreak` no GitHub.
-3. Envie **o conteúdo desta pasta** para a raiz do repositório, inclusive a pasta `.github`.
-4. Faça o commit.
-5. Abra a aba **Actions**.
-6. Aguarde `Build Windows EXE` terminar.
-7. Abra a execução concluída.
-8. Em **Artifacts**, baixe `DBD-Map-Detector-Beta-1.0.0`.
-9. Extraia o artifact e execute o instalador `.exe`.
-
-## Como testar
-
-1. Abra o DBD Map Detector.
-2. Abra o Dead by Daylight.
-3. Clique em `Nova captura` antes de entrar na partida.
-4. Entre em uma partida pública.
-5. Espere o mapa carregar.
-6. Veja se aparece algo em `Mapa / candidato`.
-7. Depois clique em `Exportar diagnóstico`.
-8. Se a detecção não estiver correta, envie o TXT gerado para análise.
-
-O arquivo monitorado normalmente é:
-
-`%LOCALAPPDATA%\DeadByDaylight\Saved\Logs\DeadByDaylight.log`
-
-Esta beta é deliberadamente diagnóstica. O próximo passo será mapear os identificadores reais encontrados no teste para os nomes dos mapas ou, se necessário, usar reconhecimento de tela.
+## Teste
+1. Abra o programa.
+2. Abra o DBD.
+3. Clique em `Nova captura` pouco antes de entrar/procurar a partida.
+4. Entre na Trial e espere 20–30 segundos após poder se mover.
+5. Clique em `Exportar diagnóstico compacto`.
+6. Envie o TXT gerado para análise.
