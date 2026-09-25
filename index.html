@@ -1,42 +1,15 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DBD Overlay Map & WinStreak</title>
-<style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0e0f12;color:#f5f5f5;font-family:Segoe UI,Arial,sans-serif}
-main{max-width:1040px;margin:auto;padding:28px}h1{margin:0;font-size:28px}.ver{font-size:13px;color:#8991a1}.sub{color:#aab0bc;margin:7px 0 20px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.card{background:#181a20;border:1px solid #2c3039;border-radius:12px;padding:16px}
-.label{font-size:11px;color:#8f98aa;letter-spacing:.09em;text-transform:uppercase}.value{font-size:17px;margin-top:7px;word-break:break-word}
-#map{font-size:23px;font-weight:700;color:#e3c657}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px}
-.stat{background:#14161b;border:1px solid #292d35;border-radius:9px;padding:11px}.stat b{display:block;font-size:19px;margin-top:5px}
-.actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}button{background:#242730;border:1px solid #383d49;color:white;border-radius:8px;padding:10px 14px;font-weight:650;cursor:pointer}
-pre{background:#090a0d;border:1px solid #252933;border-radius:9px;padding:13px;max-height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.45}
-.note{color:#b3b9c4;font-size:13px;line-height:1.5}.good{color:#79df96}@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
-</style></head><body><main>
-<h1>DBD Overlay Map & WinStreak <span class="ver">Beta 1.0.1</span></h1>
-<div class="sub">Diagnóstico compacto para detecção automática de mapas do Dead by Daylight.</div>
-<div class="grid">
-<section class="card"><div class="label">Status</div><div id="status" class="value">Iniciando...</div></section>
-<section class="card"><div class="label">Mapa / candidato</div><div id="map" class="value">—</div></section>
-<section class="card"><div class="label">Método</div><div class="value">DeadByDaylight.log</div></section>
-<section class="card"><div class="label">Arquivo monitorado</div><div id="path" class="value" style="font-size:12px">—</div></section>
-</div>
-<div class="stats">
-<div class="stat"><div class="label">Linhas lidas</div><b id="lines">0</b></div>
-<div class="stat"><div class="label">Relevantes</div><b id="relevant">0</b></div>
-<div class="stat"><div class="label">Dados lidos</div><b id="bytes">0 KB</b></div>
-<div class="stat"><div class="label">Amostras</div><b id="samples">0</b></div>
-</div>
-<div class="actions"><button id="restart">Nova captura</button><button id="pause">Pausar captura</button><button id="export">Exportar diagnóstico compacto</button></div>
-<section class="card"><div class="label">Eventos relevantes</div>
-<p class="note">Clique em <b>Nova captura</b> pouco antes de procurar/entrar na partida. Esta versão lê somente dados novos e salva no máximo algumas milhares de linhas filtradas + amostras periódicas, evitando outro TXT de centenas de MB.</p>
-<pre id="raw">Aguardando novos eventos...</pre></section>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>DBD Overlay Map & WinStreak</title><style>
+*{box-sizing:border-box}body{margin:0;background:#0e0f12;color:#f5f5f5;font:14px Segoe UI,Arial}main{max-width:1050px;margin:auto;padding:28px}h1{margin:0;font-size:28px}.v{font-size:13px;color:#9199aa}.sub{color:#abb1bd;margin:7px 0 20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card,.stat{background:#181a20;border:1px solid #2c3039;border-radius:12px;padding:15px}.label{font-size:11px;color:#929bad;letter-spacing:.09em;text-transform:uppercase}.val{font-size:17px;margin-top:7px;word-break:break-word}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.stat b{display:block;font-size:18px;margin-top:5px}.actions{display:flex;gap:9px;margin:14px 0;flex-wrap:wrap}button{padding:10px 14px;background:#252832;color:#fff;border:1px solid #3b404c;border-radius:8px;font-weight:650;cursor:pointer}pre{white-space:pre-wrap;word-break:break-word;background:#090a0d;border:1px solid #272b34;border-radius:9px;padding:12px;max-height:250px;overflow:auto;font-size:12px}.warn{color:#e3c657}.note{color:#b4bac5;line-height:1.5}@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}</style></head><body><main>
+<h1>DBD Overlay Map & WinStreak <span class=v>Beta 1.0.2</span></h1><div class=sub>Diagnóstico do formato real do DeadByDaylight.log.</div>
+<div class=grid><div class=card><div class=label>Status</div><div id=status class=val>Iniciando...</div></div><div class=card><div class=label>Formato detectado</div><div id=format class="val warn">Aguardando...</div></div><div class=card><div class=label>Arquivo</div><div id=path class=val style="font-size:12px">—</div></div><div class=card><div class=label>Magic / primeiros bytes</div><div id=magic class=val style="font:12px Consolas">—</div></div></div>
+<div class=stats><div class=stat><div class=label>Dados inspecionados</div><b id=bytes>0 KB</b></div><div class=stat><div class=label>Imprimíveis</div><b id=print>0%</b></div><div class=stat><div class=label>Bytes nulos</div><b id=nulls>0%</b></div><div class=stat><div class=label>Entropia</div><b id=entropy>0</b></div></div>
+<div class=actions><button id=restart>Nova captura</button><button id=pause>Pausar captura</button><button id=export>Exportar diagnóstico</button></div>
+<div class=card><div class=label>Prévia dos bytes</div><p class=note>Esta versão não tenta interpretar o arquivo inteiro como texto. Ela mede o conteúdo bruto para confirmar se o log atual está em texto, UTF-16, compactado ou com alta entropia.</p><pre id=preview>Aguardando novos bytes...</pre></div>
 <script>
-const $=x=>document.getElementById(x);let lines=[],capturing=true;
-detector.getLogPath().then(p=>$('path').textContent=p);
-detector.onStatus(d=>{$('status').textContent=d.message;if(d.logPath)$('path').textContent=d.logPath});
-detector.onStats(s=>{$('lines').textContent=s.linesRead.toLocaleString('pt-BR');$('relevant').textContent=s.relevant.toLocaleString('pt-BR');$('samples').textContent=s.samples.toLocaleString('pt-BR');$('bytes').textContent=s.bytesRead<1048576?(s.bytesRead/1024).toFixed(1)+' KB':(s.bytesRead/1048576).toFixed(1)+' MB'});
-detector.onCandidate(d=>{$('map').textContent=d.value;$('status').innerHTML='<span class="good">Candidato encontrado no log.</span>';});
-detector.onRawHit(l=>{lines.unshift(l);$('raw').textContent=lines.slice(0,70).join('\n\n')});
-$('restart').onclick=async()=>{lines=[];$('raw').textContent='Aguardando novos eventos...';$('map').textContent='—';capturing=true;$('pause').textContent='Pausar captura';await detector.restart()};
-$('pause').onclick=async()=>{capturing=!capturing;await detector.toggleCapture(capturing);$('pause').textContent=capturing?'Pausar captura':'Continuar captura'};
-$('export').onclick=async()=>{const r=await detector.exportDiagnostic();if(r.ok)$('status').textContent='Diagnóstico salvo ('+(r.size/1024).toFixed(1)+' KB): '+r.filePath};
+const $=x=>document.getElementById(x);let on=true;d.path().then(x=>$('path').textContent=x);d.status(x=>$('status').textContent=x);
+d.stats(s=>{$('format').textContent=s.format;$('bytes').textContent=s.bytesRead<1048576?(s.bytesRead/1024).toFixed(1)+' KB':(s.bytesRead/1048576).toFixed(1)+' MB';$('print').textContent=s.printablePct.toFixed(1)+'%';$('nulls').textContent=s.nullPct.toFixed(1)+'%';$('entropy').textContent=s.entropy.toFixed(3);$('magic').textContent=s.magic||'—'});
+d.preview(x=>$('preview').textContent=x.preview||'(sem prévia)');
+$('restart').onclick=()=>{on=true;$('pause').textContent='Pausar captura';$('preview').textContent='Aguardando novos bytes...';d.restart()};
+$('pause').onclick=()=>{on=!on;d.toggle(on);$('pause').textContent=on?'Pausar captura':'Continuar captura'};
+$('export').onclick=async()=>{const r=await d.export();if(r.ok)$('status').textContent='Diagnóstico salvo ('+(r.size/1024).toFixed(1)+' KB): '+r.filePath};
 </script></main></body></html>

@@ -1,23 +1,15 @@
-# DBD Overlay Map & WinStreak — Beta 1.0.1
+# DBD Overlay Map & WinStreak — Beta 1.0.2
 
-Beta diagnóstica para descobrir como a versão atual do Dead by Daylight registra o carregamento da Trial/mapa.
+Esta beta diagnostica os bytes brutos do `DeadByDaylight.log` em vez de assumir UTF-8.
 
-## Mudanças da 1.0.1
-- Novo nome: DBD Overlay Map & WinStreak.
-- Corrigido o diagnóstico gigantesco da 1.0.0.
-- A captura começa no fim do log e lê somente eventos novos.
-- O TXT exportado guarda no máximo 4.000 linhas relevantes.
-- Também guarda amostras periódicas para encontrar eventos que não usam palavras óbvias como "map".
-- Contadores de linhas, dados lidos, eventos relevantes e amostras.
-- Workflow já inclui `--publish never`.
+O teste anterior mostrou alta quantidade de dados ilegíveis. Esta versão mede:
+- percentual de bytes imprimíveis;
+- bytes nulos;
+- entropia;
+- primeiros bytes (magic);
+- prévia ASCII sanitizada.
 
-## Atualização no GitHub
-Substitua `package.json`, `main.js`, `preload.js`, `index.html` e `.github/workflows/build-windows.yml` pelos arquivos desta versão. Faça commit na `main`. O Actions gerará o artifact `DBD-Overlay-Map-WinStreak-Beta-1.0.1`.
+Ela limita a quantidade salva no diagnóstico e não tenta descriptografar, injetar código ou ler memória do jogo.
 
 ## Teste
-1. Abra o programa.
-2. Abra o DBD.
-3. Clique em `Nova captura` pouco antes de entrar/procurar a partida.
-4. Entre na Trial e espere 20–30 segundos após poder se mover.
-5. Clique em `Exportar diagnóstico compacto`.
-6. Envie o TXT gerado para análise.
+Abra o programa, clique em Nova captura, deixe o DBD gerar novos dados por 10–20 segundos e exporte o diagnóstico.
