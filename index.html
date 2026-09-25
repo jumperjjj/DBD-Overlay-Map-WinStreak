@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DBD Map Detector Beta</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;background:#0f1013;color:#f4f4f4;font-family:Segoe UI,Arial,sans-serif}
+main{max-width:980px;margin:auto;padding:28px}
+h1{margin:0;font-size:29px}.version{font-size:13px;color:#8e95a3}
+.sub{color:#a5aab4;margin:7px 0 22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.card{background:#181a20;border:1px solid #2b2e37;border-radius:12px;padding:16px}
+.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#8e95a3}
+.value{margin-top:7px;font-size:17px;word-break:break-word}
+#map{font-size:23px;font-weight:700;color:#e5c85c}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+button{border:1px solid #353945;background:#23262e;color:white;border-radius:8px;padding:10px 14px;font-weight:650;cursor:pointer}
+button:hover{background:#2c3039}
+pre{background:#0a0b0e;border:1px solid #262933;border-radius:9px;padding:13px;max-height:330px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.45}
+.note{font-size:13px;color:#b0b5c0;line-height:1.5}.good{color:#79df96}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>DBD Map Detector <span class="version">Beta 1.0.0</span></h1>
+<div class="sub">Primeiro teste da detecção automática de mapa via log local do Dead by Daylight.</div>
+
+<div class="grid">
+ <section class="card"><div class="label">Status</div><div id="status" class="value">Iniciando...</div></section>
+ <section class="card"><div class="label">Mapa / candidato</div><div id="map" class="value">—</div></section>
+ <section class="card"><div class="label">Método</div><div class="value">DeadByDaylight.log</div></section>
+ <section class="card"><div class="label">Arquivo monitorado</div><div id="path" class="value" style="font-size:12px">—</div></section>
+</div>
+
+<div class="actions">
+ <button id="restart">Nova captura</button>
+ <button id="pause">Pausar captura</button>
+ <button id="export">Exportar diagnóstico</button>
+</div>
+
+<section class="card">
+ <div class="label">Eventos relevantes</div>
+ <p class="note">Abra o DBD e entre em uma partida. Quando a tela do mapa aparecer, espere alguns segundos. Se o nome não for identificado corretamente, clique em <b>Exportar diagnóstico</b> e me envie o TXT. Assim conseguimos descobrir exatamente o que a versão atual do jogo registra.</p>
+ <pre id="raw">Aguardando novos eventos...</pre>
+</section>
+
+<script>
+const $=id=>document.getElementById(id);
+let lines=[], capturing=true;
+detector.getLogPath().then(p=>$('path').textContent=p);
+
+detector.onStatus(d=>{
+ $('status').textContent=d.message;
+ if(d.logPath)$('path').textContent=d.logPath;
+});
+detector.onCandidate(d=>{
+ $('map').textContent=d.value;
+ $('status').innerHTML='<span class="good">Candidato encontrado no log.</span>';
+ lines.unshift('[CANDIDATO] '+d.source);
+ $('raw').textContent=lines.slice(0,100).join('\n\n');
+});
+detector.onRawHit(line=>{
+ lines.unshift(line);
+ $('raw').textContent=lines.slice(0,100).join('\n\n');
+});
+$('restart').onclick=async()=>{
+ lines=[];$('raw').textContent='Aguardando novos eventos...';$('map').textContent='—';
+ capturing=true;$('pause').textContent='Pausar captura';
+ await detector.restart();
+};
+$('pause').onclick=async()=>{
+ capturing=!capturing;await detector.toggleCapture(capturing);
+ $('pause').textContent=capturing?'Pausar captura':'Continuar captura';
+};
+$('export').onclick=async()=>{
+ const r=await detector.exportDiagnostic();
+ if(r.ok)$('status').textContent='Diagnóstico salvo: '+r.filePath;
+};
+</script>
+</main></body></html>

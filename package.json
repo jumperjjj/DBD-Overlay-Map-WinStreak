@@ -1,0 +1,32 @@
+{
+  "name": "dbd-overlay-map-winstreak",
+  "version": "1.0.0-beta.1",
+  "description": "DBD Map Detector Beta - diagnostic proof of concept",
+  "main": "main.js",
+  "author": "SA Ranked",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.saranked.dbdmapdetector",
+    "productName": "DBD Map Detector Beta",
+    "files": ["main.js", "preload.js", "index.html"],
+    "win": {
+      "target": [{"target":"nsis","arch":["x64"]}],
+      "artifactName": "DBD-Map-Detector-Beta-1.0.0-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
