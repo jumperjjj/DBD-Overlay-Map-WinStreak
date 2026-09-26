@@ -1,6 +1,6 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.5.0-beta.1",
+  "version": "2.5.1-beta.1",
   "description": "DBD WinStreak + Map Overlay",
   "main": "main.js",
   "author": "SA Ranked",
@@ -37,7 +37,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Studio-Beta-2.5.0-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Studio-Beta-2.5.1-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
