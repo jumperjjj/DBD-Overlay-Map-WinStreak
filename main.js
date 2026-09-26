@@ -1,31 +1,59 @@
-const {app,BrowserWindow,ipcMain,screen,dialog}=require('electron');
-const path=require('path'),fs=require('fs'),MAPS=require('./maps');
-let editor,streak,mapWin,control;
-const defaults={style:0,title:'WIN STREAK',value:0,accent:'#d7b84a',text:'#ffffff',bg:'#111318',font:'Segoe UI',scale:1,
- streak:{x:null,y:null,w:340,h:104,visible:true},map:{x:null,y:null,w:420,h:420,visible:false,name:'',image:''}};
-let settings;
-function settingsPath(){return path.join(app.getPath('userData'),'settings.json')}
-function load(){try{settings={...defaults,...JSON.parse(fs.readFileSync(settingsPath(),'utf8'))};settings.streak={...defaults.streak,...settings.streak};settings.map={...defaults.map,...settings.map}}catch{settings=structuredClone(defaults)}}
-function save(){fs.writeFileSync(settingsPath(),JSON.stringify(settings,null,2));broadcast()}
-function opts(w,h){return {width:w,height:h,frame:false,transparent:true,hasShadow:false,show:false,skipTaskbar:true,resizable:true,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}}}
-function place(win,cfg,defX,defY){const wa=screen.getPrimaryDisplay().workArea;let x=cfg.x??defX,y=cfg.y??defY;win.setBounds({x,y,width:cfg.w,height:cfg.h})}
-function makeEditor(){editor=new BrowserWindow({width:1080,height:760,minWidth:900,minHeight:650,backgroundColor:'#0e1014',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});editor.setMenuBarVisibility(false);editor.loadFile('app.html');editor.on('close',e=>{if(!app.quitting){e.preventDefault();editor.hide()}})}
-function makeOverlays(){
- streak=new BrowserWindow(opts(settings.streak.w,settings.streak.h));streak.loadFile('overlay.html');streak.setAlwaysOnTop(true,'screen-saver');streak.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});streak.setIgnoreMouseEvents(true,{forward:true});place(streak,settings.streak,40,40);if(settings.streak.visible)streak.showInactive();
- mapWin=new BrowserWindow(opts(settings.map.w,settings.map.h));mapWin.loadFile('map-overlay.html');mapWin.setAlwaysOnTop(true,'screen-saver');mapWin.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});mapWin.setIgnoreMouseEvents(true,{forward:true});place(mapWin,settings.map,screen.getPrimaryDisplay().workArea.width-settings.map.w-30,100);if(settings.map.visible)mapWin.showInactive();
- // Separate protected control window: intended to be visible locally but excluded from capture on supported Windows capture paths.
- control=new BrowserWindow({width:34,height:34,x:0,y:0,frame:false,transparent:true,hasShadow:false,resizable:false,skipTaskbar:true,alwaysOnTop:true,focusable:false,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});
+const {app,BrowserWindow,ipcMain,screen,dialog,Tray,Menu,nativeImage,shell,clipboard}=require('electron');
+const path=require('path'),fs=require('fs'),http=require('http'),url=require('url'),MAPS=require('./maps');
+let editor,streak,mapWin,control,tray,server,quitting=false,editMode=false;
+const PORT=17384;
+const defaults={style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberColor:'#d7b84a',accent:'#d7b84a',
+ nameFont:'Segoe UI',numberFont:'Segoe UI',streakEnabled:true,mapEnabled:true,
+ streak:{x:40,y:40,w:380,h:120,visible:true},map:{x:1400,y:120,w:420,h:420,visible:false,name:'',image:''}};
+let S;
+const sp=()=>path.join(app.getPath('userData'),'settings.json');
+const mapsDir=()=>path.join(app.getPath('userData'),'maps');
+function load(){try{let j=JSON.parse(fs.readFileSync(sp(),'utf8'));S={...defaults,...j,streak:{...defaults.streak,...j.streak},map:{...defaults.map,...j.map}}catch{S=structuredClone(defaults)}fs.mkdirSync(mapsDir(),{recursive:true})}
+function save(){fs.writeFileSync(sp(),JSON.stringify(S,null,2));broadcast();applyVisibility()}
+function send(w,c,d){if(w&&!w.isDestroyed())w.webContents.send(c,d)}
+function broadcast(){[editor,streak,mapWin].forEach(w=>send(w,'settings',S))}
+function overlayOpts(w,h){return {width:w,height:h,frame:false,transparent:true,hasShadow:false,show:false,skipTaskbar:true,resizable:true,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}}}
+function clampBounds(cfg){let wa=screen.getPrimaryDisplay().workArea;return{x:Math.max(0,Math.min(cfg.x,wa.width-80)),y:Math.max(0,Math.min(cfg.y,wa.height-50)),width:Math.max(120,cfg.w),height:Math.max(70,cfg.h)}}
+function makeEditor(){editor=new BrowserWindow({width:1120,height:820,minWidth:940,minHeight:680,backgroundColor:'#0e1014',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});editor.setMenuBarVisibility(false);editor.loadFile('app.html');editor.on('close',e=>{if(!quitting){e.preventDefault();editor.hide()}})}
+function setupOverlay(w){w.setAlwaysOnTop(true,'screen-saver');w.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});w.setIgnoreMouseEvents(true,{forward:true})}
+function makeWindows(){
+ streak=new BrowserWindow(overlayOpts(S.streak.w,S.streak.h));streak.loadFile('overlay.html');setupOverlay(streak);streak.setBounds(clampBounds(S.streak));
+ mapWin=new BrowserWindow(overlayOpts(S.map.w,S.map.h));mapWin.loadFile('map-overlay.html');setupOverlay(mapWin);mapWin.setBounds(clampBounds(S.map));
+ control=new BrowserWindow({width:36,height:36,x:0,y:0,frame:false,transparent:true,hasShadow:false,resizable:false,skipTaskbar:true,focusable:false,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});
  control.loadFile('control.html');control.setAlwaysOnTop(true,'screen-saver');control.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});control.setContentProtection(true);control.showInactive();
+ applyVisibility();
 }
-function broadcast(){for(const w of [editor,streak,mapWin])if(w&&!w.isDestroyed())w.webContents.send('settings',settings)}
-function syncBounds(){for(const [w,k] of [[streak,'streak'],[mapWin,'map']])if(w&&!w.isDestroyed()){let b=w.getBounds();settings[k]={...settings[k],x:b.x,y:b.y,w:b.width,h:b.height}}save()}
-function editMode(on){for(const w of [streak,mapWin])if(w&&!w.isDestroyed()){w.setIgnoreMouseEvents(!on,{forward:true});w.setResizable(on);w.webContents.send('edit-mode',on)}}
-app.whenReady().then(()=>{load();makeEditor();makeOverlays();setTimeout(broadcast,500)});
-app.on('before-quit',()=>{app.quitting=true;syncBounds()});app.on('window-all-closed',()=>{if(process.platform!=='darwin')app.quit()});
-ipcMain.handle('get-settings',()=>({settings,maps:MAPS}));
-ipcMain.handle('patch',(_,p)=>{settings={...settings,...p};if(p.streak)settings.streak={...settings.streak,...p.streak};if(p.map)settings.map={...settings.map,...p.map};save();if(streak)settings.streak.visible?streak.showInactive():streak.hide();if(mapWin)settings.map.visible?mapWin.showInactive():mapWin.hide();return settings});
-ipcMain.handle('edit-mode',(_,on)=>{editMode(on);return true});
-ipcMain.handle('save-bounds',()=>{syncBounds();editMode(false);return settings});
-ipcMain.handle('open-editor',(_,tab='maps')=>{editor.show();editor.focus();editor.webContents.send('open-tab',tab);return true});
-ipcMain.handle('choose-map-image',async()=>{let r=await dialog.showOpenDialog(editor,{title:'Escolher imagem do mapa',properties:['openFile'],filters:[{name:'Imagens',extensions:['png','jpg','jpeg','webp']}]});if(r.canceled)return null;settings.map.image=r.filePaths[0];settings.map.visible=true;save();mapWin.showInactive();return settings.map.image});
-ipcMain.handle('reset-map-image',()=>{settings.map.image='';save();return true});
+function applyVisibility(){if(!streak||!mapWin)return;(S.streakEnabled&&S.streak.visible)?streak.showInactive():streak.hide();(S.mapEnabled&&S.map.visible)?mapWin.showInactive():mapWin.hide()}
+function setEdit(on){editMode=on;for(const w of [streak,mapWin]){w.setIgnoreMouseEvents(!on,{forward:true});w.setResizable(on);send(w,'edit-mode',on)}if(on){if(S.streakEnabled)streak.show();if(S.mapEnabled&&S.map.visible)mapWin.show()}else applyVisibility()}
+function saveBounds(){for(const [w,k] of [[streak,'streak'],[mapWin,'map']]){let b=w.getBounds();S[k]={...S[k],x:b.x,y:b.y,w:b.width,h:b.height}}setEdit(false);save();return S}
+function setBounds(k,b){let w=k==='map'?mapWin:streak,Sb=S[k];S[k]={...Sb,...b};w.setBounds(clampBounds(S[k]));save()}
+function makeTray(){
+ const ico=nativeImage.createEmpty();tray=new Tray(ico);tray.setToolTip('DBD Overlay Map & WinStreak');
+ tray.setContextMenu(Menu.buildFromTemplate([
+  {label:'Abrir programa',click:()=>{editor.show();editor.focus()}},
+  {label:'Selecionar mapa',click:()=>{editor.show();editor.focus();send(editor,'open-tab','maps')}},
+  {type:'separator'},
+  {label:'Ligar/Desligar WinStreak',click:()=>{S.streakEnabled=!S.streakEnabled;save()}},
+  {label:'Ligar/Desligar Mapa',click:()=>{S.mapEnabled=!S.mapEnabled;save()}},
+  {type:'separator'},{label:'Sair completamente',click:()=>{quitting=true;app.quit()}}
+ ]));
+ tray.on('double-click',()=>{editor.show();editor.focus()});
+}
+function browserHTML(){
+ const p=path.join(__dirname,'browser-overlay.html');return fs.readFileSync(p,'utf8');
+}
+function startServer(){server=http.createServer((req,res)=>{let u=url.parse(req.url,true);
+ if(u.pathname==='/state'){res.writeHead(200,{'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Cache-Control':'no-store'});return res.end(JSON.stringify(S))}
+ if(u.pathname==='/winstreak'||u.pathname==='/map'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(browserHTML().replace('__MODE__',u.pathname.slice(1)))}
+ res.writeHead(404);res.end('Not found')}).listen(PORT,'127.0.0.1')}
+app.whenReady().then(()=>{load();makeEditor();makeWindows();makeTray();startServer();setTimeout(broadcast,500)});
+app.on('before-quit',()=>{quitting=true;if(server)server.close()});app.on('window-all-closed',e=>{if(quitting)app.quit()});
+ipcMain.handle('get-settings',()=>({settings:S,maps:MAPS,urls:{streak:`http://127.0.0.1:${PORT}/winstreak`,map:`http://127.0.0.1:${PORT}/map`},mapsDir:mapsDir()}));
+ipcMain.handle('patch',(_,p)=>{S={...S,...p};if(p.streak)S.streak={...S.streak,...p.streak};if(p.map)S.map={...S.map,...p.map};save();return S});
+ipcMain.handle('edit-mode',(_,on)=>{setEdit(on);return true});ipcMain.handle('save-bounds',()=>saveBounds());
+ipcMain.handle('set-bounds',(_,k,b)=>{setBounds(k,b);return S});
+ipcMain.handle('open-editor',(_,tab='maps')=>{editor.show();editor.focus();send(editor,'open-tab',tab);return true});
+ipcMain.handle('choose-map-image',async()=>{let r=await dialog.showOpenDialog(editor,{title:'Escolher imagem do mapa',defaultPath:mapsDir(),properties:['openFile'],filters:[{name:'Imagens',extensions:['png','jpg','jpeg','webp']}]});if(r.canceled)return null;S.map.image=r.filePaths[0];S.map.visible=true;S.mapEnabled=true;save();return S.map.image});
+ipcMain.handle('open-maps-folder',()=>shell.openPath(mapsDir()));
+ipcMain.handle('copy',(_,t)=>{clipboard.writeText(t);return true});
+ipcMain.handle('quit',()=>{quitting=true;app.quit();return true});

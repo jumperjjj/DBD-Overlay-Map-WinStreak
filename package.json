@@ -1,6 +1,6 @@
 {
   "name": "dbd-overlay-map-winstreak",
-  "version": "2.0.0-beta.1",
+  "version": "2.1.0-beta.1",
   "description": "DBD WinStreak + Map Overlay",
   "main": "main.js",
   "author": "SA Ranked",
@@ -24,8 +24,9 @@
       "overlay.html",
       "map-overlay.html",
       "control.html",
+      "browser-overlay.html",
       "maps.js",
-      "assets/**/*"
+      "maps/**/*"
     ],
     "win": {
       "target": [
@@ -36,7 +37,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-2.0.0-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-2.1.0-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
