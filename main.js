@@ -8,7 +8,15 @@ const defaults={style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberCol
 let S;
 const sp=()=>path.join(app.getPath('userData'),'settings.json');
 const mapsDir=()=>path.join(app.getPath('userData'),'maps');
-function load(){try{let j=JSON.parse(fs.readFileSync(sp(),'utf8'));S={...defaults,...j,streak:{...defaults.streak,...j.streak},map:{...defaults.map,...j.map}}catch{S=structuredClone(defaults)}fs.mkdirSync(mapsDir(),{recursive:true})}
+function load(){
+  try {
+    const j=JSON.parse(fs.readFileSync(sp(),'utf8'));
+    S={...defaults,...j,streak:{...defaults.streak,...(j.streak||{})},map:{...defaults.map,...(j.map||{})}};
+  } catch {
+    S=structuredClone(defaults);
+  }
+  fs.mkdirSync(mapsDir(),{recursive:true});
+}
 function save(){fs.writeFileSync(sp(),JSON.stringify(S,null,2));broadcast();applyVisibility()}
 function send(w,c,d){if(w&&!w.isDestroyed())w.webContents.send(c,d)}
 function broadcast(){[editor,streak,mapWin].forEach(w=>send(w,'settings',S))}

@@ -1,4 +1,4 @@
-# Beta 2.1.0
+# Beta 2.1.1
 
 - 10 layouts WinStreak realmente diferentes.
 - Fonte do nome e do número separadas.
