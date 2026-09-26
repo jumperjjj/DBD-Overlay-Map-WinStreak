@@ -1,4 +1,4 @@
-const {app,BrowserWindow,ipcMain,screen,Tray,Menu,nativeImage,globalShortcut}=require('electron');
+const {app,BrowserWindow,ipcMain,screen,Tray,Menu,nativeImage,globalShortcut,shell}=require('electron');
 const path=require('path'),fs=require('fs'),http=require('http'),url=require('url'),MAPS=require('./maps');
 let editor,streak,mapWin,control,tray,server,quitting=false,lastHotkey=0;
 const PORT=17384,EXTS=['.png','.jpg','.jpeg','.webp'];
@@ -6,6 +6,7 @@ const defaults={language:'pt',style:0,title:'WIN STREAK',value:0,nameColor:'#fff
 streak:{x:40,y:40,w:380,h:120,visible:true,scale:1},map:{x:1400,y:120,w:420,h:420,visible:false,name:'',image:'',scale:1}};
 let S;
 const sp=()=>path.join(app.getPath('userData'),'settings.json'), userMaps=()=>path.join(app.getPath('userData'),'maps');
+function syncBundledMaps(){const bundled=path.join(__dirname,'maps');fs.mkdirSync(userMaps(),{recursive:true});if(!fs.existsSync(bundled))return;for(const f of fs.readdirSync(bundled)){const ext=path.extname(f).toLowerCase();if(!EXTS.includes(ext))continue;const a=path.join(bundled,f),b=path.join(userMaps(),f);if(!fs.existsSync(b))try{fs.copyFileSync(a,b)}catch{}}}
 function load(){
  try{
   let j=JSON.parse(fs.readFileSync(sp(),'utf8'));
@@ -13,7 +14,7 @@ function load(){
  }catch{
   S=structuredClone(defaults);
  }
- fs.mkdirSync(userMaps(),{recursive:true});
+ fs.mkdirSync(userMaps(),{recursive:true});syncBundledMaps();
  S.streak.scale=Math.max(.55,Math.min(1.5,+S.streak.scale||1));
  S.map.scale=Math.max(.40,Math.min(.77,+S.map.scale||.77));
  S.streak.w=Math.round(380*S.streak.scale); S.streak.h=Math.round(120*S.streak.scale);
@@ -45,6 +46,7 @@ function scaleOverlay(k,v){
  S[k].w=Math.round(base.w*v);S[k].h=Math.round(base.h*v);
  w.setSize(S[k].w,S[k].h);save();dirty(true);
 }
+function mapCatalog(){return MAPS.map(name=>({name,hasImage:!!mapImage(name)}))}
 function mapImage(name){for(const dir of [userMaps(),path.join(__dirname,'maps')])for(const ext of EXTS){let p=path.join(dir,name+ext);if(fs.existsSync(p))return p}return ''}
 function chooseMap(name){S.map.name=name;S.map.image=mapImage(name);S.map.visible=true;S.mapEnabled=true;save();dirty(true);return S.map.image}
 function inc(){let now=Date.now();if(now-lastHotkey<2000)return;lastHotkey=now;S.value=(+S.value||0)+1;save()}
@@ -65,7 +67,7 @@ function startServer(){server=http.createServer((req,res)=>{let u=url.parse(req.
  }).listen(PORT,'127.0.0.1')}
 app.whenReady().then(()=>{load();makeEditor();makeWindows();makeTray();startServer();if(S.hotkey)registerHotkey(S.hotkey);setTimeout(broadcast,400)});
 app.on('before-quit',()=>{quitting=true;globalShortcut.unregisterAll();if(server)server.close()});app.on('window-all-closed',()=>{if(quitting)app.quit()});
-ipcMain.handle('get-settings',()=>({settings:S,maps:MAPS,urls:{overlay:`http://127.0.0.1:${PORT}/overlay`},mapsDir:userMaps()}));
+ipcMain.handle('get-settings',()=>({settings:S,maps:mapCatalog(),urls:{overlay:`http://127.0.0.1:${PORT}/overlay`},mapsDir:userMaps()}));
 ipcMain.handle('patch',(_,p)=>{
  S={...S,...p};if(p.streak)S.streak={...S.streak,...p.streak};if(p.map)S.map={...S.map,...p.map};
  S.nameFontSize=Math.max(10,Math.min(42,+S.nameFontSize||18));
@@ -74,7 +76,7 @@ ipcMain.handle('patch',(_,p)=>{
  const nonVisual=Object.keys(p).every(k=>['language','hotkey'].includes(k)); if(!nonVisual)dirty(true);
  return S
 });
-ipcMain.handle('select-map',(_,n)=>chooseMap(n));ipcMain.handle('edit',(_,x)=>{edit(x);return true});ipcMain.handle('save-pos',()=>{persistBounds();edit(false);return S});
+ipcMain.handle('refresh-maps',()=>mapCatalog());ipcMain.handle('open-maps-dir',()=>{syncBundledMaps();shell.openPath(userMaps());return userMaps()});ipcMain.handle('select-map',(_,n)=>chooseMap(n));ipcMain.handle('edit',(_,x)=>{edit(x);return true});ipcMain.handle('save-pos',()=>{persistBounds();edit(false);return S});
 ipcMain.handle('scale',(_,k,v)=>{scaleOverlay(k,v);return S});ipcMain.handle('hotkey',(_,a)=>registerHotkey(a));
 ipcMain.handle('open-editor',(_,t='maps')=>{editor.show();editor.focus();send(editor,'open-tab',t);return true});
 ipcMain.handle('quit',()=>{quitting=true;app.quit()});
