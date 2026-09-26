@@ -1,6 +1,6 @@
 {
   "name": "dbd-overlay-map-winstreak",
-  "version": "2.3.5-beta.1",
+  "version": "2.4.0-beta.1",
   "description": "DBD WinStreak + Map Overlay",
   "main": "main.js",
   "author": "SA Ranked",
@@ -37,7 +37,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-2.3.5-${arch}.${ext}"
+      "artifactName": "DBD-WinStreak-Match-Overlay-Beta-2.4.0-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
@@ -46,5 +46,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     }
-  }
+  },
+  "productName": "DBD WinStreak & Match Overlay"
 }
