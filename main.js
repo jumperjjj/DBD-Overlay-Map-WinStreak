@@ -2,7 +2,7 @@ const {app,BrowserWindow,ipcMain,screen,Tray,Menu,nativeImage,globalShortcut,she
 const path=require('path'),fs=require('fs'),http=require('http'),url=require('url'),MAPS=require('./maps');
 let editor,streak,mapWin,control,tray,server,quitting=false,lastHotkey=0;
 const PORT=17384,EXTS=['.png','.jpg','.jpeg','.webp'];
-const defaults={language:'pt',style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberColor:'#d7b84a',accent:'#d7b84a',nameFont:'Segoe UI',numberFont:'Impact',nameFontSize:18,numberFontSize:58,nameOffsetX:0,numberOffsetX:0,shadow:true,transparentBg:false,nameBold:true,bgOpacity:1,streakEnabled:true,mapEnabled:true,hotkey:'',
+const defaults={language:'pt',style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberColor:'#d7b84a',accent:'#d7b84a',nameFont:'Segoe UI',numberFont:'Impact',nameFontSize:18,numberFontSize:58,nameOffsetX:0,numberOffsetX:0,shadow:true,transparentBg:false,nameBold:true,bgOpacity:1,letterSpacing:0,numberSpacing:0,nameUpper:false,streakEnabled:true,mapEnabled:true,hotkey:'',
 streak:{x:40,y:40,w:380,h:120,visible:true,scale:1},map:{x:1400,y:120,w:420,h:420,visible:false,name:'',image:'',scale:1}};
 let S;
 const sp=()=>path.join(app.getPath('userData'),'settings.json'), userMaps=()=>path.join(app.getPath('userData'),'maps');
@@ -56,7 +56,7 @@ function edit(on){
   const base=k==='streak'?{w:380,h:120,min:.78,max:1.22}:{w:420,h:420,min:.48,max:.72};
   w.setMinimumSize(Math.round(base.w*base.min),Math.round(base.h*base.min));
   w.setMaximumSize(Math.round(base.w*base.max),Math.round(base.h*base.max));
-  w.setIgnoreMouseEvents(!on,{forward:true});w.setResizable(on);send(w,'edit-mode',on);
+  w.setIgnoreMouseEvents(!on,{forward:true});w.setResizable(false);send(w,'edit-mode',on);
  }
  if(on){if(S.streakEnabled)streak.show();if(S.mapEnabled&&S.map.visible)mapWin.show()}else applyVisibility()
 }
@@ -71,6 +71,27 @@ function scaleOverlay(k,v){
  S[k].scale=v;S[k].x=b.x;S[k].y=b.y;S[k].w=b.width;S[k].h=b.height;
  w.setBounds(b);save();dirty(true);
 }
+
+let resizeJob=null;
+function beginResize(kind,edge){
+ const w=kind==='map'?mapWin:streak;if(!w)return false;
+ if(resizeJob)clearInterval(resizeJob.timer);
+ const start=w.getBounds(),mouse=screen.getCursorScreenPoint();
+ const lim=kind==='map'?{minW:202,minH:202,maxW:302,maxH:302}:{minW:296,minH:94,maxW:464,maxH:146};
+ resizeJob={w,kind,edge,start,mouse,timer:null};
+ resizeJob.timer=setInterval(()=>{
+  if(!resizeJob)return;
+  const pt=screen.getCursorScreenPoint(),dx=pt.x-mouse.x,dy=pt.y-mouse.y;
+  let b={...start};
+  if(edge.includes('e'))b.width=Math.max(lim.minW,Math.min(lim.maxW,start.width+dx));
+  if(edge.includes('s'))b.height=Math.max(lim.minH,Math.min(lim.maxH,start.height+dy));
+  if(edge.includes('w')){let nw=Math.max(lim.minW,Math.min(lim.maxW,start.width-dx));b.x=start.x+start.width-nw;b.width=nw}
+  if(edge.includes('n')){let nh=Math.max(lim.minH,Math.min(lim.maxH,start.height-dy));b.y=start.y+start.height-nh;b.height=nh}
+  b=clampRect(b);w.setBounds(b);S[kind==='map'?'map':'streak']={...S[kind==='map'?'map':'streak'],x:b.x,y:b.y,w:b.width,h:b.height};dirty(true);
+ },16);
+ return true;
+}
+function endResize(){if(resizeJob){clearInterval(resizeJob.timer);resizeJob=null}return true}
 function mapCatalog(){return MAPS.map(name=>({name,hasImage:!!mapImage(name)}))}
 function mapImage(name){for(const dir of [userMaps(),path.join(__dirname,'maps')])for(const ext of EXTS){let p=path.join(dir,name+ext);if(fs.existsSync(p))return p}return ''}
 function chooseMap(name){S.map.name=name;S.map.image=mapImage(name);S.map.visible=true;S.mapEnabled=true;save();dirty(true);return S.map.image}
@@ -102,6 +123,6 @@ ipcMain.handle('patch',(_,p)=>{
  return S
 });
 ipcMain.handle('refresh-maps',()=>mapCatalog());ipcMain.handle('open-maps-dir',()=>{syncBundledMaps();shell.openPath(userMaps());return userMaps()});ipcMain.handle('select-map',(_,n)=>chooseMap(n));ipcMain.handle('edit',(_,x)=>{edit(x);return true});ipcMain.handle('save-pos',()=>{persistBounds();edit(false);return S});
-ipcMain.handle('scale',(_,k,v)=>{scaleOverlay(k,v);return S});ipcMain.handle('hotkey',(_,a)=>registerHotkey(a));
+ipcMain.handle('scale',(_,k,v)=>{scaleOverlay(k,v);return S});ipcMain.handle('resize-start',(_,kind,edge)=>beginResize(kind,edge));ipcMain.handle('resize-end',()=>endResize());ipcMain.handle('hotkey',(_,a)=>registerHotkey(a));
 ipcMain.handle('open-editor',(_,t='maps')=>{editor.show();editor.focus();send(editor,'open-tab',t);return true});
 ipcMain.handle('quit',()=>{quitting=true;app.quit()});

@@ -1,13 +1,15 @@
-# Beta 2.3.3
-
-Revisão dos estilos e edição:
-- cor do número forçada de forma consistente em todos os 10 estilos;
-- deslocamento horizontal do nome atua somente no nome; número somente no número;
-- sombra reforçada com duas camadas de drop-shadow;
-- opção de negrito para o nome;
-- fontes ampliadas com opções como Bahnschrift, Cascadia, Rockwell, Stencil, Haettenschweiler, Agency FB, Segoe Print/Script;
-- fundo transparente virou barra de Opacidade do fundo (0% a 100%);
-- removido o ímã/snap automático: agora só existe bloqueio físico para não sair da tela;
-- borda de edição padronizada em vermelho, sem azul;
-- resize nativo ativado nas bordas e quinas no modo Editar, com limites mínimo/máximo iguais aos sliders;
-- sistema de mapas e OBS mantidos.
+# Beta 2.3.4
+- Revisão completa dos 10 estilos antigos; Score Tab refeito e dimensões internas compactadas.
+- 4 estilos novos: Minimal Line, Hex Frame, Split Score e Razor.
+- Desktop e OBS usam o mesmo motor/CSS de estilos.
+- Cor do número forçada em todos os estilos.
+- Deslocamento horizontal do nome atua somente no nome; deslocamento do número somente no número.
+- Novas edições: espaçamento do nome, espaçamento do número, nome em maiúsculas, negrito, sombra forte e opacidade do fundo.
+- Mais fontes disponíveis nos seletores.
+- Área Valor da Streak compactada em duas colunas: controles à esquerda, valor exato/aplicar à direita; hotkey abaixo.
+- Aba OBS traduzida em Português, English e Español.
+- Nomes de mapas sem apóstrofos.
+- Sem ímã: overlays podem ficar em qualquer ponto dentro do monitor.
+- Resize próprio: 8 handles vermelhos (4 quinas + 4 lados), permitindo largura e altura independentes.
+- Ao mexer nos sliders da aba Posição, o modo Editar é ativado automaticamente.
+- Apenas borda/handles vermelhos aparecem durante edição.
