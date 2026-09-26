@@ -1,7 +1,7 @@
 {
   "name": "dbd-overlay-map-winstreak",
-  "version": "1.2.0-beta.1",
-  "description": "DBD Overlay Map & WinStreak - automatic low-impact map sentinel",
+  "version": "1.2.1-beta.1",
+  "description": "Automatic low-impact DBD map detector",
   "main": "main.js",
   "author": "SA Ranked",
   "license": "MIT",
@@ -45,7 +45,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-1.2.0-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-1.2.1-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,

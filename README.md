@@ -1,16 +1,14 @@
-# DBD Overlay Map & WinStreak — Beta 1.2.0
+# Beta 1.2.1
 
-Primeira beta automática do detector de mapa.
+Objetivo: detector automático mais clean e de baixo impacto.
 
-## Arquitetura
-- ARMED: sentinela visual, sem OCR.
-- OCR: acorda Tesseract apenas quando a região parece conter o título.
-- SLEEP: após detectar o mapa, detector fica inativo.
+- não exige clique para iniciar;
+- sentinela solicita uma captura reduzida de 640 px de largura já na origem;
+- análise barata em apenas 150x42 pixels;
+- sentinela roda a cada 2,5 s;
+- OCR usa captura de 960 px somente numa janela curta quando há gatilho visual;
+- após detectar o mapa, dorme por 90 s;
+- rearma automaticamente depois do descanso, sem tentar interpretar pause/settings como fim da Trial;
+- interface principal simplificada; diagnóstico fica recolhido.
 
-## Desempenho
-A sentinela reduz o recorte a apenas 160×36 pixels para análise simples de contraste/bordas.
-A verificação-alvo ocorre aproximadamente a cada 3 segundos.
-O OCR pesado só é usado numa janela curta de até 9 segundos.
-
-## Importante nesta beta
-O rearme após o fim da Trial ainda não tenta inferir menus/configurações. O botão `Forçar nova detecção` existe para diagnóstico. Depois de validarmos o gatilho leve, implementaremos um sinal específico e seguro de nova Trial.
+Nesta beta o rearme de 90 s é deliberadamente conservador. Ele evita depender de uma transição visual genérica, que poderia confundir Settings com fim da partida. O objetivo do teste é validar detecção automática repetida e consumo.
