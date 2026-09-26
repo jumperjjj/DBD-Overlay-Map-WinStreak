@@ -1,14 +1,27 @@
-# Beta 1.2.1
+# DBD Overlay Map & WinStreak — Beta 2.0.0
 
-Objetivo: detector automático mais clean e de baixo impacto.
+Nova base do aplicativo. OCR/detecção automática foi removido do fluxo normal.
 
-- não exige clique para iniciar;
-- sentinela solicita uma captura reduzida de 640 px de largura já na origem;
-- análise barata em apenas 150x42 pixels;
-- sentinela roda a cada 2,5 s;
-- OCR usa captura de 960 px somente numa janela curta quando há gatilho visual;
-- após detectar o mapa, dorme por 90 s;
-- rearma automaticamente depois do descanso, sem tentar interpretar pause/settings como fim da Trial;
-- interface principal simplificada; diagnóstico fica recolhido.
+## WinStreak
+- overlay transparente e always-on-top;
+- click-through no modo normal;
+- nome e valor personalizáveis;
+- fonte, cores e escala;
+- 10 estilos;
+- posição e tamanho ajustáveis;
+- configurações persistentes.
 
-Nesta beta o rearme de 90 s é deliberadamente conservador. Ele evita depender de uma transição visual genérica, que poderia confundir Settings com fim da partida. O objetivo do teste é validar detecção automática repetida e consumo.
+## Mapas
+- seleção manual pesquisável;
+- overlay de mapa independente;
+- imagem local selecionável;
+- posição e tamanho independentes.
+
+## Botão local ⌖
+Janela separada de 34x34 no canto superior esquerdo.
+Abre diretamente a aba Mapas.
+No Windows recebe `setContentProtection(true)` para tentar excluí-la da captura enquanto as overlays continuam capturáveis.
+Isso precisa ser validado com a fonte/método usado no OBS; diferentes APIs de captura podem se comportar de modo diferente.
+
+## Performance
+Não há OCR, screenshot polling ou detector visual nesta versão. As overlays são páginas transparentes estáticas atualizadas apenas quando as configurações mudam.

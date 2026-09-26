@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}#box{--a:#d7b84a;--t:#fff;position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:20px;color:var(--t);font-family:Segoe UI;border-radius:12px;user-select:none}.label{font-size:17px;font-weight:700;text-transform:uppercase}.num{font-size:52px;line-height:1;font-weight:900}.drag{display:none;position:absolute;inset:0;border:2px dashed #4aa3ff;background:rgba(74,163,255,.08)}.editing .drag{display:block}
+
+.s0{background:linear-gradient(135deg,#111318,#20242b);border:2px solid var(--a);box-shadow:0 0 18px #000}.s0 .num{color:var(--a)}
+.s1{background:#070910;border:1px solid var(--a);box-shadow:0 0 12px var(--a),inset 0 0 22px #000}.s1 .num{text-shadow:0 0 12px var(--a);color:var(--a)}
+.s2{background:rgba(12,13,16,.88);border-left:5px solid var(--a)}.s2 .label{letter-spacing:.28em}.s2 .num{font-weight:400}
+.s3{background:linear-gradient(100deg,#120607,#27090c);border-bottom:4px solid var(--a);clip-path:polygon(0 0,96% 0,100% 20%,100% 100%,4% 100%,0 80%)}.s3 .num{color:var(--a)}
+.s4{background:repeating-linear-gradient(135deg,#171a1f,#171a1f 8px,#1c2026 8px,#1c2026 16px);border:1px solid #4a505a}.s4:after{content:'';position:absolute;inset:7px;border:1px solid var(--a);pointer-events:none}
+.s5{background:rgba(30,34,42,.48);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px rgba(255,255,255,.2)}.s5 .num{color:var(--a)}
+.s6{background:#111;border:4px double var(--a);box-shadow:6px 6px 0 #000}.s6 .label{font-family:monospace}.s6 .num{font-family:monospace;color:var(--a)}
+.s7{background:linear-gradient(#1b1d22,#101115);border-radius:6px;border-top:6px solid var(--a)}.s7 .label{background:var(--a);color:#111;padding:2px 8px;border-radius:3px}
+.s8{background:#0b0d13;border:1px solid var(--a);clip-path:polygon(7% 0,100% 0,100% 72%,93% 100%,0 100%,0 28%)}.s8 .num{color:var(--a);font-style:italic}
+.s9{background:linear-gradient(135deg,rgba(18,18,20,.95),rgba(42,39,32,.9));border:1px solid #8d8370}.s9 .label{font-family:Georgia,serif}.s9 .num{font-family:Georgia,serif;color:var(--a)}
+</style></head><body><div id="box"><div><div class="label" id="title">WIN STREAK</div></div><div class="num" id="num">0</div><div class=drag></div></div><script>
+function draw(s){let b=document.getElementById('box');b.className='s'+s.style;b.style.setProperty('--a',s.accent);b.style.setProperty('--t',s.text);b.style.fontFamily=s.font;b.style.transform='scale('+s.scale+')';b.style.transformOrigin='center';title.textContent=s.title;num.textContent=s.value}
+api.get().then(x=>draw(x.settings));api.onSettings(draw);api.onEdit(x=>document.body.classList.toggle('editing',x));
+</script></body></html>

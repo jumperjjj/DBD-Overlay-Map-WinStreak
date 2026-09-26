@@ -1,4 +1,5 @@
-const{contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('dbd',{
-rearm:()=>ipcRenderer.invoke('rearm'),state:f=>ipcRenderer.on('state',(_,x)=>f(x)),diag:f=>ipcRenderer.on('diag',(_,x)=>f(x)),
-perf:f=>ipcRenderer.on('perf',(_,x)=>f(x)),detected:f=>ipcRenderer.on('detected',(_,x)=>f(x))
+const{contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('api',{
+get:()=>ipcRenderer.invoke('get-settings'),patch:p=>ipcRenderer.invoke('patch',p),edit:on=>ipcRenderer.invoke('edit-mode',on),saveBounds:()=>ipcRenderer.invoke('save-bounds'),
+openEditor:t=>ipcRenderer.invoke('open-editor',t),chooseMapImage:()=>ipcRenderer.invoke('choose-map-image'),resetMapImage:()=>ipcRenderer.invoke('reset-map-image'),
+onSettings:f=>ipcRenderer.on('settings',(_,x)=>f(x)),onEdit:f=>ipcRenderer.on('edit-mode',(_,x)=>f(x)),onTab:f=>ipcRenderer.on('open-tab',(_,x)=>f(x))
 });

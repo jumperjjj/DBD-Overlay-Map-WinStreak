@@ -1,17 +1,13 @@
 {
   "name": "dbd-overlay-map-winstreak",
-  "version": "1.2.1-beta.1",
-  "description": "Automatic low-impact DBD map detector",
+  "version": "2.0.0-beta.1",
+  "description": "DBD WinStreak + Map Overlay",
   "main": "main.js",
   "author": "SA Ranked",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win nsis"
-  },
-  "dependencies": {
-    "sharp": "^0.34.4",
-    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "electron": "^38.0.0",
@@ -21,20 +17,15 @@
     "appId": "com.saranked.dbdoverlaymapwinstreak",
     "productName": "DBD Overlay Map & WinStreak",
     "asar": true,
-    "asarUnpack": [
-      "node_modules/sharp/**/*",
-      "node_modules/@img/**/*",
-      "node_modules/tesseract.js/**/*"
-    ],
     "files": [
       "main.js",
       "preload.js",
-      "index.html",
+      "app.html",
+      "overlay.html",
+      "map-overlay.html",
+      "control.html",
       "maps.js",
-      "node_modules/tesseract.js/**/*",
-      "node_modules/tesseract.js-core/**/*",
-      "node_modules/sharp/**/*",
-      "node_modules/@img/**/*"
+      "assets/**/*"
     ],
     "win": {
       "target": [
@@ -45,7 +36,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-1.2.1-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Map-WinStreak-Beta-2.0.0-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
