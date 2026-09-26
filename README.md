@@ -1,20 +1,27 @@
-# DBD Overlay Studio — Beta 2.5.1
+# DBD Overlay Studio — Beta 2.5.2
 
-Build focada no bug em que as overlays não apareciam.
+## Correção crítica
+A causa real das overlays invisíveis foi encontrada no empacotamento.
 
-## Correção principal
-As janelas transparentes agora são criadas ocultas e só são exibidas depois de o renderer emitir `did-finish-load`.
-Antes, a aplicação chamava show/hide imediatamente após `loadFile()`, sem sincronizar a visibilidade com o término real do carregamento da janela.
+`package.json -> build.files` ainda continha a lista antiga da época do módulo de mapas:
+- overlay.html
+- map-overlay.html
+- control.html
+- browser-overlay.html
+- maps.js
+- maps/**/*
 
-## Estado ao iniciar
-Toda vez que o aplicativo abre:
-- WinStreak: LIGADA
-- Confronto: DESLIGADO
+Por isso o electron-builder criava o instalador sem os renderers novos:
+- streak.html
+- match.html
+- obs.html
+- obs-streak.html
+- obs-match.html
 
-O botão do Confronto continua podendo ligá-lo normalmente depois.
+O editor abria porque app.html estava no pacote, mas as janelas transparentes tentavam carregar arquivos que não existiam dentro do aplicativo instalado.
 
-## Recuperação
-A aba Posição agora possui `Reabrir overlays`. O botão destrói somente as duas janelas transparentes e as recria com o estado atual, sem fechar o editor.
+A whitelist foi corrigida e o workflow agora verifica a presença de todos os arquivos de runtime antes de construir o EXE.
 
-## Arquitetura mantida
-WinStreak e Confronto continuam independentes, sem mapas e sem transform de escala duplicada.
+Ao abrir:
+- WinStreak: ligada
+- Confronto: desligado

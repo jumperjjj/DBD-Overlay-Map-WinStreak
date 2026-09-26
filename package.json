@@ -1,7 +1,7 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.5.1-beta.1",
-  "description": "DBD WinStreak + Map Overlay",
+  "version": "2.5.2-beta.1",
+  "description": "DBD WinStreak + Match Overlay Studio",
   "main": "main.js",
   "author": "SA Ranked",
   "license": "MIT",
@@ -21,12 +21,11 @@
       "main.js",
       "preload.js",
       "app.html",
-      "overlay.html",
-      "map-overlay.html",
-      "control.html",
-      "browser-overlay.html",
-      "maps.js",
-      "maps/**/*"
+      "streak.html",
+      "match.html",
+      "obs.html",
+      "obs-streak.html",
+      "obs-match.html"
     ],
     "win": {
       "target": [
@@ -37,7 +36,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Studio-Beta-2.5.1-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Studio-Beta-2.5.2-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
