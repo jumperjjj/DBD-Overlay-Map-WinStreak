@@ -1,19 +1,12 @@
-# Beta 2.3.1
+# Beta 2.3.2
 
-Inclui o sistema completo de mapas da 2.3.0 e os ajustes pendentes:
-
-- WinStreak: painel do valor mais compacto; setas menores; Reset menor, corretamente contido e afastado do botão `>`.
-- Valor exato: campo numérico sem setas nativas; digite o valor e confirme.
-- Tamanho das overlays: limites menores e mais úteis, evitando extremos minúsculos ou gigantes.
-- Posição: abrir a aba não ativa mais o arraste; é necessário clicar em Editar.
-- Ao mover/redimensionar, Salvar/Bloquear fica verde; depois de salvar volta ao normal.
-- Overlays são bloqueadas dentro da área útil do monitor.
-- Ímã/snap de 22 px nas quatro bordas.
-- Modo de edição com borda vermelha grossa e cantos destacados; a janela continua redimensionável pelas bordas/cantos.
-- Sliders de tamanho atualizam as mesmas janelas usadas pelo arraste/redimensionamento.
-- Mapas: catálogo completo sempre visível.
-- Botão para abrir a pasta real das imagens.
-- Imagem só é vinculada quando o arquivo tem exatamente o mesmo nome do mapa (.png/.jpg/.jpeg/.webp).
-- Mapas sem imagem continuam visíveis e mostram aviso.
-- Atualizar imagens relê a pasta sem reiniciar.
-- Coal Tower.webp continua incluído para teste.
+- O slider da WinStreak agora escala a composição inteira: caixa, nome, número e detalhes do estilo.
+- Mantidos os limites de tamanho aprovados na 2.3.1.
+- Snap/ímã corrigido: encosta nas bordas, mas solta quando o usuário arrasta para longe.
+- Somente a borda vermelha indica modo de edição; ela some ao bloquear/salvar.
+- As janelas continuam redimensionáveis pelas bordas e cantos quando Editar arrastando está ativo.
+- Controles novos para posição horizontal do nome e do número.
+- Opção de sombreamento.
+- Opção de fundo transparente.
+- Área Valor da Streak reorganizada: setas/número/reset à esquerda, valor exato + Aplicar à direita, atalho embaixo.
+- Sistema de mapas da 2.3.1 mantido.

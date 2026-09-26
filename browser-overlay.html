@@ -17,6 +17,12 @@ html,body{margin:0!important;padding:0!important;width:1920px!important;height:1
 #streakHost,#mapHost{position:absolute;margin:0;padding:0;overflow:visible;transform:none!important}
 #streakHost #o{position:relative;width:100%;height:100%;transform:none!important}
 #mapHost img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 8px #000)}
+
+#streakHost .name{position:relative;left:var(--name-x,0px)}
+#streakHost .value{position:relative;left:var(--number-x,0px)}
+#streakHost #o.transparent-bg{background:transparent!important}
+#streakHost #o.transparent-bg:before,#streakHost #o.transparent-bg:after{background:transparent!important}
+#streakHost #o.shadow-on{filter:drop-shadow(0 5px 7px rgba(0,0,0,.72))}
 </style></head><body><div id="stage">
 <div id="streakHost"><div id="o"><div class="name" id="n">WIN STREAK</div><div class="value" id="v">0</div></div></div>
 <div id="mapHost"><img id="mapImg"></div></div><script>
@@ -25,9 +31,9 @@ function draw(s){
  const sh=document.getElementById('streakHost'),mh=document.getElementById('mapHost'),o=document.getElementById('o');
  sh.style.display=(s.streakEnabled&&s.streak.visible)?'block':'none';
  sh.style.left=s.streak.x+'px';sh.style.top=s.streak.y+'px';sh.style.width=s.streak.w+'px';sh.style.height=s.streak.h+'px';
- o.className='s'+s.style;o.style.transform='none';
+ o.className='s'+s.style;o.style.width='380px';o.style.height='120px';o.style.position='absolute';o.style.left='50%';o.style.top='50%';o.style.transformOrigin='center';o.style.transform='translate(-50%,-50%) scale('+Math.min(s.streak.w/380,s.streak.h/120)+')';
  o.style.setProperty('--a',s.accent);o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);
- o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');
+ o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');o.style.setProperty('--name-x',(s.nameOffsetX||0)+'px');o.style.setProperty('--number-x',(s.numberOffsetX||0)+'px');o.classList.toggle('shadow-on',!!s.shadow);o.classList.toggle('transparent-bg',!!s.transparentBg);
  document.getElementById('n').textContent=s.title;document.getElementById('v').textContent=s.value;
  mh.style.display=(s.mapEnabled&&s.map.visible&&s.map.image)?'block':'none';
  mh.style.left=s.map.x+'px';mh.style.top=s.map.y+'px';mh.style.width=s.map.w+'px';mh.style.height=s.map.h+'px';

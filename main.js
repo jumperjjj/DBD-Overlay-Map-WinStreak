@@ -2,7 +2,7 @@ const {app,BrowserWindow,ipcMain,screen,Tray,Menu,nativeImage,globalShortcut,she
 const path=require('path'),fs=require('fs'),http=require('http'),url=require('url'),MAPS=require('./maps');
 let editor,streak,mapWin,control,tray,server,quitting=false,lastHotkey=0;
 const PORT=17384,EXTS=['.png','.jpg','.jpeg','.webp'];
-const defaults={language:'pt',style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberColor:'#d7b84a',accent:'#d7b84a',nameFont:'Segoe UI',numberFont:'Impact',nameFontSize:18,numberFontSize:58,streakEnabled:true,mapEnabled:true,hotkey:'',
+const defaults={language:'pt',style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberColor:'#d7b84a',accent:'#d7b84a',nameFont:'Segoe UI',numberFont:'Impact',nameFontSize:18,numberFontSize:58,nameOffsetX:0,numberOffsetX:0,shadow:true,transparentBg:false,streakEnabled:true,mapEnabled:true,hotkey:'',
 streak:{x:40,y:40,w:380,h:120,visible:true,scale:1},map:{x:1400,y:120,w:420,h:420,visible:false,name:'',image:'',scale:1}};
 let S;
 const sp=()=>path.join(app.getPath('userData'),'settings.json'), userMaps=()=>path.join(app.getPath('userData'),'maps');
@@ -27,17 +27,22 @@ function send(w,c,d){if(w&&!w.isDestroyed())w.webContents.send(c,d)}
 function dirty(v=true){send(editor,'dirty',v)}
 function broadcast(){[editor,streak,mapWin].forEach(w=>send(w,'settings',S))}
 function overlayOpts(w,h){return{width:w,height:h,frame:false,transparent:true,hasShadow:false,show:false,skipTaskbar:true,resizable:true,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}}}
-function clampRect(b){
+function clampRect(b,prev=null){
  const d=screen.getDisplayMatching(b),wa=d.workArea;
- const width=Math.min(Math.max(120,b.width),wa.width);
- const height=Math.min(Math.max(70,b.height),wa.height);
- let x=Math.max(wa.x,Math.min(b.x,wa.x+wa.width-width));
- let y=Math.max(wa.y,Math.min(b.y,wa.y+wa.height-height));
- const snap=22;
- if(Math.abs(x-wa.x)<=snap)x=wa.x;
- if(Math.abs((x+width)-(wa.x+wa.width))<=snap)x=wa.x+wa.width-width;
- if(Math.abs(y-wa.y)<=snap)y=wa.y;
- if(Math.abs((y+height)-(wa.y+wa.height))<=snap)y=wa.y+wa.height-height;
+ const width=Math.min(Math.max(120,b.width),wa.width),height=Math.min(Math.max(70,b.height),wa.height);
+ let x=Math.max(wa.x,Math.min(b.x,wa.x+wa.width-width)),y=Math.max(wa.y,Math.min(b.y,wa.y+wa.height-height));
+ const snap=18,release=30;
+ const nearL=Math.abs(x-wa.x)<=snap,nearR=Math.abs((x+width)-(wa.x+wa.width))<=snap,nearT=Math.abs(y-wa.y)<=snap,nearB=Math.abs((y+height)-(wa.y+wa.height))<=snap;
+ if(prev){
+   const wasL=Math.abs(prev.x-wa.x)<2,wasR=Math.abs((prev.x+prev.width)-(wa.x+wa.width))<2,wasT=Math.abs(prev.y-wa.y)<2,wasB=Math.abs((prev.y+prev.height)-(wa.y+wa.height))<2;
+   if(wasL && b.x>wa.x+release){} else if(nearL)x=wa.x;
+   if(wasR && b.x+width<wa.x+wa.width-release){} else if(nearR)x=wa.x+wa.width-width;
+   if(wasT && b.y>wa.y+release){} else if(nearT)y=wa.y;
+   if(wasB && b.y+height<wa.y+wa.height-release){} else if(nearB)y=wa.y+wa.height-height;
+ }else{
+   if(nearL)x=wa.x; else if(nearR)x=wa.x+wa.width-width;
+   if(nearT)y=wa.y; else if(nearB)y=wa.y+wa.height-height;
+ }
  return{x,y,width,height};
 }
 function bounds(c){return clampRect({x:c.x,y:c.y,width:c.w,height:c.h})}
@@ -47,8 +52,8 @@ function makeWindows(){
  streak=new BrowserWindow(overlayOpts(S.streak.w,S.streak.h));streak.loadFile('overlay.html');setup(streak);streak.setBounds(bounds(S.streak));
  mapWin=new BrowserWindow(overlayOpts(S.map.w,S.map.h));mapWin.loadFile('map-overlay.html');setup(mapWin);mapWin.setBounds(bounds(S.map));
  for(const w of [streak,mapWin]){
-  let fixing=false;
-  const constrain=()=>{if(fixing)return;fixing=true;const b=w.getBounds(),c=clampRect(b);if(b.x!==c.x||b.y!==c.y||b.width!==c.width||b.height!==c.height)w.setBounds(c);dirty(true);fixing=false};
+  let fixing=false,last=w.getBounds();
+  const constrain=()=>{if(fixing)return;fixing=true;const raw=w.getBounds(),c=clampRect(raw,last);if(raw.x!==c.x||raw.y!==c.y||raw.width!==c.width||raw.height!==c.height)w.setBounds(c);last=c;dirty(true);fixing=false};
   w.on('move',constrain);w.on('resize',constrain);
  }
  control=new BrowserWindow({width:36,height:36,x:0,y:0,frame:false,transparent:true,hasShadow:false,resizable:false,skipTaskbar:true,focusable:false,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});

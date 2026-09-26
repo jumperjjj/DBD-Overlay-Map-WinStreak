@@ -14,7 +14,18 @@
 .editing{outline:5px solid #ff2020!important;outline-offset:-5px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85)!important}
 .editing:before,.editing:after{content:'';position:absolute;width:16px;height:16px;background:#ff2020;border:2px solid #fff;z-index:99999}
 .editing:before{left:0;top:0}.editing:after{right:0;bottom:0}
+
+html,body{overflow:hidden}
+#o{position:absolute;left:50%;top:50%;width:380px;height:120px;transform-origin:center center}
+#o.transparent-bg{background:transparent!important}
+#o.transparent-bg:before,#o.transparent-bg:after{background:transparent!important}
+#o.shadow-on{filter:drop-shadow(0 5px 7px rgba(0,0,0,.72))}
+.name{position:relative;left:var(--name-x,0px)}
+.value{position:relative;left:var(--number-x,0px)}
+.editing{outline:5px solid #ff2020!important;outline-offset:-5px!important}
+.editing:before,.editing:after{content:'';position:absolute;width:16px;height:16px;background:#ff2020!important;border:2px solid white!important;z-index:99999}
+.editing:before{left:0;top:0}.editing:after{right:0;bottom:0}
 </style></head><body><div id=o><div class=name id=n>WIN STREAK</div><div class=value id=v>0</div><div class=drag></div></div><script>
-function draw(s){o.className='s'+s.style;o.style.setProperty('--a',s.accent);o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');n.textContent=s.title;v.textContent=s.value}
+function draw(s){o.className='s'+s.style;o.style.setProperty('--a',s.accent);o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');o.style.setProperty('--name-x',(s.nameOffsetX||0)+'px');o.style.setProperty('--number-x',(s.numberOffsetX||0)+'px');o.classList.toggle('shadow-on',!!s.shadow);o.classList.toggle('transparent-bg',!!s.transparentBg);let sx=s.streak.w/380,sy=s.streak.h/120;o.style.transform='translate(-50%,-50%) scale('+Math.min(sx,sy)+')';n.textContent=s.title;v.textContent=s.value}
 api.get().then(x=>draw(x.settings));api.onSettings(draw);api.onEdit(x=>o.classList.toggle('editing',x));
 </script></body></html>
