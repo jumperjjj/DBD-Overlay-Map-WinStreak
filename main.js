@@ -2,7 +2,7 @@ const {app,BrowserWindow,ipcMain,screen,Tray,Menu,nativeImage,globalShortcut,she
 const path=require('path'),fs=require('fs'),http=require('http'),url=require('url'),MAPS=require('./maps');
 let editor,streak,mapWin,control,tray,server,quitting=false,lastHotkey=0;
 const PORT=17384,EXTS=['.png','.jpg','.jpeg','.webp'];
-const defaults={language:'pt',style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberColor:'#d7b84a',accent:'#d7b84a',nameFont:'Segoe UI',numberFont:'Impact',nameFontSize:18,numberFontSize:58,nameOffsetX:0,numberOffsetX:0,shadow:true,transparentBg:false,nameBold:true,bgOpacity:1,letterSpacing:0,numberSpacing:0,nameUpper:false,streakEnabled:true,mapEnabled:true,hotkey:'',
+const defaults={language:'pt',style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',numberColor:'#d7b84a',accent:'#d7b84a',boxColor:'#15191f',boxColor2:'#09090b',nameFont:'Segoe UI',numberFont:'Impact',nameFontSize:18,numberFontSize:58,nameOffsetX:0,numberOffsetX:0,shadow:true,transparentBg:false,nameBold:true,bgOpacity:1,letterSpacing:0,numberSpacing:0,nameUpper:false,streakEnabled:true,mapEnabled:true,hotkey:'',
 streak:{x:40,y:40,w:380,h:120,visible:true,scale:1},map:{x:1400,y:120,w:420,h:420,visible:false,name:'',image:'',scale:1}};
 let S;
 const sp=()=>path.join(app.getPath('userData'),'settings.json'), userMaps=()=>path.join(app.getPath('userData'),'maps');
@@ -113,7 +113,9 @@ function startServer(){server=http.createServer((req,res)=>{let u=url.parse(req.
  }).listen(PORT,'127.0.0.1')}
 app.whenReady().then(()=>{load();makeEditor();makeWindows();makeTray();startServer();if(S.hotkey)registerHotkey(S.hotkey);setTimeout(broadcast,400)});
 app.on('before-quit',()=>{quitting=true;globalShortcut.unregisterAll();if(server)server.close()});app.on('window-all-closed',()=>{if(quitting)app.quit()});
+function resetCustomization(){const d=defaults;for(const k of ['style','nameColor','numberColor','accent','boxColor','boxColor2','nameFont','numberFont','nameFontSize','numberFontSize','nameOffsetX','numberOffsetX','shadow','nameBold','bgOpacity','letterSpacing','numberSpacing','nameUpper'])S[k]=d[k];save();dirty(true);return S}
 ipcMain.handle('get-settings',()=>({settings:S,maps:mapCatalog(),urls:{overlay:`http://127.0.0.1:${PORT}/overlay`},mapsDir:userMaps()}));
+ipcMain.handle('reset-customization',()=>resetCustomization());
 ipcMain.handle('patch',(_,p)=>{
  S={...S,...p};if(p.streak)S.streak={...S.streak,...p.streak};if(p.map)S.map={...S.map,...p.map};
  S.nameFontSize=Math.max(10,Math.min(42,+S.nameFontSize||18));S.bgOpacity=Math.max(0,Math.min(1,Number(S.bgOpacity??1)));
