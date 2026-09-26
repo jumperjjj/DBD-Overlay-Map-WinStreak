@@ -24,7 +24,7 @@
 /* 7 Arcade */
 .s7{display:grid;grid-template-columns:1fr 105px;align-items:center;padding:0 55px}.s7 .bg{inset:13px 34px;background:var(--box1);border:4px double var(--a);box-shadow:5px 5px 0 #000}.s7 .name{text-align:center}.s7 .value{text-align:center}
 /* 8 Broadcast */
-.s8{display:grid;grid-template-columns:1fr 105px;align-items:center;padding:0 38px}.s8 .bg{inset:25px 20px;background:#101319}.s8 .decor{left:20px;right:20px;top:25px;bottom:25px;border-left:9px solid var(--a);border-right:2px solid var(--a)}.s8 .name{padding-left:12px}.s8 .value{text-align:center}
+.s8{display:grid;grid-template-columns:1fr 105px;align-items:center;padding:0 38px}.s8 .bg{inset:25px 20px;background:var(--box1)}.s8 .decor{left:20px;right:20px;top:25px;bottom:25px;border-left:9px solid var(--a);border-right:2px solid var(--a)}.s8 .name{padding-left:12px}.s8 .value{text-align:center}
 /* 9 Cyber */
 .s9{display:flex;align-items:center;justify-content:center;gap:30px}.s9 .bg{inset:13px 18px;background:var(--box1);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-top:3px solid var(--a);border-bottom:3px solid var(--a)}.s9 .decor:before{content:'';position:absolute;left:54px;top:26px;width:28px;height:4px;background:var(--a)}
 /* 10 Elegant */
@@ -59,7 +59,7 @@ function draw(s){
  o.style.setProperty('--name-x',(s.nameOffsetX||0)+'px');o.style.setProperty('--number-x',(s.numberOffsetX||0)+'px');
  o.style.setProperty('--name-weight',s.nameBold?'900':'400');o.style.setProperty('--bg-opacity',String(s.bgOpacity??1));
  o.style.setProperty('--letter-spacing',(s.letterSpacing||0)+'px');o.style.setProperty('--number-spacing',(s.numberSpacing||0)+'px');
- let sx=s.streak.w/380,sy=s.streak.h/120;o.style.transform='translate(-50%,-50%) scale('+sx+','+sy+')';
+ o.style.transform='translate(-50%,-50%)';
  n.textContent=s.nameUpper?String(s.title).toUpperCase():s.title;v.textContent=s.value;v.style.setProperty('color',s.numberColor,'important');
 }
 api.get().then(x=>draw(x.settings));api.onSettings(draw);api.onEdit(x=>o.classList.toggle('editing',x));

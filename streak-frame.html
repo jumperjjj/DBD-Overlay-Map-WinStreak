@@ -24,7 +24,7 @@
 /* 7 Arcade */
 .s7{display:grid;grid-template-columns:1fr 105px;align-items:center;padding:0 55px}.s7 .bg{inset:13px 34px;background:var(--box1);border:4px double var(--a);box-shadow:5px 5px 0 #000}.s7 .name{text-align:center}.s7 .value{text-align:center}
 /* 8 Broadcast */
-.s8{display:grid;grid-template-columns:1fr 105px;align-items:center;padding:0 38px}.s8 .bg{inset:25px 20px;background:#101319}.s8 .decor{left:20px;right:20px;top:25px;bottom:25px;border-left:9px solid var(--a);border-right:2px solid var(--a)}.s8 .name{padding-left:12px}.s8 .value{text-align:center}
+.s8{display:grid;grid-template-columns:1fr 105px;align-items:center;padding:0 38px}.s8 .bg{inset:25px 20px;background:var(--box1)}.s8 .decor{left:20px;right:20px;top:25px;bottom:25px;border-left:9px solid var(--a);border-right:2px solid var(--a)}.s8 .name{padding-left:12px}.s8 .value{text-align:center}
 /* 9 Cyber */
 .s9{display:flex;align-items:center;justify-content:center;gap:30px}.s9 .bg{inset:13px 18px;background:var(--box1);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-top:3px solid var(--a);border-bottom:3px solid var(--a)}.s9 .decor:before{content:'';position:absolute;left:54px;top:26px;width:28px;height:4px;background:var(--a)}
 /* 10 Elegant */
@@ -40,13 +40,27 @@
 
 .editing{outline:5px solid #ff2020!important;outline-offset:-5px!important}
 .handle{display:none;position:absolute;z-index:9999;background:#ff2020;border:2px solid #fff;width:14px;height:14px}
-.editing .handle{display:block}
+.editing .handle{display:none}
 .handle.nw{left:-2px;top:-2px;cursor:nwse-resize}.handle.ne{right:-2px;top:-2px;cursor:nesw-resize}.handle.sw{left:-2px;bottom:-2px;cursor:nesw-resize}.handle.se{right:-2px;bottom:-2px;cursor:nwse-resize}
 .handle.n{left:50%;top:-2px;transform:translateX(-50%);cursor:ns-resize}.handle.s{left:50%;bottom:-2px;transform:translateX(-50%);cursor:ns-resize}.handle.w{left:-2px;top:50%;transform:translateY(-50%);cursor:ew-resize}.handle.e{right:-2px;top:50%;transform:translateY(-50%);cursor:ew-resize}
 
 .editing{-webkit-app-region:drag}
 .editing .handle{-webkit-app-region:no-drag}
-
-.handle{display:none!important}.editing{outline:0!important}</style></head><body><div id="o"><div class="bg"></div><div class="decor"></div><div id="n" class="name nameShift"></div><div id="v" class="value valueShift"></div>
+</style></head>
+<body><div id="o"><div class="bg"></div><div class="decor"></div><div id="n" class="name nameShift"></div><div id="v" class="value valueShift"></div>
 <div class="handle nw" data-edge="nw"></div><div class="handle n" data-edge="n"></div><div class="handle ne" data-edge="ne"></div><div class="handle e" data-edge="e"></div><div class="handle se" data-edge="se"></div><div class="handle s" data-edge="s"></div><div class="handle sw" data-edge="sw"></div><div class="handle w" data-edge="w"></div></div>
-<script>const o=document.getElementById('o'),n=document.getElementById('n'),v=document.getElementById('v');function draw(s){o.className='s'+((+s.style||0)+1)+(s.shadow?' shadow-on':'');o.style.setProperty('--a',s.accent);o.style.setProperty('--box1',s.boxColor||'#15191f');o.style.setProperty('--box2',s.boxColor2||'#09090b');o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');o.style.setProperty('--name-x',(s.nameOffsetX||0)+'px');o.style.setProperty('--number-x',(s.numberOffsetX||0)+'px');o.style.setProperty('--name-weight',s.nameBold?'900':'400');o.style.setProperty('--bg-opacity',String(s.bgOpacity??1));o.style.setProperty('--letter-spacing',(s.letterSpacing||0)+'px');o.style.setProperty('--number-spacing',(s.numberSpacing||0)+'px');o.style.transform='translate(-50%,-50%) scale('+(s.streak.w/380)+','+(s.streak.h/120)+')';n.textContent=s.nameUpper?String(s.title).toUpperCase():s.title;v.textContent=s.value;v.style.setProperty('color',s.numberColor,'important')}async function tick(){try{draw(await fetch('/state?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()))}catch{}}tick();setInterval(tick,250);</script></body></html>
+<script>
+const o=document.getElementById('o'),n=document.getElementById('n'),v=document.getElementById('v');
+function draw(s){
+ o.className='s'+((+s.style||0)+1)+(s.shadow?' shadow-on':'');
+ o.style.setProperty('--a',s.accent);o.style.setProperty('--box1',s.boxColor||'#15191f');o.style.setProperty('--box2',s.boxColor2||'#09090b');o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);
+ o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);
+ o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');
+ o.style.setProperty('--name-x',(s.nameOffsetX||0)+'px');o.style.setProperty('--number-x',(s.numberOffsetX||0)+'px');
+ o.style.setProperty('--name-weight',s.nameBold?'900':'400');o.style.setProperty('--bg-opacity',String(s.bgOpacity??1));
+ o.style.setProperty('--letter-spacing',(s.letterSpacing||0)+'px');o.style.setProperty('--number-spacing',(s.numberSpacing||0)+'px');
+ let sx=s.streak.w/380,sy=s.streak.h/120;o.style.transform='translate(-50%,-50%) scale('+sx+','+sy+')';
+ n.textContent=s.nameUpper?String(s.title).toUpperCase():s.title;v.textContent=s.value;v.style.setProperty('color',s.numberColor,'important');
+}
+async function tick(){try{draw(await fetch('/state?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()))}catch{}}tick();setInterval(tick,200);
+</script></body></html>
