@@ -25,7 +25,17 @@ html,body{overflow:hidden}
 .editing{outline:5px solid #ff2020!important;outline-offset:-5px!important}
 .editing:before,.editing:after{content:'';position:absolute;width:16px;height:16px;background:#ff2020!important;border:2px solid white!important;z-index:99999}
 .editing:before{left:0;top:0}.editing:after{right:0;bottom:0}
+
+.editing{outline:5px solid #ff2020!important;outline-offset:-5px!important;border-color:transparent!important}
+.editing *{outline-color:transparent!important}
+.name{transform:translateX(var(--name-x,0px))!important;left:auto!important;font-weight:var(--name-weight,700)!important}
+.value{transform:translateX(var(--number-x,0px))!important;left:auto!important;color:var(--vc)!important}
+#o.shadow-on{filter:drop-shadow(0 7px 5px rgba(0,0,0,.92)) drop-shadow(0 0 5px rgba(0,0,0,.70))!important}
+
+#o{--bg-opacity:1}
+#o.s1,#o.s2,#o.s3,#o.s4,#o.s5,#o.s6,#o.s7,#o.s8,#o.s9,#o.s10{background-color:color-mix(in srgb, var(--panel,#171b21) calc(var(--bg-opacity)*100%), transparent)!important}
+#o:before,#o:after{opacity:var(--bg-opacity)!important}
 </style></head><body><div id=o><div class=name id=n>WIN STREAK</div><div class=value id=v>0</div><div class=drag></div></div><script>
-function draw(s){o.className='s'+s.style;o.style.setProperty('--a',s.accent);o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');o.style.setProperty('--name-x',(s.nameOffsetX||0)+'px');o.style.setProperty('--number-x',(s.numberOffsetX||0)+'px');o.classList.toggle('shadow-on',!!s.shadow);o.classList.toggle('transparent-bg',!!s.transparentBg);let sx=s.streak.w/380,sy=s.streak.h/120;o.style.transform='translate(-50%,-50%) scale('+Math.min(sx,sy)+')';n.textContent=s.title;v.textContent=s.value}
+function draw(s){o.className='s'+s.style;o.style.setProperty('--a',s.accent);o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');o.style.setProperty('--name-x',(s.nameOffsetX||0)+'px');o.style.setProperty('--number-x',(s.numberOffsetX||0)+'px');o.style.setProperty('--name-weight',s.nameBold?'900':'400');o.style.setProperty('--bg-opacity',String(s.bgOpacity??1));o.classList.toggle('shadow-on',!!s.shadow);o.classList.toggle('transparent-bg',!!s.transparentBg);let sx=s.streak.w/380,sy=s.streak.h/120;o.style.transform='translate(-50%,-50%) scale('+Math.min(sx,sy)+')';n.textContent=s.title;v.textContent=s.value}
 api.get().then(x=>draw(x.settings));api.onSettings(draw);api.onEdit(x=>o.classList.toggle('editing',x));
 </script></body></html>

@@ -2,6 +2,8 @@
 .editing{outline:5px solid #ff2020!important;outline-offset:-5px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85)!important}
 .editing:before,.editing:after{content:'';position:absolute;width:16px;height:16px;background:#ff2020;border:2px solid #fff;z-index:99999}
 .editing:before{left:0;top:0}.editing:after{right:0;bottom:0}
+
+.editing{outline:5px solid #ff2020!important;outline-offset:-5px!important;border-color:transparent!important}
 </style></head><body><div id=w><img id=i hidden><div id=f>Nenhuma imagem de mapa</div><div class=drag></div></div><script>
 function d(s){if(s.map.image){i.src='file:///'+s.map.image.replace(/\\/g,'/');i.hidden=false;f.hidden=true}else{i.hidden=true;f.hidden=false}}api.get().then(x=>d(x.settings));api.onSettings(d);api.onEdit(x=>w.classList.toggle('editing',x));
 </script></body></html>
