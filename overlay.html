@@ -10,7 +10,11 @@
 .s7{display:flex;align-items:stretch;background:#101217}.s7 .name{display:flex;align-items:center;padding:0 25px;background:var(--a);color:#111;font-size:18px;font-weight:900;clip-path:polygon(0 0,88% 0,100% 50%,88% 100%,0 100%)}.s7 .value{display:flex;align-items:center;padding:0 25px;font-size:58px}
 .s8{display:flex;align-items:center;justify-content:center;gap:28px;background:#0a0d14;clip-path:polygon(10% 0,100% 0,90% 100%,0 100%)}.s8:after{content:'';position:absolute;inset:8px;border-top:2px solid var(--a);border-bottom:2px solid var(--a)}.s8 .name{font-size:16px;font-weight:700;transform:skew(-8deg)}.s8 .value{font-size:62px;transform:skew(-8deg)}
 .s9{display:flex;align-items:center;justify-content:center;gap:22px;background:linear-gradient(135deg,#181714,#302a20);border-radius:0 30px 0 30px;border:1px solid #8f826b}.s9:before{content:'◆';color:var(--a);font-size:18px}.s9 .name{font-size:18px;letter-spacing:.08em}.s9 .value{font-size:56px;font-weight:500}
+
+.editing{outline:5px solid #ff2020!important;outline-offset:-5px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85)!important}
+.editing:before,.editing:after{content:'';position:absolute;width:16px;height:16px;background:#ff2020;border:2px solid #fff;z-index:99999}
+.editing:before{left:0;top:0}.editing:after{right:0;bottom:0}
 </style></head><body><div id=o><div class=name id=n>WIN STREAK</div><div class=value id=v>0</div><div class=drag></div></div><script>
 function draw(s){o.className='s'+s.style;o.style.setProperty('--a',s.accent);o.style.setProperty('--nc',s.nameColor);o.style.setProperty('--vc',s.numberColor);o.style.setProperty('--nf',s.nameFont);o.style.setProperty('--vf',s.numberFont);o.style.setProperty('--name-size',s.nameFontSize+'px');o.style.setProperty('--number-size',s.numberFontSize+'px');n.textContent=s.title;v.textContent=s.value}
-api.get().then(x=>draw(x.settings));api.onSettings(draw);api.onEdit(x=>document.body.classList.toggle('editing',x));
+api.get().then(x=>draw(x.settings));api.onSettings(draw);api.onEdit(x=>o.classList.toggle('editing',x));
 </script></body></html>

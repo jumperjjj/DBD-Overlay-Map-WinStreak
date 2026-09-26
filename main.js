@@ -27,24 +27,45 @@ function send(w,c,d){if(w&&!w.isDestroyed())w.webContents.send(c,d)}
 function dirty(v=true){send(editor,'dirty',v)}
 function broadcast(){[editor,streak,mapWin].forEach(w=>send(w,'settings',S))}
 function overlayOpts(w,h){return{width:w,height:h,frame:false,transparent:true,hasShadow:false,show:false,skipTaskbar:true,resizable:true,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}}}
-function bounds(c){let wa=screen.getPrimaryDisplay().workArea;return{x:Math.max(0,Math.min(c.x,wa.width-80)),y:Math.max(0,Math.min(c.y,wa.height-50)),width:Math.max(120,c.w),height:Math.max(70,c.h)}}
+function clampRect(b){
+ const d=screen.getDisplayMatching(b),wa=d.workArea;
+ const width=Math.min(Math.max(120,b.width),wa.width);
+ const height=Math.min(Math.max(70,b.height),wa.height);
+ let x=Math.max(wa.x,Math.min(b.x,wa.x+wa.width-width));
+ let y=Math.max(wa.y,Math.min(b.y,wa.y+wa.height-height));
+ const snap=22;
+ if(Math.abs(x-wa.x)<=snap)x=wa.x;
+ if(Math.abs((x+width)-(wa.x+wa.width))<=snap)x=wa.x+wa.width-width;
+ if(Math.abs(y-wa.y)<=snap)y=wa.y;
+ if(Math.abs((y+height)-(wa.y+wa.height))<=snap)y=wa.y+wa.height-height;
+ return{x,y,width,height};
+}
+function bounds(c){return clampRect({x:c.x,y:c.y,width:c.w,height:c.h})}
 function makeEditor(){editor=new BrowserWindow({width:1140,height:830,minWidth:950,minHeight:690,backgroundColor:'#0e1014',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});editor.setMenuBarVisibility(false);editor.loadFile('app.html');editor.on('close',e=>{if(!quitting){e.preventDefault();editor.hide()}})}
 function setup(w){w.setAlwaysOnTop(true,'screen-saver');w.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});w.setIgnoreMouseEvents(true,{forward:true})}
-function makeWindows(){streak=new BrowserWindow(overlayOpts(S.streak.w,S.streak.h));streak.loadFile('overlay.html');setup(streak);streak.setBounds(bounds(S.streak));
+function makeWindows(){
+ streak=new BrowserWindow(overlayOpts(S.streak.w,S.streak.h));streak.loadFile('overlay.html');setup(streak);streak.setBounds(bounds(S.streak));
  mapWin=new BrowserWindow(overlayOpts(S.map.w,S.map.h));mapWin.loadFile('map-overlay.html');setup(mapWin);mapWin.setBounds(bounds(S.map));
- for(const w of [streak,mapWin]){w.on('move',()=>dirty(true));w.on('resize',()=>dirty(true));}
+ for(const w of [streak,mapWin]){
+  let fixing=false;
+  const constrain=()=>{if(fixing)return;fixing=true;const b=w.getBounds(),c=clampRect(b);if(b.x!==c.x||b.y!==c.y||b.width!==c.width||b.height!==c.height)w.setBounds(c);dirty(true);fixing=false};
+  w.on('move',constrain);w.on('resize',constrain);
+ }
  control=new BrowserWindow({width:36,height:36,x:0,y:0,frame:false,transparent:true,hasShadow:false,resizable:false,skipTaskbar:true,focusable:false,backgroundColor:'#00000000',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});
- control.loadFile('control.html');control.setAlwaysOnTop(true,'screen-saver');control.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});control.setContentProtection(true);control.showInactive();applyVisibility()}
+ control.loadFile('control.html');control.setAlwaysOnTop(true,'screen-saver');control.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});control.setContentProtection(true);control.showInactive();applyVisibility();
+}
 function applyVisibility(){if(!streak)return;(S.streakEnabled&&S.streak.visible)?streak.showInactive():streak.hide();(S.mapEnabled&&S.map.visible)?mapWin.showInactive():mapWin.hide()}
 function edit(on){for(const w of [streak,mapWin]){w.setIgnoreMouseEvents(!on,{forward:true});w.setResizable(on);send(w,'edit-mode',on)}if(on){if(S.streakEnabled)streak.show();if(S.mapEnabled&&S.map.visible)mapWin.show()}else applyVisibility()}
-function persistBounds(){for(const [w,k] of [[streak,'streak'],[mapWin,'map']]){let b=w.getBounds();S[k]={...S[k],x:b.x,y:b.y,w:b.width,h:b.height}}save();dirty(false)}
+function persistBounds(){for(const [w,k] of [[streak,'streak'],[mapWin,'map']]){const b=clampRect(w.getBounds());w.setBounds(b);S[k]={...S[k],x:b.x,y:b.y,w:b.width,h:b.height}}save();dirty(false)}
 function scaleOverlay(k,v){
- const lim=k==='streak'?[.55,1.5]:[.40,.77];
- v=Math.max(lim[0],Math.min(lim[1],+v));
- S[k].scale=v;
- const base=k==='streak'?{w:380,h:120}:{w:420,h:420},w=k==='streak'?streak:mapWin;
- S[k].w=Math.round(base.w*v);S[k].h=Math.round(base.h*v);
- w.setSize(S[k].w,S[k].h);save();dirty(true);
+ const lim=k==='streak'?[.78,1.22]:[.48,.72];
+ v=Math.max(lim[0],Math.min(lim[1],Number(v)||1));
+ const base=k==='streak'?{w:380,h:120}:{w:420,h:420};
+ const w=k==='streak'?streak:mapWin,old=w.getBounds();
+ const nw=Math.round(base.w*v),nh=Math.round(base.h*v);
+ const b=clampRect({x:Math.round(old.x+(old.width-nw)/2),y:Math.round(old.y+(old.height-nh)/2),width:nw,height:nh});
+ S[k].scale=v;S[k].x=b.x;S[k].y=b.y;S[k].w=b.width;S[k].h=b.height;
+ w.setBounds(b);save();dirty(true);
 }
 function mapCatalog(){return MAPS.map(name=>({name,hasImage:!!mapImage(name)}))}
 function mapImage(name){for(const dir of [userMaps(),path.join(__dirname,'maps')])for(const ext of EXTS){let p=path.join(dir,name+ext);if(fs.existsSync(p))return p}return ''}
