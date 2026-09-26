@@ -1,0 +1,3 @@
+<!doctype html><html><head><meta charset=utf-8><style>html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transparent}iframe{position:absolute;border:0;background:transparent}</style></head><body><iframe id=s src=/obs-streak></iframe><iframe id=m src=/obs-match></iframe><script>
+async function tick(){try{const x=await fetch('/state?'+Date.now(),{cache:'no-store'}).then(r=>r.json());for(const [e,c] of [[s,x.streak],[m,x.match]]){e.style.display=c.enabled?'block':'none';e.style.left=c.x+'px';e.style.top=c.y+'px';e.style.width=c.w+'px';e.style.height=c.h+'px'}}catch{}}tick();setInterval(tick,150);
+</script></body></html>
