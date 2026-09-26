@@ -1,12 +1,13 @@
-# Beta 2.2.1
+# Beta 2.2.2
 
-Correção da integração com OBS.
-
-- Uma única Browser Source: `http://127.0.0.1:17384/overlay`
-- A Browser Source deve ser configurada em **1920 x 1080**.
-- O canvas do OBS agora representa o monitor inteiro em 1920x1080.
-- WinStreak e mapa usam as mesmas coordenadas e tamanhos salvos pelo editor.
-- Os switches WinStreak/Mapa controlam o que aparece no mesmo link.
-- A Browser Source usa os mesmos 10 layouts, fontes e cores da overlay local.
-- A imagem selecionada do mapa é servida pelo app para a Browser Source.
-- Alterações são refletidas continuamente no OBS.
+Ajustes desta versão:
+- corrigido o efeito de escala dupla que deformava WinStreak e mapa;
+- escala máxima reduzida: nenhuma overlay passa de aproximadamente 30% do canvas 1920x1080;
+- fonte do nome e fonte do número agora têm controle de tamanho;
+- valor exato da WinStreak pode ser digitado (ex.: 1230);
+- botão para copiar a URL única do OBS;
+- Browser Source continua sendo 1920x1080 e espelha posição/tamanho do app;
+- botão Salvar/Bloquear fica verde quando existe alteração visual/posição pendente de confirmação;
+- abrir a aba Posição NÃO ativa mais o arraste automaticamente;
+- somente Coal Tower aparece na lista de mapas nesta beta;
+- Coal Tower.webp está incluído e vinculado ao botão Coal Tower.
