@@ -1,10 +1,11 @@
-# DBD Overlay Studio — Beta 2.6.4
-- Mantido o novo sistema de Posição da 2.6.3.
-- Borda vermelha de edição usa borda interna persistente para reduzir o desaparecimento visual durante drag.
-- Cores: swatch pequeno abre diretamente o seletor nativo; removido o painel RGB e a etapa grande intermediária.
-- Confronto: mesma lista de fontes da WinStreak para nomes e números.
-- Fontes de nomes e números são globais para o Confronto (Time A/B juntos).
-- Glow colorido no cabeçalho/placar, com intensidade 0–100%.
-- Killer: corrigido clipping. A imagem agora fica dentro da janela, com fundo transparente, altura acompanhando a overlay e espaço reservado no placar.
-- Esquerda/direita continua controlado pelo checkbox.
-- 44 imagens de Killer permanecem empacotadas.
+# DBD Overlay Studio — Beta 2.6.5
+
+Correções focadas no Confronto e Posição:
+- Killer fica visualmente fora do painel central, em uma faixa transparente lateral.
+- Lado esquerdo/direito continua configurável.
+- Nome do Killer aparece abaixo da imagem sem caixa opaca e o campo de digitação não é reconstruído enquanto está em foco.
+- MAP / MATCH é uma linha própria abaixo das INFOs e possui checkbox de mostrar/ocultar.
+- Fontes de nomes/números agora recebem a lista de opções corretamente e aplicam no renderer.
+- Seletor de cor mantém o swatch + seletor nativo aprovado; a nova cor só é aplicada após clicar OK ao lado do swatch.
+- Posição: a borda vermelha passou a ser uma BrowserWindow guia independente, transparente e click-through, sincronizada com a overlay durante drag/resize. Assim não depende do repaint da overlay enquanto ela se move.
+- 44 Killers permanecem empacotados.

@@ -40,6 +40,7 @@ function overlay(file,cfg,key){
  w.webContents.on('did-finish-load',()=>{
    w.webContents.send('state',S);
    w.webContents.send('edit',editing);
+  const g=guideFor(w);if(g&&!g.isDestroyed()){if(editing){g.setBounds(w.getBounds());g.showInactive();g.moveTop()}else g.hide()}
    if(S[key].enabled) w.showInactive(); else w.hide();
  });
  w.webContents.on('did-fail-load',(_,code,desc)=>console.error('Overlay load failed:',key,code,desc));
@@ -65,17 +66,33 @@ function setEdit(v){
    w.setFocusable(false);
   }
   w.webContents.send('edit',editing);
+  const g=guideFor(w);if(g&&!g.isDestroyed()){if(editing){g.setBounds(w.getBounds());g.showInactive();g.moveTop()}else g.hide()}
  }
  if(!editing)visibility();
  ui?.webContents.send('edit',editing)
 }
 function syncBounds(){for(const [w,k] of [[streakWin,'streak'],[matchWin,'match']]){const b=displayClamp(w.getBounds());w.setBounds(b);Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height})}save()}
 function attachBounds(w,k){
- const remember=()=>{if(!editing)return;const b=w.getBounds();Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});ui?.webContents.send('dirty',true);push()};
+ const remember=()=>{if(!editing)return;const b=w.getBounds();Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});syncGuide(w);ui?.webContents.send('dirty',true);push()};
  w.on('move',remember);w.on('resize',remember);
 }
+
+function makeGuide(){
+ const g=new BrowserWindow({show:false,frame:false,transparent:true,hasShadow:false,resizable:false,movable:false,focusable:false,skipTaskbar:true,alwaysOnTop:true,backgroundColor:'#00000000'});
+ g.setIgnoreMouseEvents(true);
+ g.setAlwaysOnTop(true,'screen-saver');
+ g.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent('<!doctype html><html><body style="margin:0;box-sizing:border-box;width:100vw;height:100vh;border:4px solid #ff2525;background:transparent"></body></html>'));
+ return g
+}
+function guideFor(w){return w===streakWin?streakGuide:matchGuide}
+function syncGuide(w){
+ if(!editing||!w||w.isDestroyed())return;
+ const g=guideFor(w);if(!g||g.isDestroyed())return;
+ g.setBounds(w.getBounds());if(!g.isVisible())g.showInactive();g.moveTop()
+}
+
 function create(){ui=new BrowserWindow({width:1160,height:820,minWidth:980,minHeight:680,backgroundColor:'#0d0f13',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});ui.setMenuBarVisibility(false);ui.loadFile('app.html');ui.on('close',e=>{if(!quitting){e.preventDefault();ui.hide()}});
- streakWin=overlay('streak.html',S.streak,'streak');matchWin=overlay('match.html',S.match,'match');attachBounds(streakWin,'streak');attachBounds(matchWin,'match');visibility();
+ streakWin=overlay('streak.html',S.streak,'streak');matchWin=overlay('match.html',S.match,'match');streakGuide=makeGuide();matchGuide=makeGuide();attachBounds(streakWin,'streak');attachBounds(matchWin,'match');visibility();
  tray=new Tray(nativeImage.createEmpty());tray.setToolTip('DBD Overlay Studio');tray.setContextMenu(Menu.buildFromTemplate([{label:'Abrir',click:()=>ui.show()},{label:'Sair',click:()=>{quitting=true;app.quit()}}]));
 }
 function recreateOverlays(){
@@ -110,7 +127,7 @@ ipcMain.on('drag-move',(e,mouse)=>{
  x=Math.max(b.x,Math.min(x,maxX));y=Math.max(b.y,Math.min(y,maxY));
  if(Math.abs(x-b.x)<=snap)x=b.x;if(Math.abs(x-maxX)<=snap)x=maxX;
  if(Math.abs(y-b.y)<=snap)y=b.y;if(Math.abs(y-maxY)<=snap)y=maxY;
- z.w.setPosition(Math.round(x),Math.round(y));
+ z.w.setPosition(Math.round(x),Math.round(y));syncGuide(z.w);
 });
 ipcMain.on('drag-end',()=>{dragSession=null});
 let resizeSession=null;
@@ -124,7 +141,7 @@ ipcMain.on('resize-move',(e,mouse)=>{
  if(z.edge.includes('w')){x+=dx;width-=dx}if(z.edge.includes('n')){y+=dy;height-=dy}
  const minW=z.key==='streak'?280:560,minH=z.key==='streak'?88:145,maxW=z.key==='streak'?520:1050,maxH=z.key==='streak'?165:420;
  if(width<minW){if(z.edge.includes('w'))x-=minW-width;width=minW}if(height<minH){if(z.edge.includes('n'))y-=minH-height;height=minH}
- width=Math.min(maxW,width);height=Math.min(maxH,height);z.w.setBounds({x:Math.round(x),y:Math.round(y),width:Math.round(width),height:Math.round(height)});
+ width=Math.min(maxW,width);height=Math.min(maxH,height);z.w.setBounds({x:Math.round(x),y:Math.round(y),width:Math.round(width),height:Math.round(height)});syncGuide(z.w);
 });
 ipcMain.on('resize-end',()=>{resizeSession=null});
 app.whenReady().then(()=>{load();startServer();create();if(S.streak.hotkey)hotkey(S.streak.hotkey);setTimeout(push,300)});
