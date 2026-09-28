@@ -1,15 +1,20 @@
-# DBD Overlay Studio — Beta 2.6.2
+# DBD Overlay Studio — Beta 2.6.3
 
-Foco: Confronto + Posição.
+Foco: corrigir Posição e Killer.
 
-- Time A/B ainda mais compactos.
-- INFO 1, INFO 2, INFO 3, INFO 4 como defaults; textos vazios.
-- Cores mantidas.
-- Seletor de cor compacto por RGB, sem área gigante, com OK.
-- 44 imagens do ZIP enviado incorporadas em `killers/`.
-- Dropdown mostra nomes legíveis dos Killers.
-- Nome do Killer continua livre e opcional na overlay.
-- Sliders de largura/altura removidos da aba Posição.
-- Ativar para arrastar permanece ativo até Salvar/Bloquear ou trocar de aba.
-- Resize feito diretamente nas bordas/quinas vermelhas, como uma janela.
-- Posição/tamanho são limitados ao monitor ao salvar; snap suave de borda aplicado nesse momento.
+## Posição
+- Removido o drag dependente de `-webkit-app-region`.
+- Drag agora usa pointer capture + IPC, mantendo o modo de edição ativo depois de soltar o mouse.
+- WinStreak e Confronto ficam temporariamente visíveis e interativos enquanto o modo Posição está ativado, mesmo se um deles estiver desligado no uso normal.
+- As duas overlays usam a mesma implementação de drag.
+- Limite do monitor é aplicado durante o movimento.
+- Ímã leve de 10 px nas bordas.
+- Resize por bordas/quinas continua separado do drag.
+- O modo só termina ao Salvar/Bloquear ou trocar de aba.
+
+## Killer
+- Corrigida a URL das imagens no renderer desktop: agora usa explicitamente o servidor local `127.0.0.1:17384`.
+- Imagem permanece transparente (PNG sem painel atrás).
+- Checkbox `Imagem do Killer à esquerda`: marcado = esquerda; desmarcado = direita.
+- Campo Nome do Killer usa atualização local + debounce para não perder a digitação durante atualizações de estado.
+- Mostrar nome na overlay continua independente da imagem.

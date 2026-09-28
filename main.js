@@ -6,7 +6,7 @@ const DEF={
  streak:{enabled:true,x:40,y:40,w:380,h:120,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',bg2:'#09090b',opacity:1,nameSize:18,valueSize:58,nameX:0,valueX:0,bold:true,shadow:true,fontName:'Segoe UI',fontValue:'Impact',hotkey:''},
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
- killerImage:'',killerName:'',showKillerName:true,
+ killerImage:'',killerName:'',showKillerName:true,killerLeft:true,
 teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'SET 1/1',footerShow:true,footer:'MAP / MATCH',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
   {show:true,label:'INFO 1',a:'',b:'',color:'#3b82f6'},
   {show:true,label:'INFO 2',a:'',b:'',color:'#22c55e'},
@@ -30,7 +30,7 @@ function overlay(file,cfg,key){
  const w=new BrowserWindow({
   x:cfg.x,y:cfg.y,width:cfg.w,height:cfg.h,
   show:false,frame:false,transparent:true,hasShadow:false,resizable:false,
-  skipTaskbar:true,focusable:false,backgroundColor:'#00000000',
+  skipTaskbar:true,focusable:true,backgroundColor:'#00000000',
   webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}
  });
  w.setAlwaysOnTop(true,'screen-saver');
@@ -46,8 +46,29 @@ function overlay(file,cfg,key){
  return w
 }
 function safeVisible(w,on){if(!w||w.isDestroyed())return;if(!on){w.hide();return}if(w.webContents.isLoading())return;w.showInactive();w.moveTop();w.setAlwaysOnTop(true,'screen-saver')}
-function visibility(){safeVisible(streakWin,S.streak.enabled);safeVisible(matchWin,S.match.enabled)}
-function setEdit(v){editing=!!v;for(const [w,c] of [[streakWin,S.streak],[matchWin,S.match]]){editing?w.setIgnoreMouseEvents(false):w.setIgnoreMouseEvents(true,{forward:true});w.setResizable(editing);w.setMovable(editing);w.setMinimumSize(w===streakWin?280:560,w===streakWin?88:145);w.setMaximumSize(w===streakWin?520:1050,w===streakWin?165:420);w.webContents.send('edit',editing);if(editing&&c.enabled)w.show()}if(!editing)visibility();ui?.webContents.send('edit',editing)}
+function visibility(){if(editing){safeVisible(streakWin,true);safeVisible(matchWin,true);return}safeVisible(streakWin,S.streak.enabled);safeVisible(matchWin,S.match.enabled)}
+function setEdit(v){
+ editing=!!v;
+ for(const [w,c] of [[streakWin,S.streak],[matchWin,S.match]]){
+  if(!w||w.isDestroyed())continue;
+  w.setResizable(editing);w.setMovable(editing);
+  w.setMinimumSize(w===streakWin?280:560,w===streakWin?88:145);
+  w.setMaximumSize(w===streakWin?520:1050,w===streakWin?165:420);
+  if(editing){
+   w.setIgnoreMouseEvents(false);
+   w.setFocusable(true);
+   // Position mode deliberately shows BOTH overlays, even if one is disabled,
+   // so both can always be positioned.
+   w.showInactive();w.moveTop();
+  }else{
+   w.setIgnoreMouseEvents(true,{forward:true});
+   w.setFocusable(false);
+  }
+  w.webContents.send('edit',editing);
+ }
+ if(!editing)visibility();
+ ui?.webContents.send('edit',editing)
+}
 function syncBounds(){for(const [w,k] of [[streakWin,'streak'],[matchWin,'match']]){const b=displayClamp(w.getBounds());w.setBounds(b);Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height})}save()}
 function attachBounds(w,k){
  const remember=()=>{if(!editing)return;const b=w.getBounds();Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});ui?.webContents.send('dirty',true);push()};
@@ -75,6 +96,23 @@ ipcMain.handle('patch',(_,section,p)=>{if(section==='root')S={...S,...p};else S[
 ipcMain.handle('edit',(_,v)=>{setEdit(v);return S});ipcMain.handle('save-bounds',()=>{syncBounds();setEdit(false);ui.webContents.send('dirty',false);return S});
 ipcMain.handle('reset',(_,section)=>{if(section==='streak'){const keep={value:S.streak.value,hotkey:S.streak.hotkey,x:S.streak.x,y:S.streak.y,w:S.streak.w,h:S.streak.h,enabled:S.streak.enabled};S.streak={...clone(DEF.streak),...keep}}else{const pos={x:S.match.x,y:S.match.y,w:S.match.w,h:S.match.h,enabled:S.match.enabled};S.match={...clone(DEF.match),...pos}}save();visibility();return S});
 ipcMain.handle('hotkey',(_,k)=>hotkey(k));ipcMain.handle('quit-app',()=>{quitting=true;app.quit()});
+let dragSession=null;
+ipcMain.on('drag-start',(e,key,mouse)=>{
+ if(!editing)return;const w=key==='streak'?streakWin:matchWin;if(!w||w.isDestroyed())return;
+ dragSession={w,key,start:w.getBounds(),mx:mouse.x,my:mouse.y};
+});
+ipcMain.on('drag-move',(e,mouse)=>{
+ const z=dragSession;if(!z||!editing)return;
+ const d=screen.getDisplayMatching(z.start),b=d.bounds;
+ let x=z.start.x+(mouse.x-z.mx),y=z.start.y+(mouse.y-z.my);
+ // Hard monitor bounds while dragging. Small edge magnet, but no persistent lock.
+ const maxX=b.x+b.width-z.start.width,maxY=b.y+b.height-z.start.height,snap=10;
+ x=Math.max(b.x,Math.min(x,maxX));y=Math.max(b.y,Math.min(y,maxY));
+ if(Math.abs(x-b.x)<=snap)x=b.x;if(Math.abs(x-maxX)<=snap)x=maxX;
+ if(Math.abs(y-b.y)<=snap)y=b.y;if(Math.abs(y-maxY)<=snap)y=maxY;
+ z.w.setPosition(Math.round(x),Math.round(y));
+});
+ipcMain.on('drag-end',()=>{dragSession=null});
 let resizeSession=null;
 ipcMain.on('resize-start',(e,key,edge,mouse)=>{
  if(!editing)return;const w=key==='streak'?streakWin:matchWin;if(!w||w.isDestroyed())return;
