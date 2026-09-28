@@ -7,9 +7,9 @@ const DEF={
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,
-teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#a86cff',colorB:'#6cff8d',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'SET 1/1',footerShow:true,footer:'SET 1: THE COAL TOWER',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
-  {show:true,label:'SURVIVOR RESULT',a:'7 STAGES - 3F',b:'6 STAGES - 2F',color:'#a86cff'},
-  {show:true,label:'KILLER WINCON',a:'6 STAGES',b:'7 STAGES',color:'#6cff8d'},
+teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'SET 1/1',footerShow:true,footer:'MAP / MATCH',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
+  {show:true,label:'RESULT',a:'7 STAGES - 3F',b:'',color:'#3b82f6'},
+  {show:true,label:'WINCON',a:'6 STAGES',b:'',color:'#22c55e'},
   {show:false,label:'INFO 3',a:'',b:'',color:'#f0b84b'},{show:false,label:'INFO 4',a:'',b:'',color:'#4bb7f0'}
  ]}
 };
@@ -52,7 +52,7 @@ function syncBounds(){for(const [w,k] of [[streakWin,'streak'],[matchWin,'match'
 function attachBounds(w,k){
  let t=null;
  const remember=()=>{if(!editing)return;const b=w.getBounds();Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});ui?.webContents.send('dirty',true);push()};
- w.on('move',()=>{if(!editing)return;clearTimeout(t);remember();t=setTimeout(()=>{if(!editing)return;const b=displayClamp(w.getBounds());w.setBounds(b);Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});push()},120)});
+ w.on('move',()=>{if(!editing)return;clearTimeout(t);remember();t=setTimeout(()=>{if(!editing)return;const b=displayClamp(w.getBounds());w.setBounds(b);Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});push()},500)});
  w.on('resize',()=>{if(editing)remember()});
 }
 function create(){ui=new BrowserWindow({width:1160,height:820,minWidth:980,minHeight:680,backgroundColor:'#0d0f13',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});ui.setMenuBarVisibility(false);ui.loadFile('app.html');ui.on('close',e=>{if(!quitting){e.preventDefault();ui.hide()}});
@@ -76,6 +76,6 @@ ipcMain.handle('patch',(_,section,p)=>{if(section==='root')S={...S,...p};else S[
  save();visibility();return S});
 ipcMain.handle('edit',(_,v)=>{setEdit(v);return S});ipcMain.handle('save-bounds',()=>{syncBounds();setEdit(false);ui.webContents.send('dirty',false);return S});
 ipcMain.handle('reset',(_,section)=>{if(section==='streak'){const keep={value:S.streak.value,hotkey:S.streak.hotkey,x:S.streak.x,y:S.streak.y,w:S.streak.w,h:S.streak.h,enabled:S.streak.enabled};S.streak={...clone(DEF.streak),...keep}}else{const pos={x:S.match.x,y:S.match.y,w:S.match.w,h:S.match.h,enabled:S.match.enabled};S.match={...clone(DEF.match),...pos}}save();visibility();return S});
-ipcMain.handle('hotkey',(_,k)=>hotkey(k));
+ipcMain.handle('hotkey',(_,k)=>hotkey(k));ipcMain.handle('quit-app',()=>{quitting=true;app.quit()});
 app.whenReady().then(()=>{load();startServer();create();if(S.streak.hotkey)hotkey(S.streak.hotkey);setTimeout(push,300)});
 app.on('before-quit',()=>{quitting=true;globalShortcut.unregisterAll();server?.close()});app.on('window-all-closed',()=>{if(quitting)app.quit()});
