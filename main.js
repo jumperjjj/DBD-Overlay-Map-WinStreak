@@ -8,8 +8,8 @@ const DEF={
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,
 teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'SET 1/1',footerShow:true,footer:'MAP / MATCH',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
-  {show:true,label:'RESULT',a:'7 STAGES - 3F',b:'',color:'#3b82f6'},
-  {show:true,label:'WINCON',a:'6 STAGES',b:'',color:'#22c55e'},
+  {show:true,label:'INFO 1',a:'',b:'',color:'#3b82f6'},
+  {show:true,label:'INFO 2',a:'',b:'',color:'#22c55e'},
   {show:false,label:'INFO 3',a:'',b:'',color:'#f0b84b'},{show:false,label:'INFO 4',a:'',b:'',color:'#4bb7f0'}
  ]}
 };
@@ -50,10 +50,8 @@ function visibility(){safeVisible(streakWin,S.streak.enabled);safeVisible(matchW
 function setEdit(v){editing=!!v;for(const [w,c] of [[streakWin,S.streak],[matchWin,S.match]]){editing?w.setIgnoreMouseEvents(false):w.setIgnoreMouseEvents(true,{forward:true});w.setResizable(editing);w.setMovable(editing);w.setMinimumSize(w===streakWin?280:560,w===streakWin?88:145);w.setMaximumSize(w===streakWin?520:1050,w===streakWin?165:420);w.webContents.send('edit',editing);if(editing&&c.enabled)w.show()}if(!editing)visibility();ui?.webContents.send('edit',editing)}
 function syncBounds(){for(const [w,k] of [[streakWin,'streak'],[matchWin,'match']]){const b=displayClamp(w.getBounds());w.setBounds(b);Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height})}save()}
 function attachBounds(w,k){
- let t=null;
  const remember=()=>{if(!editing)return;const b=w.getBounds();Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});ui?.webContents.send('dirty',true);push()};
- w.on('move',()=>{if(!editing)return;clearTimeout(t);remember();t=setTimeout(()=>{if(!editing)return;const b=displayClamp(w.getBounds());w.setBounds(b);Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});push()},500)});
- w.on('resize',()=>{if(editing)remember()});
+ w.on('move',remember);w.on('resize',remember);
 }
 function create(){ui=new BrowserWindow({width:1160,height:820,minWidth:980,minHeight:680,backgroundColor:'#0d0f13',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});ui.setMenuBarVisibility(false);ui.loadFile('app.html');ui.on('close',e=>{if(!quitting){e.preventDefault();ui.hide()}});
  streakWin=overlay('streak.html',S.streak,'streak');matchWin=overlay('match.html',S.match,'match');attachBounds(streakWin,'streak');attachBounds(matchWin,'match');visibility();
@@ -77,5 +75,19 @@ ipcMain.handle('patch',(_,section,p)=>{if(section==='root')S={...S,...p};else S[
 ipcMain.handle('edit',(_,v)=>{setEdit(v);return S});ipcMain.handle('save-bounds',()=>{syncBounds();setEdit(false);ui.webContents.send('dirty',false);return S});
 ipcMain.handle('reset',(_,section)=>{if(section==='streak'){const keep={value:S.streak.value,hotkey:S.streak.hotkey,x:S.streak.x,y:S.streak.y,w:S.streak.w,h:S.streak.h,enabled:S.streak.enabled};S.streak={...clone(DEF.streak),...keep}}else{const pos={x:S.match.x,y:S.match.y,w:S.match.w,h:S.match.h,enabled:S.match.enabled};S.match={...clone(DEF.match),...pos}}save();visibility();return S});
 ipcMain.handle('hotkey',(_,k)=>hotkey(k));ipcMain.handle('quit-app',()=>{quitting=true;app.quit()});
+let resizeSession=null;
+ipcMain.on('resize-start',(e,key,edge,mouse)=>{
+ if(!editing)return;const w=key==='streak'?streakWin:matchWin;if(!w||w.isDestroyed())return;
+ resizeSession={w,key,edge,start:w.getBounds(),mx:mouse.x,my:mouse.y};
+});
+ipcMain.on('resize-move',(e,mouse)=>{
+ const z=resizeSession;if(!z||!editing)return;let {x,y,width,height}=z.start;const dx=mouse.x-z.mx,dy=mouse.y-z.my;
+ if(z.edge.includes('e'))width+=dx;if(z.edge.includes('s'))height+=dy;
+ if(z.edge.includes('w')){x+=dx;width-=dx}if(z.edge.includes('n')){y+=dy;height-=dy}
+ const minW=z.key==='streak'?280:560,minH=z.key==='streak'?88:145,maxW=z.key==='streak'?520:1050,maxH=z.key==='streak'?165:420;
+ if(width<minW){if(z.edge.includes('w'))x-=minW-width;width=minW}if(height<minH){if(z.edge.includes('n'))y-=minH-height;height=minH}
+ width=Math.min(maxW,width);height=Math.min(maxH,height);z.w.setBounds({x:Math.round(x),y:Math.round(y),width:Math.round(width),height:Math.round(height)});
+});
+ipcMain.on('resize-end',()=>{resizeSession=null});
 app.whenReady().then(()=>{load();startServer();create();if(S.streak.hotkey)hotkey(S.streak.hotkey);setTimeout(push,300)});
 app.on('before-quit',()=>{quitting=true;globalShortcut.unregisterAll();server?.close()});app.on('window-all-closed',()=>{if(quitting)app.quit()});

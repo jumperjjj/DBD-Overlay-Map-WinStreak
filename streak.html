@@ -13,7 +13,12 @@
 .s10 .bg{inset:18% 8%;background:var(--b1);border-top:1px solid var(--a);border-bottom:1px solid var(--a)}
 .s11 .bg{inset:25% 9%;background:var(--b1);border-left:4px solid var(--a)}
 .s12 .bg{inset:11% 8%;background:var(--b1);clip-path:polygon(7% 0,93% 0,100% 50%,93% 100%,7% 100%,0 50%);border-top:2px solid var(--a);border-bottom:2px solid var(--a)}
-.edit{outline:5px solid #ff2525;outline-offset:-5px;-webkit-app-region:drag}
-</style></head><body><div id=o><div class=bg></div><div class=deco></div><div id=n class=name></div><div id=v class=value></div></div><script>
+.edit{outline:4px solid #ff2525;outline-offset:-4px;-webkit-app-region:drag}
+.handle{display:none;position:fixed;z-index:9999;-webkit-app-region:no-drag}.edit .handle{display:block}
+.h-n,.h-s{left:8px;right:8px;height:8px;cursor:ns-resize}.h-n{top:0}.h-s{bottom:0}
+.h-e,.h-w{top:8px;bottom:8px;width:8px;cursor:ew-resize}.h-e{right:0}.h-w{left:0}
+.h-ne,.h-nw,.h-se,.h-sw{width:14px;height:14px}.h-ne{right:0;top:0;cursor:nesw-resize}.h-nw{left:0;top:0;cursor:nwse-resize}.h-se{right:0;bottom:0;cursor:nwse-resize}.h-sw{left:0;bottom:0;cursor:nesw-resize}
+</style></head><body><div id=o><div class=bg></div><div class=deco></div><div id=n class=name></div><div id=v class=value></div></div><div class="handle h-n" data-edge=n></div><div class="handle h-s" data-edge=s></div><div class="handle h-e" data-edge=e></div><div class="handle h-w" data-edge=w></div><div class="handle h-ne" data-edge=ne></div><div class="handle h-nw" data-edge=nw></div><div class="handle h-se" data-edge=se></div><div class="handle h-sw" data-edge=sw></div><script>
 const o=document.getElementById('o');function draw(S){const s=S.streak;o.className='s'+(+s.style+1)+(s.shadow?' shadow':'');const x={'--a':s.accent,'--b1':s.bg1,'--b2':s.bg2,'--op':s.opacity,'--nc':s.nameColor,'--vc':s.valueColor,'--nf':s.fontName,'--vf':s.fontValue,'--ns':s.nameSize+'px','--vs':s.valueSize+'px','--nx':s.nameX+'px','--vx':s.valueX+'px','--bold':s.bold?900:500};for(const[k,v]of Object.entries(x))o.style.setProperty(k,v);n.textContent=s.title;v.textContent=s.value}api.get().then(x=>draw(x.state));api.onState(draw);api.onEdit(x=>o.classList.toggle('edit',x));
+document.querySelectorAll('.handle').forEach(el=>el.onmousedown=e=>{e.preventDefault();api.resizeStart('streak',el.dataset.edge,{x:e.screenX,y:e.screenY});const mv=e=>api.resizeMove({x:e.screenX,y:e.screenY});const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);api.resizeEnd()};addEventListener('mousemove',mv);addEventListener('mouseup',up)});
 </script></body></html>
