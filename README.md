@@ -1,12 +1,10 @@
-# DBD Overlay Studio — Beta 2.6.20
-- Escala geral da WinStreak: 60–120%.
-- Escala geral do Confronto: 55–115%; padrão/reset em 82%.
-- Corrigida caixa da WinStreak separada do nome/número.
-- Conteúdo principal alinhado à esquerda e centralizado dentro da caixa.
-- Número padrão: 36 px.
-- Blood Slash removido; Hex Frame permanece removido.
-- 10 layouts no total; novo #10 Ribbon Core.
-- Arcade Box sem sombra preta, inclusive Mini Estilo 1/2.
-- Caixas solicitadas reduzidas sem reduzir suas fontes.
-- Minimal Line refinado.
-- Nenhuma outra mudança visual no Confronto.
+# DBD Overlay Studio — Beta 2.6.21
+
+- Tamanho geral da WinStreak movido para a aba WinStreak e corrigido.
+- Tamanho geral do Confronto corrigido: 60–130%, padrão 100% com base visual compacta.
+- Score Tab sem a peça amarela indevida.
+- Round Badge: minis seguem o desenho principal.
+- Arcade Box: borda dos minis suavizada.
+- Layout 9 sem linhas laterais e minis equivalentes.
+- Layout 10 totalmente reconstruído, com fundo e minis equivalentes.
+- Posições padrão preservadas.

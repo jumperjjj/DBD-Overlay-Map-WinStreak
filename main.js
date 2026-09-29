@@ -5,7 +5,7 @@ const DEF={
  language:'pt',
  streak:{enabled:true,x:40,y:40,w:350,h:285,scale:1,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:36,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0,recordY:0,
  record2Show:false,record2Title:'OPCIONAL',record2Value:0,record2NameColor:'#ffffff',record2ValueColor:'#d7b84a',record2Bg:'#15191f',record2Accent:'#d7b84a',record2X:0,record2Y:0},
- match:{enabled:false,x:500,y:55,w:820,h:250,scale:.82,style:0,mode:'manual',
+ match:{enabled:false,x:500,y:55,w:820,h:250,scale:1,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
 teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',footerBg:'#15181d',footerCenter:false,edgeBorder:false,headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
@@ -32,11 +32,13 @@ function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile
  if(!S._migrated2619){if((+S.streak.style||0)>9)S.streak.style=9;S.streak.valueSize=Math.min(+S.streak.valueSize||46,46);if(S.match.footerCenter==null)S.match.footerCenter=false;S._migrated2619=true}
  if(!S._migrated2620){
   if(S.streak.scale==null)S.streak.scale=1;
-  if(S.match.scale==null)S.match.scale=.82;
+  if(S.match.scale==null)S.match.scale=1;
   if((+S.streak.valueSize||46)>=46)S.streak.valueSize=36;
   const oldStyle=+S.streak.style||0;
   if(oldStyle===2)S.streak.style=9; else if(oldStyle>2)S.streak.style=oldStyle-1;
   S._migrated2620=true;
+
+ if(!S._migrated2621){if(S.match.scale==null||Math.abs((+S.match.scale)-.82)<.001)S.match.scale=1;S._migrated2621=true}
  }
  if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
  S.streak.enabled=true; S.match.enabled=false;
