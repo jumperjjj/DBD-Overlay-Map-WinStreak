@@ -1,34 +1,37 @@
 <!doctype html><html><head><meta charset=utf-8><style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}#o{width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;gap:5%;font-family:Segoe UI;color:#fff}.bg,.deco{position:absolute;pointer-events:none}.bg{opacity:var(--op)}.name,.value{position:relative;z-index:2;white-space:nowrap}.name{font-family:var(--nf);font-size:var(--ns);font-weight:var(--bold);color:var(--nc);transform:translateX(var(--nx))}.value{font-family:var(--vf);font-size:var(--vs);font-weight:900;color:var(--vc);line-height:1;transform:translateX(var(--vx))}
-.shadow{filter:drop-shadow(0 7px 7px #000c)}.record{display:none;position:absolute;left:calc(19% + var(--rx,0%));bottom:-1%;z-index:3;align-items:center;gap:6px;padding:3px 8px;background:var(--rb);font-size:9px}.record b{font-size:16px;color:var(--rvc)}.record span{color:var(--rnc);font-weight:800;letter-spacing:.7px}
+.shadow{filter:drop-shadow(0 7px 7px #000c)}.record{display:none;position:absolute;left:19%;bottom:3%;z-index:3;align-items:center;gap:6px;padding:3px 8px;background:var(--rb);font-size:9px}.record b{font-size:16px;color:var(--rvc)}.record{transform:translate(var(--rx,0px),var(--ry,12px))}.record#record2{transform:translate(var(--r2x,0px),var(--r2y,34px))}.record span{color:var(--rnc);font-weight:800;letter-spacing:.7px}
 .s1 .bg{inset:24% 19%;background:var(--b1);clip-path:polygon(4% 0,94% 0,100% 50%,94% 100%,4% 100%,0 50%)}.s1 .deco{inset:12%;border-left:5px solid var(--a)}
-.s1 .bg{inset:24% 18%;background:var(--b1);border:2px solid var(--a);box-shadow:inset 0 0 18px color-mix(in srgb,var(--a) 35%,transparent);transform:skew(-7deg)}
-.s1 .bg{inset:29% 19%;background:var(--b1);border-radius:9px;border-bottom:4px solid var(--a)}
-.s1 .bg{inset:25% 17%;background:var(--b1);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%)}.s1 .deco:after{content:''}
-.s1 .bg{inset:16% 17%;background:var(--b1);border:3px solid var(--a);border-radius:999px}.s1 .value{border:2px solid var(--a);border-radius:999px;padding:.12em .3em}
-.s1 .bg{inset:22% 14%;background:color-mix(in srgb,var(--b1) 76%,transparent);border:1px solid #fff5;border-radius:28px}
-.s1 .bg{inset:18% 14%;background:var(--b1);border:4px double var(--a);box-shadow:5px 5px #000}
-.s1 .bg{inset:28% 12%;background:var(--b1)}.s1 .deco{inset:28% 12%;border-left:8px solid var(--a);border-right:2px solid var(--a)}
-.s1 .bg{inset:20% 13%;background:var(--b1);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-top:3px solid var(--a);border-bottom:3px solid var(--a)}
-.s1 .bg{inset:24% 14%;background:var(--b1);border-top:1px solid var(--a);border-bottom:1px solid var(--a)}
-.s1 .bg{inset:30% 16%;background:var(--b1);border-left:4px solid var(--a)}
-.s1 .bg{inset:18% 14%;background:var(--b1);clip-path:polygon(7% 0,93% 0,100% 50%,93% 100%,7% 100%,0 50%);border-top:2px solid var(--a);border-bottom:2px solid var(--a)}
-
-.s1 .record{border:1px solid var(--ra);transform:skew(-7deg)}
-.s1 .record{border-radius:6px;border-bottom:2px solid var(--ra)}
-.s1 .record{clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-left:3px solid var(--ra)}
-.s1 .record{border:2px solid var(--ra);border-radius:999px}.s1 .record{border:1px solid #fff5;border-radius:16px}
-.s1 .record{border:3px double var(--ra);box-shadow:3px 3px #000}.s1 .record{border-left:5px solid var(--a);border-right:1px solid var(--ra)}
-.s1 .record{clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-top:2px solid var(--a);border-bottom:2px solid var(--ra)}
-.s1 .record{border-top:1px solid var(--a);border-bottom:1px solid var(--ra)}.s1 .record{border-left:3px solid var(--ra)}
-.s1 .record{clip-path:polygon(7% 0,93% 0,100% 50%,93% 100%,7% 100%,0 50%);border-top:1px solid var(--a);border-bottom:1px solid var(--ra)}
+.s2 .bg{inset:24% 18%;background:var(--b1);border:2px solid var(--a);box-shadow:inset 0 0 18px color-mix(in srgb,var(--a) 35%,transparent);transform:skew(-7deg)}
+.s3 .bg{inset:29% 19%;background:var(--b1);border-radius:9px;border-bottom:4px solid var(--a)}
+.s4 .bg{inset:25% 17%;background:var(--b1);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%)}.s4 .deco:after{content:''}
+.s5 .bg{inset:16% 17%;background:var(--b1);border:3px solid var(--a);border-radius:999px}.s5 .value{border:2px solid var(--a);border-radius:999px;padding:.12em .3em}
+.s6 .bg{inset:22% 14%;background:color-mix(in srgb,var(--b1) 76%,transparent);border:1px solid #fff5;border-radius:28px}
+.s7 .bg{inset:18% 14%;background:var(--b1);border:4px double var(--a);box-shadow:5px 5px #000}
+.s8 .bg{inset:28% 12%;background:var(--b1)}.s8 .deco{inset:28% 12%;border-left:8px solid var(--a);border-right:2px solid var(--a)}
+.s9 .bg{inset:20% 13%;background:var(--b1);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-top:3px solid var(--a);border-bottom:3px solid var(--a)}
+.s10 .bg{inset:24% 14%;background:var(--b1);border-top:1px solid var(--a);border-bottom:1px solid var(--a)}
+.s11 .bg{inset:30% 16%;background:var(--b1);border-left:4px solid var(--a)}
+.s12 .bg{inset:18% 14%;background:var(--b1);clip-path:polygon(7% 0,93% 0,100% 50%,93% 100%,7% 100%,0 50%);border-top:2px solid var(--a);border-bottom:2px solid var(--a)}
+.s1 .record{clip-path:polygon(5% 0,94% 0,100% 50%,94% 100%,5% 100%,0 50%);border-left:3px solid var(--ra)}
+.s2 .record{border:1px solid var(--ra);transform:skew(-7deg)}
+.s3 .record{border-radius:6px;border-bottom:2px solid var(--ra)}
+.s4 .record{clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-left:3px solid var(--ra)}
+.s5 .record{border:2px solid var(--ra);border-radius:999px}.s6 .record{border:1px solid #fff5;border-radius:16px}
+.s7 .record{border:3px double var(--ra);box-shadow:3px 3px #000}.s8 .record{border-left:5px solid var(--ra);border-right:1px solid var(--ra)}
+.s9 .record{clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);border-top:2px solid var(--ra);border-bottom:2px solid var(--ra)}
+.s10 .record{border-top:1px solid var(--ra);border-bottom:1px solid var(--ra)}.s11 .record{border-left:3px solid var(--ra)}
+.s12 .record{clip-path:polygon(7% 0,93% 0,100% 50%,93% 100%,7% 100%,0 50%);border-top:1px solid var(--ra);border-bottom:1px solid var(--ra)}
 .edit{-webkit-app-region:no-drag;cursor:move}
 .handle{display:none;position:fixed;z-index:9999;-webkit-app-region:no-drag}.edit .handle{display:block}
 .h-n,.h-s{left:8px;right:8px;height:8px;cursor:ns-resize}.h-n{top:0}.h-s{bottom:0}
 .h-e,.h-w{top:8px;bottom:8px;width:8px;cursor:ew-resize}.h-e{right:0}.h-w{left:0}
 .h-ne,.h-nw,.h-se,.h-sw{width:14px;height:14px}.h-ne{right:0;top:0;cursor:nesw-resize}.h-nw{left:0;top:0;cursor:nwse-resize}.h-se{right:0;bottom:0;cursor:nwse-resize}.h-sw{left:0;bottom:0;cursor:nesw-resize}
-</style></head><body><div id=o><div class=bg></div><div class=deco></div><div id=n class=name></div><div id=v class=value></div><div id=record class=record><span id=rn></span><b id=rv></b></div></div><div class="handle h-n" data-edge=n></div><div class="handle h-s" data-edge=s></div><div class="handle h-e" data-edge=e></div><div class="handle h-w" data-edge=w></div><div class="handle h-ne" data-edge=ne></div><div class="handle h-nw" data-edge=nw></div><div class="handle h-se" data-edge=se></div><div class="handle h-sw" data-edge=sw></div><script>
-const o=document.getElementById('o');function draw(S){const s=S.streak;o.className='s'+(+s.style+1)+(s.shadow?' shadow':'');const x={'--a':s.accent,'--b1':s.bg1,'--op':s.opacity,'--nc':s.nameColor,'--vc':s.valueColor,'--nf':s.fontName,'--vf':s.fontValue,'--ns':s.nameSize+'px','--vs':s.valueSize+'px','--nx':s.nameX+'px','--vx':s.valueX+'px','--bold':s.bold?900:500,'--rb':s.recordBg||'#15191f','--rnc':s.recordNameColor||'#fff','--rvc':s.recordValueColor||'#d7b84a','--ra':s.recordAccent||'#d7b84a','--rx':((+s.recordX||0)*0.16)+'%'};for(const[k,v]of Object.entries(x))o.style.setProperty(k,v);n.textContent=s.title;v.textContent=s.value;record.style.display=s.recordShow?'flex':'none';rn.textContent=s.recordTitle||'RECORD';rv.textContent=s.recordValue??0;const gg=Math.max(0,Math.min(100,+s.glow||0))/100,gblur=gg*7;n.style.textShadow=gg?`0 0 ${gblur.toFixed(2)}px ${s.nameColor}`:'none';v.style.textShadow=gg?`0 0 ${gblur.toFixed(2)}px ${s.valueColor}`:'none';n.style.filter='none';v.style.filter='none'}api.get().then(x=>draw(x.state));api.onState(draw);let editMode=false;api.onEdit(x=>{editMode=x;o.classList.toggle('edit',x)});
+</style></head><body><div id=o><div class=bg></div><div class=deco></div><div id=n class=name></div><div id=v class=value></div><div id=record class=record><span id=rn></span><b id=rv></b></div><div id=record2 class=record><span id=r2n></span><b id=r2v></b></div></div><div class="handle h-n" data-edge=n></div><div class="handle h-s" data-edge=s></div><div class="handle h-e" data-edge=e></div><div class="handle h-w" data-edge=w></div><div class="handle h-ne" data-edge=ne></div><div class="handle h-nw" data-edge=nw></div><div class="handle h-se" data-edge=se></div><div class="handle h-sw" data-edge=sw></div><script>
+const o=document.getElementById('o');function draw(S){const s=S.streak;o.className='s'+(+s.style+2)+(s.shadow?' shadow':'');const x={'--a':s.accent,'--b1':s.bg1,'--op':s.opacity,'--nc':s.nameColor,'--vc':s.valueColor,'--nf':s.fontName,'--vf':s.fontValue,'--ns':s.nameSize+'px','--vs':s.valueSize+'px','--nx':s.nameX+'px','--vx':s.valueX+'px','--bold':s.bold?900:500,'--rb':s.recordBg||'#15191f','--rnc':s.recordNameColor||'#fff','--rvc':s.recordValueColor||'#d7b84a','--ra':s.recordAccent||'#d7b84a','--rx':(+s.recordX||0)+'px','--ry':(+s.recordY||12)+'px',
+'--r2x':(+s.record2X||0)+'px','--r2y':(+s.record2Y||34)+'px'};for(const[k,v]of Object.entries(x))o.style.setProperty(k,v);n.textContent=s.title;v.textContent=s.value;record.style.display=s.recordShow?'flex':'none';rn.textContent=s.recordTitle||'';rv.textContent=s.recordValue??0;
+record2.style.display=s.record2Show?'flex':'none';r2n.textContent=s.record2Title||'';r2v.textContent=s.record2Value??0;
+record2.style.setProperty('--rb',s.record2Bg||'#15191f');record2.style.setProperty('--rnc',s.record2NameColor||'#fff');record2.style.setProperty('--rvc',s.record2ValueColor||'#d7b84a');record2.style.setProperty('--ra',s.record2Accent||'#d7b84a');const gg=Math.max(0,Math.min(100,+s.glow||0))/100,gblur=gg*7;n.style.textShadow=gg?`0 0 ${gblur.toFixed(2)}px ${s.nameColor}`:'none';v.style.textShadow=gg?`0 0 ${gblur.toFixed(2)}px ${s.valueColor}`:'none';n.style.filter='none';v.style.filter='none'}api.get().then(x=>draw(x.state));api.onState(draw);let editMode=false;api.onEdit(x=>{editMode=x;o.classList.toggle('edit',x)});
 o.addEventListener('pointerdown',e=>{if(!editMode||e.target.closest('.handle'))return;e.preventDefault();o.setPointerCapture?.(e.pointerId);api.dragStart('streak',{x:e.screenX,y:e.screenY})});
 o.addEventListener('pointermove',e=>{if(editMode&&o.hasPointerCapture?.(e.pointerId))api.dragMove({x:e.screenX,y:e.screenY})});
 function endDrag(e){if(o.hasPointerCapture?.(e.pointerId))o.releasePointerCapture?.(e.pointerId);api.dragEnd()}o.addEventListener('pointerup',endDrag);o.addEventListener('pointercancel',endDrag);

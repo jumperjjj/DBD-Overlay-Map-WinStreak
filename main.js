@@ -3,7 +3,8 @@ const fs=require('fs'),path=require('path'),http=require('http'); const PORT=173
 let ui,streakWin,matchWin,tray,server,quitting=false,editing=false,lastHotkey=0;
 const DEF={
  language:'pt',
- streak:{enabled:true,x:40,y:40,w:330,h:100,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0},
+ streak:{enabled:true,x:40,y:40,w:330,h:100,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0,recordY:12,
+ record2Show:false,record2Title:'',record2Value:0,record2NameColor:'#ffffff',record2ValueColor:'#d7b84a',record2Bg:'#15191f',record2Accent:'#d7b84a',record2X:0,record2Y:34},
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
