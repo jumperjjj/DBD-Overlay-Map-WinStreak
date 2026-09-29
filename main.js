@@ -3,11 +3,11 @@ const fs=require('fs'),path=require('path'),http=require('http'); const PORT=173
 let ui,streakWin,matchWin,tray,server,quitting=false,editing=false,lastHotkey=0;
 const DEF={
  language:'pt',
- streak:{enabled:true,x:40,y:40,w:380,h:120,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',bg2:'#09090b',opacity:1,nameSize:18,valueSize:58,nameX:0,valueX:0,bold:true,shadow:true,fontName:'Segoe UI',fontValue:'Impact',hotkey:''},
+ streak:{enabled:true,x:40,y:40,w:330,h:100,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:20,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f'},
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,killerLeft:true,
-teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'SET 1/1',footerShow:true,footer:'MAP / MATCH',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
+teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
   {show:true,label:'INFO 1',a:'',b:'',color:'#3b82f6'},
   {show:true,label:'INFO 2',a:'',b:'',color:'#22c55e'},
   {show:false,label:'INFO 3',a:'',b:'',color:'#f0b84b'},{show:false,label:'INFO 4',a:'',b:'',color:'#4bb7f0'}
@@ -21,6 +21,8 @@ function killerFiles(){try{return fs.readdirSync(killerDir()).filter(x=>/\.(png|
 
 function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile(),'utf8'));S.streak={...S.streak,...(x.streak||{})};S.match={...S.match,...(x.match||{})};if(Array.isArray(x.match?.rows))S.match.rows=x.match.rows.slice(0,4).map((v,i)=>({...DEF.match.rows[i],...v}));S.language=x.language||'pt'}catch{}
  // Estado inicial deliberado: sempre inicia com WinStreak visível e Confronto oculto.
+ if(S.match.setText==='SET 1/1')S.match.setText=S.language==='en'?'CHAMPIONSHIP':'CAMPEONATO';if(S.match.footer==='MAP / MATCH')S.match.footer='SET / MAP';
+ if(S.match.killerImage&&S.match.w<900){S.match.w+=140;if(S.match.killerLeft)S.match.x-=140}
  S.streak.enabled=true; S.match.enabled=false;
 }
 function save(){fs.writeFileSync(settingsFile(),JSON.stringify(S,null,2));push()}

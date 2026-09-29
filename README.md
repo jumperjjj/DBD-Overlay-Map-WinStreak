@@ -1,11 +1,10 @@
-# DBD Overlay Studio — Beta 2.6.6
-- Posição mantida como na 2.6.5.
-- WinStreak: adicionado glow/contorno luminoso 0–100%, usando a própria cor do nome e do número.
-- Confronto: Killer agora usa um portrait bay lateral reservado dentro da área transparente da BrowserWindow, separado do painel de informações. Isso evita clipping do Electron e evita sobreposição.
-- `Sem Killer` mantém a HUD sem a coluna lateral.
-- Killer pode continuar à esquerda ou à direita.
-- Estilo 2 redesenhado: dark broadcast bar.
-- Estilo 3 redesenhado: split center/esports.
-- Estilo 7 antigo removido.
-- Antigo estilo 8 redesenhado e passa a ser o novo estilo 7 `Panels`.
-- 44 imagens de Killer permanecem incluídas.
+# DBD Overlay Studio — Beta 2.6.7
+
+- Confronto: portrait bay do Killer aumentado para 132 px e a janela é migrada +140 px quando já há Killer selecionado, preservando o painel principal; esquerda/direita mantido.
+- Defaults do Confronto: CAMPEONATO (CHAMPIONSHIP em inglês) e SET / MAP.
+- Sliders visuais do Confronto agora exibem 0–100%; margem interna ganhou alcance maior.
+- WinStreak: glow corrigido e reforçado, Fundo 2 removido, caixas compactadas, decoração /// removida do Layout 4.
+- WinStreak: novo Record opcional, menor, com texto RECORD, valor e cores independentes.
+- Campo de valor exato sem setas; Reset em vermelho.
+- Posição não alterada.
+- 44 Killers mantidos.
