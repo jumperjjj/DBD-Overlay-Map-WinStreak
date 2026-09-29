@@ -28,6 +28,7 @@ function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile
  if(!S._migrated2614){S.streak.w=Math.max(350,+S.streak.w||350);S.streak.h=Math.max(285,+S.streak.h||285);S._migrated2614=true}
  if(!S._migrated2615){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;if(!S.streak.record2Title)S.streak.record2Title='OPCIONAL';S._migrated2615=true}
  if(!S._migrated2617){S.streak.recordShow=false;S.streak.record2Show=false;S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2617=true}
+ if(!S._migrated2618){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2618=true}
  if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
  S.streak.enabled=true; S.match.enabled=false;
 }
