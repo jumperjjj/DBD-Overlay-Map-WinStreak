@@ -1,11 +1,15 @@
-# DBD Overlay Studio — Beta 2.6.16
+# DBD Overlay Studio — Beta 2.6.17
 
-Patch exclusivo de build/distribuição.
+## WinStreak
+- Mini Estilo 1 e 2 ficam desligados por padrão.
+- Ao ativar: Mini 1 nasce imediatamente abaixo da WinStreak e Mini 2 imediatamente abaixo do Mini 1.
+- Os dois usam o mesmo alinhamento esquerdo em todos os 11 estilos.
+- Sliders X/Y continuam disponíveis para personalização depois da posição padrão.
+- Nenhum dos 11 designs principais foi redesenhado neste patch.
 
-- Nenhum arquivo funcional da Beta 2.6.15 foi alterado.
-- Corrigida a inconsistência entre o nome que electron-builder gerava e o nome que o GitHub Actions procurava.
-- Instalador esperado: DBD-Overlay-Studio-Beta-2.6.16-x64-Setup.exe
-- Artifact do GitHub: DBD-Overlay-Studio-Beta-2.6.16-Windows
-- SHA256SUMS.txt continua sendo gerado pelo workflow.
-
-Observação: o executável continua sem assinatura digital. Chrome/SmartScreen ainda podem apresentar alerta de reputação para binários novos/não assinados; eliminar isso de forma confiável exige code signing.
+## Confronto
+- Estilo 1 Broadcast substituído integralmente por Frame Rail.
+- Estilo 2 Dark Bar: removida a linha colorida superior.
+- Split Center, Slanted e Panels preservados.
+- Novo estilo 6: Corner Cut.
+- Cards de Killer também recebem linguagem visual dos estilos novos.

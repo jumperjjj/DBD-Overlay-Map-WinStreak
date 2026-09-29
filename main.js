@@ -4,7 +4,7 @@ let ui,streakWin,matchWin,tray,server,quitting=false,editing=false,lastHotkey=0;
 const DEF={
  language:'pt',
  streak:{enabled:true,x:40,y:40,w:350,h:285,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0,recordY:0,
- record2Show:false,record2Title:'OPCIONAL',record2Value:0,record2NameColor:'#ffffff',record2ValueColor:'#d7b84a',record2Bg:'#15191f',record2Accent:'#d7b84a',record2X:0,record2Y:24},
+ record2Show:false,record2Title:'OPCIONAL',record2Value:0,record2NameColor:'#ffffff',record2ValueColor:'#d7b84a',record2Bg:'#15191f',record2Accent:'#d7b84a',record2X:0,record2Y:0},
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
@@ -26,7 +26,8 @@ function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile
  if(!S._migrated269){S.streak.style=Math.max(0,(+S.streak.style||0)-1);S._migrated269=true}
  if(!S._migrated2611){S.streak.h=Math.max(180,+S.streak.h||180);S._migrated2611=true}
  if(!S._migrated2614){S.streak.w=Math.max(350,+S.streak.w||350);S.streak.h=Math.max(285,+S.streak.h||285);S._migrated2614=true}
- if(!S._migrated2615){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=24;if(!S.streak.record2Title)S.streak.record2Title='OPCIONAL';S._migrated2615=true}
+ if(!S._migrated2615){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;if(!S.streak.record2Title)S.streak.record2Title='OPCIONAL';S._migrated2615=true}
+ if(!S._migrated2617){S.streak.recordShow=false;S.streak.record2Show=false;S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2617=true}
  if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
  S.streak.enabled=true; S.match.enabled=false;
 }
