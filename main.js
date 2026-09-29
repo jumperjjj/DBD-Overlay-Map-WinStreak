@@ -43,7 +43,8 @@ function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile
  if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
  S.streak.enabled=true; S.match.enabled=false;
 }
-function save(){fs.writeFileSync(settingsFile(),JSON.stringify(S,null,2));push()}
+if(!S._migrated2622){S.streak.record2Y=0;if(S.match.scale==null)S.match.scale=1;S._migrated2622=true}
+ function save(){fs.writeFileSync(settingsFile(),JSON.stringify(S,null,2));push()}
 function push(){[ui,streakWin,matchWin].forEach(w=>{if(w&&!w.isDestroyed())w.webContents.send('state',S)})}
 function displayClamp(rect){const d=screen.getDisplayMatching(rect),b=d.bounds,w=Math.min(rect.width,b.width),h=Math.min(rect.height,b.height);let x=Math.max(b.x,Math.min(rect.x,b.x+b.width-w)),y=Math.max(b.y,Math.min(rect.y,b.y+b.height-h));const snap=12;if(Math.abs(x-b.x)<=snap)x=b.x;if(Math.abs((x+w)-(b.x+b.width))<=snap)x=b.x+b.width-w;if(Math.abs(y-b.y)<=snap)y=b.y;if(Math.abs((y+h)-(b.y+b.height))<=snap)y=b.y+b.height-h;return{x,y,width:w,height:h}}
 function overlay(file,cfg,key){

@@ -1,10 +1,12 @@
-# DBD Overlay Studio — Beta 2.6.21
+# DBD Overlay Studio — Beta 2.6.22
 
-- Tamanho geral da WinStreak movido para a aba WinStreak e corrigido.
-- Tamanho geral do Confronto corrigido: 60–130%, padrão 100% com base visual compacta.
-- Score Tab sem a peça amarela indevida.
-- Round Badge: minis seguem o desenho principal.
-- Arcade Box: borda dos minis suavizada.
-- Layout 9 sem linhas laterais e minis equivalentes.
-- Layout 10 totalmente reconstruído, com fundo e minis equivalentes.
-- Posições padrão preservadas.
+Patch restrito aos ajustes solicitados:
+- Mini Estilo 2 nasce um pouco mais abaixo do Mini 1.
+- Cyber Cut ganhou mais espaço horizontal.
+- Elegant: minis harmonizados com o painel principal.
+- Ribbon Core: removidas as duas faixas amarelas inferiores.
+- Controles de cor restaurados como caixas nativas clicáveis, com OK compacto.
+- Tamanho geral da WinStreak permanece na aba WinStreak.
+- Tamanho geral do Confronto corrigido para escalar o conjunto inteiro.
+- Killer volta a manter proporção e distância junto do Confronto ao mudar escala.
+- Confronto permanece em 60–130%, padrão 100%.
