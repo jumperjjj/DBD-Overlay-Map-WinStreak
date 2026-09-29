@@ -1,13 +1,17 @@
-# DBD Overlay Studio — Beta 2.6.14
+# DBD Overlay Studio — Beta 2.6.15
+
+## Correção estrutural do editor
+- Campos de texto/valor não reconstruem mais a interface a cada tecla.
+- Digitação de WinStreak, Mini Estilos, Time A/B, CAMPEONATO, SET/MAP e demais campos permanece focada e é enviada ao vivo à overlay.
 
 ## WinStreak
-- Área transparente de posicionamento ampliada para 350×285, criando espaço real abaixo do painel para Mini Estilo 1 e 2.
-- O painel principal não foi estreitado: ficou ligeiramente mais largo e bem mais baixo verticalmente.
-- Painel principal deslocado para cima dentro do canvas, deixando a região inferior livre para empilhar os minis.
-- Designs, Mini Estilos, cores e controles existentes preservados.
+- Mini Estilo 1 nasce imediatamente abaixo da WinStreak.
+- Mini Estilo 2 nasce imediatamente abaixo do Mini Estilo 1.
+- X e Y dos minis agora usam 0–100% da área útil ABAIXO da WinStreak e não conseguem sair do canvas.
+- Mini Estilo 2 usa OPCIONAL como texto padrão em instalações existentes quando estava vazio.
+- Layouts 1, 4, 5, 6 e 8 tiveram somente tamanho/proporção reduzidos.
+- Round Badge ficou mais baixo/compacto e sem o círculo interno do número.
 
 ## Confronto
-- Cor de fundo do SET / MAP movida para a própria linha SET / MAP, imediatamente abaixo das INFOs.
-- Botão OK continua pequeno ao lado do seletor.
-- Slider de brilho continua 0–100%, mas foi reduzido fisicamente para 210 px.
-- Grade Visual recebeu espaçamento menor para ocupar menos altura.
+- SET/MAP agora tem a cor na mesma estrutura/coluna das INFOs, imediatamente abaixo da INFO 4.
+- Demais opções visuais e Killer foram preservados.
