@@ -1,11 +1,8 @@
-# DBD Overlay Studio — Beta 2.6.11
-
-- Área da WinStreak aumentada para 180 px de altura para não cortar o Mini Estilo 2.
-- Mini Estilo 1 e 2 com largura idêntica de 112 px.
-- X/Y dos minis agora usam posição CSS sem sobrescrever o transform visual de cada layout.
-- Neon Panel: os dois minis preservam o mesmo skew/formato do layout.
-- Round Badge: círculo interno do número removido.
-- Glow/contorno aplicado também ao texto e número dos dois Mini Estilos.
-- Seletores de cor: botão OK pequeno, em linha própria abaixo do swatch em todos os controles.
-- Sliders do Confronto não fazem mais render completo do editor durante o arraste.
-- Render do Confronto continua aplicando altura, espaçamento, margem e tamanhos diretamente no DOM.
+# DBD Overlay Studio — Beta 2.6.13
+- WinStreak: mantém espaço transparente para Mini Estilo 1/2, mas reduz somente o painel visual principal dos layouts.
+- Confronto: removidos controles de altura, linhas, espaço, margem e tamanhos.
+- Fundo SET / MAP movido para a grade das demais cores.
+- Confirmação OK das cores pequena e à direita do swatch.
+- Informações da partida e Killer do Set compactados.
+- Killer recebe card/baia visual coerente com o estilo do Confronto, à esquerda ou direita.
+- Limpeza de build/distribuição da 2.6.12 preservada.
