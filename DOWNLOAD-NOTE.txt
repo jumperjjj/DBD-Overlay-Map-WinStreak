@@ -1,0 +1,10 @@
+DBD Overlay Studio 2.6.19
+
+Este pacote preserva integralmente o runtime da Beta 2.6.19.
+A alteração deste pacote é somente de metadados/nomenclatura de build.
+
+IMPORTANTE:
+Chrome/Windows SmartScreen podem continuar alertando sobre um instalador
+Electron novo e não assinado. Renomear o arquivo não cria reputação nem
+assinatura digital. Para eliminar esse tipo de alerta de forma confiável,
+é necessário assinar o executável/instalador com um certificado de code signing.
