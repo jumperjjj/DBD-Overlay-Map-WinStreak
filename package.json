@@ -1,6 +1,6 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.6.11-beta.1",
+  "version": "2.6.12-beta.1",
   "description": "DBD WinStreak + Match Overlay Studio",
   "main": "main.js",
   "author": "SA Ranked",
@@ -37,14 +37,17 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Studio-Beta-2.6.11-${arch}.${ext}"
+      "artifactName": "DBD-Overlay-Studio-Beta-2.6.12-${arch}-Setup.${ext}",
+      "executableName": "DBD Overlay Studio"
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
       "allowElevation": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "DBD Overlay Studio",
+      "uninstallDisplayName": "DBD Overlay Studio"
     }
   },
   "productName": "DBD Overlay Studio"
