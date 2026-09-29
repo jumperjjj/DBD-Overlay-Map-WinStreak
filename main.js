@@ -3,11 +3,11 @@ const fs=require('fs'),path=require('path'),http=require('http'); const PORT=173
 let ui,streakWin,matchWin,tray,server,quitting=false,editing=false,lastHotkey=0;
 const DEF={
  language:'pt',
- streak:{enabled:true,x:40,y:40,w:330,h:100,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a'},
+ streak:{enabled:true,x:40,y:40,w:330,h:100,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0},
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
-teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
+teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',footerBg:'#15181d',edgeBorder:false,headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
   {show:true,label:'INFO 1',a:'',b:'',color:'#3b82f6'},
   {show:true,label:'INFO 2',a:'',b:'',color:'#22c55e'},
   {show:false,label:'INFO 3',a:'',b:'',color:'#f0b84b'},{show:false,label:'INFO 4',a:'',b:'',color:'#4bb7f0'}
@@ -22,6 +22,7 @@ function killerFiles(){try{return fs.readdirSync(killerDir()).filter(x=>/\.(png|
 function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile(),'utf8'));S.streak={...S.streak,...(x.streak||{})};S.match={...S.match,...(x.match||{})};if(Array.isArray(x.match?.rows))S.match.rows=x.match.rows.slice(0,4).map((v,i)=>({...DEF.match.rows[i],...v}));S.language=x.language||'pt'}catch{}
  // Estado inicial deliberado: sempre inicia com WinStreak visível e Confronto oculto.
  if(S.match.setText==='SET 1/1')S.match.setText=S.language==='en'?'CHAMPIONSHIP':'CAMPEONATO';if(S.match.footer==='MAP / MATCH')S.match.footer='SET / MAP';
+ if(!S._migrated269){S.streak.style=Math.max(0,(+S.streak.style||0)-1);S._migrated269=true}
  if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
  S.streak.enabled=true; S.match.enabled=false;
 }
@@ -122,7 +123,7 @@ ipcMain.handle('patch',(_,section,p)=>{
  }
  if(section==='streak'&&(p.w!==undefined||p.h!==undefined)){const b=displayClamp({...streakWin.getBounds(),width:S.streak.w,height:S.streak.h});streakWin.setBounds(b);Object.assign(S.streak,{x:b.x,y:b.y,w:b.width,h:b.height})}
  if(section==='match'&&(p.w!==undefined||p.h!==undefined)){const b=displayClamp({...matchWin.getBounds(),width:S.match.w,height:S.match.h});matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height})}
- save();visibility();return S});
+ save();visibility();push();return S});
 ipcMain.handle('edit',(_,v)=>{setEdit(v);return S});ipcMain.handle('save-bounds',()=>{syncBounds();setEdit(false);ui.webContents.send('dirty',false);return S});
 ipcMain.handle('reset',(_,section)=>{if(section==='streak'){const keep={value:S.streak.value,hotkey:S.streak.hotkey,x:S.streak.x,y:S.streak.y,w:S.streak.w,h:S.streak.h,enabled:S.streak.enabled};S.streak={...clone(DEF.streak),...keep}}else{const pos={x:S.match.x,y:S.match.y,w:S.match.w,h:S.match.h,enabled:S.match.enabled};S.match={...clone(DEF.match),...pos}}save();visibility();return S});
 ipcMain.handle('hotkey',(_,k)=>hotkey(k));ipcMain.handle('quit-app',()=>{quitting=true;app.quit()});
