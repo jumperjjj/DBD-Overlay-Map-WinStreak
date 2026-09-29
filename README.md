@@ -1,15 +1,14 @@
-# DBD Overlay Studio — Beta 2.6.18
-
-## WinStreak
-- WinStreak principal ancorada na região superior do canvas transparente.
-- Mini Estilo 1 inicia logo abaixo da WinStreak.
-- Mini Estilo 2 inicia logo abaixo do Mini 1.
-- Posições padrão não se sobrepõem.
-- Sliders X/Y dos minis continuam disponíveis.
-- Layout 11 Rectangle Frame reduzido.
+# DBD Overlay Studio — Beta 2.6.19
 
 ## Confronto
-- Os 6 estilos anteriores foram preservados.
-- Novo estilo 7: Score Deck.
-- Novo estilo 8: Twin Wing.
-- Os dois estilos novos possuem tratamento próprio para o card do Killer.
+- Killer sem borda nos estilos 1 e 2.
+- SET / MAP do estilo 1 volta ao canto esquerdo.
+- Campo SET / MAP mais compacto e novo botão Centralizar.
+
+## WinStreak
+- Overlay principal alinhada mais à esquerda, acompanhando os Mini Estilos.
+- Nome e número reposicionados verticalmente para ficarem centralizados no painel.
+- Número padrão reduzido de 52 para 46 sem alterar os controles de fonte.
+- Hex Frame (estilo 11) removido: agora são 10 estilos.
+- Blood Slash (estilo 3) redesenhado.
+- Caixas dos estilos 7 e 9 reduzidas sem reduzir fonte/número desses estilos.

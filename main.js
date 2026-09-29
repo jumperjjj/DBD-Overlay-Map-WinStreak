@@ -3,12 +3,12 @@ const fs=require('fs'),path=require('path'),http=require('http'); const PORT=173
 let ui,streakWin,matchWin,tray,server,quitting=false,editing=false,lastHotkey=0;
 const DEF={
  language:'pt',
- streak:{enabled:true,x:40,y:40,w:350,h:285,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0,recordY:0,
+ streak:{enabled:true,x:40,y:40,w:350,h:285,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:46,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0,recordY:0,
  record2Show:false,record2Title:'OPCIONAL',record2Value:0,record2NameColor:'#ffffff',record2ValueColor:'#d7b84a',record2Bg:'#15191f',record2Accent:'#d7b84a',record2X:0,record2Y:0},
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
-teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',footerBg:'#15181d',edgeBorder:false,headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
+teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',footerBg:'#15181d',footerCenter:false,edgeBorder:false,headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
   {show:true,label:'INFO 1',a:'',b:'',color:'#3b82f6'},
   {show:true,label:'INFO 2',a:'',b:'',color:'#22c55e'},
   {show:false,label:'INFO 3',a:'',b:'',color:'#f0b84b'},{show:false,label:'INFO 4',a:'',b:'',color:'#4bb7f0'}
@@ -29,6 +29,7 @@ function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile
  if(!S._migrated2615){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;if(!S.streak.record2Title)S.streak.record2Title='OPCIONAL';S._migrated2615=true}
  if(!S._migrated2617){S.streak.recordShow=false;S.streak.record2Show=false;S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2617=true}
  if(!S._migrated2618){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2618=true}
+ if(!S._migrated2619){if((+S.streak.style||0)>9)S.streak.style=9;S.streak.valueSize=Math.min(+S.streak.valueSize||46,46);if(S.match.footerCenter==null)S.match.footerCenter=false;S._migrated2619=true}
  if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
  S.streak.enabled=true; S.match.enabled=false;
 }

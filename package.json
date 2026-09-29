@@ -1,6 +1,6 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.6.18-beta.1",
+  "version": "2.6.19-beta.1",
   "description": "DBD WinStreak + Match Overlay Studio",
   "main": "main.js",
   "author": "SA Ranked",
@@ -37,7 +37,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Studio-Beta-2.6.18-${arch}-Setup.${ext}",
+      "artifactName": "DBD-Overlay-Studio-Beta-2.6.19-${arch}-Setup.${ext}",
       "executableName": "DBD Overlay Studio"
     },
     "nsis": {
