@@ -1,12 +1,7 @@
-# DBD Overlay Studio — Beta 2.6.22
+# DBD Overlay Studio — Beta 2.6.23
 
-Patch restrito aos ajustes solicitados:
-- Mini Estilo 2 nasce um pouco mais abaixo do Mini 1.
-- Cyber Cut ganhou mais espaço horizontal.
-- Elegant: minis harmonizados com o painel principal.
-- Ribbon Core: removidas as duas faixas amarelas inferiores.
-- Controles de cor restaurados como caixas nativas clicáveis, com OK compacto.
-- Tamanho geral da WinStreak permanece na aba WinStreak.
-- Tamanho geral do Confronto corrigido para escalar o conjunto inteiro.
-- Killer volta a manter proporção e distância junto do Confronto ao mudar escala.
-- Confronto permanece em 60–130%, padrão 100%.
+Hotfix da Beta 2.6.22.
+
+- Corrigido erro de inicialização: `_migrated2622` era acessado antes de o estado `S` existir.
+- A migração foi movida para dentro de `load()`, depois do carregamento/criação do estado.
+- Nenhum layout, posição, cor, tamanho ou configuração visual da 2.6.22 foi alterado neste hotfix.
