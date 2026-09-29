@@ -1,10 +1,21 @@
-# DBD Overlay Studio — Beta 2.6.7
+# DBD Overlay Studio — Beta 2.6.8
 
-- Confronto: portrait bay do Killer aumentado para 132 px e a janela é migrada +140 px quando já há Killer selecionado, preservando o painel principal; esquerda/direita mantido.
-- Defaults do Confronto: CAMPEONATO (CHAMPIONSHIP em inglês) e SET / MAP.
-- Sliders visuais do Confronto agora exibem 0–100%; margem interna ganhou alcance maior.
-- WinStreak: glow corrigido e reforçado, Fundo 2 removido, caixas compactadas, decoração /// removida do Layout 4.
-- WinStreak: novo Record opcional, menor, com texto RECORD, valor e cores independentes.
-- Campo de valor exato sem setas; Reset em vermelho.
-- Posição não alterada.
-- 44 Killers mantidos.
+## WinStreak
+- Glow recalibrado: muito mais suave; 1–2% agora é realmente discreto.
+- Caixas visuais dos 12 estilos foram compactadas.
+- Record movido para baixo/esquerda e passa a herdar a geometria do estilo atual.
+- Record mantém cores independentes e ganhou `Destaque` independente.
+
+## Confronto
+- Killer corrigido estruturalmente: selecionar uma imagem aumenta a BrowserWindow em 140 px e cria uma baia lateral real, sem reduzir a largura do placar.
+- A baia pode ficar à esquerda ou à direita.
+- Portrait é absoluto dentro da baia e centralizado verticalmente pela altura real do painel.
+- Bordas do cabeçalho são forçadas para Time A à esquerda / Time B à direita.
+- Fonte do texto sobre o placar é independente.
+- Sliders de altura, linhas, espaço, margem, times e placar foram religados e tiveram alcance ampliado.
+- Footer SET / MAP usa altura mínima para não cortar em overlays compactas.
+- Minimal e Gradient removidos. Restam 5 estilos: Broadcast, Dark Bar, Split Center, Slanted e Panels.
+- Aba Confronto compactada em três colunas na parte Visual.
+
+## Posição
+- Sem alterações.

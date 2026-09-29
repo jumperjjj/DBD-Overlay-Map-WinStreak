@@ -3,10 +3,10 @@ const fs=require('fs'),path=require('path'),http=require('http'); const PORT=173
 let ui,streakWin,matchWin,tray,server,quitting=false,editing=false,lastHotkey=0;
 const DEF={
  language:'pt',
- streak:{enabled:true,x:40,y:40,w:330,h:100,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:20,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f'},
+ streak:{enabled:true,x:40,y:40,w:330,h:100,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:52,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a'},
  match:{enabled:false,x:500,y:55,w:820,h:250,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
- killerImage:'',killerName:'',showKillerName:true,killerLeft:true,
+ killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
 teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
   {show:true,label:'INFO 1',a:'',b:'',color:'#3b82f6'},
   {show:true,label:'INFO 2',a:'',b:'',color:'#22c55e'},
@@ -22,7 +22,7 @@ function killerFiles(){try{return fs.readdirSync(killerDir()).filter(x=>/\.(png|
 function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile(),'utf8'));S.streak={...S.streak,...(x.streak||{})};S.match={...S.match,...(x.match||{})};if(Array.isArray(x.match?.rows))S.match.rows=x.match.rows.slice(0,4).map((v,i)=>({...DEF.match.rows[i],...v}));S.language=x.language||'pt'}catch{}
  // Estado inicial deliberado: sempre inicia com WinStreak visível e Confronto oculto.
  if(S.match.setText==='SET 1/1')S.match.setText=S.language==='en'?'CHAMPIONSHIP':'CAMPEONATO';if(S.match.footer==='MAP / MATCH')S.match.footer='SET / MAP';
- if(S.match.killerImage&&S.match.w<900){S.match.w+=140;if(S.match.killerLeft)S.match.x-=140}
+ if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
  S.streak.enabled=true; S.match.enabled=false;
 }
 function save(){fs.writeFileSync(settingsFile(),JSON.stringify(S,null,2));push()}
@@ -108,7 +108,18 @@ function startServer(){server=http.createServer((req,res)=>{
  if(req.url.startsWith('/killer?')){try{const u=new URL(req.url,'http://127.0.0.1');const name=path.basename(u.searchParams.get('name')||'');const file=path.join(killerDir(),name);if(!name||!fs.existsSync(file)){res.writeHead(404);return res.end()}const ext=path.extname(name).toLowerCase();const type=ext==='.png'?'image/png':ext==='.webp'?'image/webp':'image/jpeg';res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store'});return fs.createReadStream(file).pipe(res)}catch{res.writeHead(400);return res.end()}}
 if(req.url.startsWith('/state')){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store','Access-Control-Allow-Origin':'*'});return res.end(JSON.stringify(S))}if(req.url==='/overlay'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs.html'),'utf8'))}if(req.url==='/obs-streak'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs-streak.html'),'utf8'))}if(req.url==='/obs-match'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs-match.html'),'utf8'))}res.writeHead(404);res.end()}).listen(PORT,'127.0.0.1')}
 ipcMain.handle('get',()=>({state:S,url:`http://127.0.0.1:${PORT}/overlay`,killers:killerFiles()}));
-ipcMain.handle('patch',(_,section,p)=>{if(section==='root')S={...S,...p};else S[section]={...S[section],...p};
+ipcMain.handle('patch',(_,section,p)=>{
+ const oldK=section==='match'?S.match.killerImage:'';const oldLeft=section==='match'?S.match.killerLeft:true;
+ if(section==='root')S={...S,...p};else S[section]={...S[section],...p};
+ if(section==='match'&&Object.prototype.hasOwnProperty.call(p,'killerImage')&&!!oldK!==!!S.match.killerImage){
+   let b=matchWin.getBounds();
+   if(S.match.killerImage){b.width+=140;if(S.match.killerLeft)b.x-=140}
+   else{b.width=Math.max(560,b.width-140);if(oldLeft)b.x+=140}
+   b=displayClamp(b);matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height});
+ }
+ if(section==='match'&&Object.prototype.hasOwnProperty.call(p,'killerLeft')&&S.match.killerImage&&oldLeft!==S.match.killerLeft){
+   let b=matchWin.getBounds();b.x+=S.match.killerLeft?-140:140;b=displayClamp(b);matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height});
+ }
  if(section==='streak'&&(p.w!==undefined||p.h!==undefined)){const b=displayClamp({...streakWin.getBounds(),width:S.streak.w,height:S.streak.h});streakWin.setBounds(b);Object.assign(S.streak,{x:b.x,y:b.y,w:b.width,h:b.height})}
  if(section==='match'&&(p.w!==undefined||p.h!==undefined)){const b=displayClamp({...matchWin.getBounds(),width:S.match.w,height:S.match.h});matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height})}
  save();visibility();return S});
