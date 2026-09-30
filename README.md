@@ -1,34 +1,19 @@
-# DBD Overlay Studio — Beta 2.7.5
+# DBD Overlay Studio — Beta 2.7.6
 
-Base: 2.7.4 + stable Download Fix packaging.
+Base: Beta 2.7.5.
 
-## Cores
-- Cores prontas agora são o padrão do aplicativo.
-- Em Configuração, a opção virou **Usar seletor personalizado**.
-- Desligada (padrão): clicar numa cor abre a paleta rápida.
-- Ligada: volta ao seletor completo de cor.
+## Ajustes de interface
+- O botão "Usar seletor personalizado" ficou compacto.
+- Em modo de edição de posição, "Ativar para arrastar" e "Salvar / Bloquear" ficam verdes em todos os temas.
+- O botão "Fechar aplicativo" acompanha a cor de destaque do tema:
+  - Escuro: vinho/vermelho
+  - Claro: rosa claro
+  - Azul noite: azul
+  - Violeta: violeta
 
-## Configuração
-- Os temas Dark / Light / Midnight / Violet agora são selecionados diretamente pelos cartões grandes.
-- O antigo seletor de tema foi removido.
-- O botão **Fechar aplicativo** foi movido para baixo do seletor de idioma no cabeçalho.
-- Tamanho fixo da janela foi mantido.
-
-## WinStreak
-- Split Blade: detalhe amarelo direito dos Mini Estilos ficou mais fino.
-- Pulse Cut: painel principal levemente menor e linhas dos Mini Estilos encurtadas/afastadas do número.
-
-## Confronto
-- Minimal (Vertical) foi redesenhado do zero com fundo visível, escuro e compacto.
-- Layouts verticais agora ficam ancorados no topo da janela/guia de posição.
-- O texto sobre o placar virou uma caixa independente acima da HUD.
-- A caixa do título cresce horizontalmente conforme o texto (até o limite seguro da janela).
-- Mostrar/ocultar continua funcionando.
-- O tamanho do texto continua controlável.
-- Nos layouts verticais existe uma separação de 2 px entre a caixa do título e a HUD.
-- Cada layout recebe um estilo próprio para essa caixa de título.
-
-## Distribuição
-- Mesmo appId.
-- Mesmo link OBS.
-- Instalador estável: `DBD-Overlay-Studio-Windows-x64-Setup.exe`.
+## Confronto / título destacado
+- O placar e as INFOs passam a começar no topo útil da janela, logo abaixo da caixa CAMPEONATO.
+- A caixa CAMPEONATO permanece no topo.
+- O espaço entre CAMPEONATO e a HUD é de 2 px.
+- Nos layouts verticais, isso remove o grande espaço vazio acima do placar e facilita encostar a composição no topo do monitor.
+- Mesma correção aplicada ao renderer OBS.
