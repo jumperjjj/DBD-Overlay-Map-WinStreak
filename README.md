@@ -1,28 +1,14 @@
-# DBD Overlay Studio — Beta 1.0.0
+# DBD Overlay Studio — Beta 1.0.1
 
-Esta ainda é uma build **Beta**, não é o release oficial.
+Base: Beta 1.0.0.
 
-## Identidade visual
-- Nome: DBD Overlay Studio
-- Cabeçalho: `DBD Overlay Studio  Beta 1.0.0  |  By Jumper`
-- Novo ícone Minimal Lines aplicado no cabeçalho e preparado para o executável/atalho do Windows.
-- Mantido o mesmo appId para continuar sendo o mesmo aplicativo instalado.
+## Alterações
+- Ícone oficial Minimal Lines atualizado no painel, janela, tray, executável, atalhos e instalador.
+- Aplicativo agora aceita apenas uma instância por computador.
+- Ao tentar abrir novamente, a janela existente volta para frente e aparece a mensagem: “O aplicativo já está aberto.”
+- Duplo clique no ícone da bandeja abre novamente a janela principal.
+- Ícone da bandeja deixou de ser vazio e usa o ícone oficial do aplicativo.
+- Portrait do Killer aumentado levemente nos layouts 1, 2, 3, 4, 7, 9, 10, 11, 12, 14, 15 e 16.
+- Numeração dos layouts do Confronto preserva os números originais após a remoção do layout 13.
 
-## Ajustes desta build
-- Layout vertical 13 removido da lista sem renumerar os seguintes; o layout 15 continua aparecendo como 15.
-- Vertical 11 recebeu mais espaço na área do Time B para não ser cortado pela linha inferior.
-- Linha SET / MAP reorganizada com o mesmo grid das INFOs:
-  - checkbox;
-  - SET / MAP + Centralizar;
-  - cor do fundo;
-  - texto;
-  - cor do texto.
-- A última cor do SET / MAP agora fica exatamente alinhada com a coluna de cores dos textos das INFOs.
-- Fundo do Killer continua com transparência.
-- A barra preta do nome do Killer aparece somente quando o fundo escolhido é branco (#ffffff).
-- Em qualquer outra cor, o nome aparece sem barra preta, diretamente sobre o card.
-- `Rebuild limpo` permanece removido.
-
-## OBS
-A URL continua a mesma:
-`http://127.0.0.1:17384/overlay`
+Esta continua sendo uma build Beta e ainda não é o release oficial.

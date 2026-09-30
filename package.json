@@ -1,6 +1,6 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.1-beta.1",
   "description": "DBD Overlay Studio - WinStreak and Match Overlay",
   "main": "main.js",
   "author": "Jumper",

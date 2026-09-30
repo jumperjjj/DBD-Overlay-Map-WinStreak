@@ -129,6 +129,16 @@
 }
 
 
+
+/* Beta 1.0.1: slightly larger Killer portrait in selected layouts */
+.theme-0 .killerCard img,.theme-1 .killerCard img,.theme-2 .killerCard img,.theme-3 .killerCard img,
+.theme-6 .killerCard img,.theme-8 .killerCard img,.theme-9 .killerCard img{
+  transform:scale(1.02);transform-origin:center center
+}
+.theme-10 .killerCard img,.theme-11 .killerCard img,.theme-13 .killerCard img,.theme-14 .killerCard img,.theme-15 .killerCard img{
+  padding:1px;transform:scale(1.09);transform-origin:center center
+}
+
 /* Detached championship/title box */
 .titleBox{position:absolute;top:8px;left:calc(50% + var(--title-shift,0px));transform:translateX(-50%);z-index:25;display:flex;align-items:center;justify-content:center;width:max-content;max-width:calc(100% - 32px);min-width:92px;height:24px;padding:0 14px;background:#0a0d13eb;color:var(--set-color);font-family:var(--set-font);font-weight:900;letter-spacing:1.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 8px #0005;border:1px solid #ffffff1b}
 .titleBox.hidden{display:none}

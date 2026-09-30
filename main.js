@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, globalShortcut, clipboard } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, globalShortcut, clipboard, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -303,18 +303,29 @@ function createUI() {
   ui.loadFile('app.html');
   ui.on('close', e => { if (!quitting) { e.preventDefault(); ui.hide(); } });
 }
+function showMainWindow() {
+  if (!ui || ui.isDestroyed()) return;
+  if (ui.isMinimized()) ui.restore();
+  ui.show();
+  ui.focus();
+}
+
 function createAll() {
   createUI();
   streakWin = createOverlay('streak.html', 'streak');
   matchWin = createOverlay('match.html', 'match');
   streakGuide = makeGuide(); matchGuide = makeGuide();
   visibility();
-  tray = new Tray(nativeImage.createEmpty());
+  const trayPath = path.join(__dirname, 'assets', 'icon.png');
+  let trayIcon = nativeImage.createFromPath(trayPath);
+  if (!trayIcon.isEmpty()) trayIcon = trayIcon.resize({ width: 20, height: 20, quality: 'best' });
+  tray = new Tray(trayIcon);
   tray.setToolTip('DBD Overlay Studio');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Abrir', click: () => ui.show() },
+    { label: 'Abrir', click: showMainWindow },
     { label: 'Sair', click: () => { quitting = true; app.quit(); } }
   ]));
+  tray.on('double-click', showMainWindow);
 }
 
 function hotkey(k) {
@@ -454,8 +465,28 @@ ipcMain.on('resize-end', () => { resizeSession = null; saveState(); });
 
 app.setAppUserModelId('com.saranked.dbdoverlaymapwinstreak');
 
-app.whenReady().then(() => {
-  loadState(); startServer(); createAll(); if (S.streak.hotkey) hotkey(S.streak.hotkey); setTimeout(pushState, 300);
-});
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    showMainWindow();
+    const options = {
+      type: 'info',
+      title: 'DBD Overlay Studio',
+      message: 'O aplicativo já está aberto.',
+      detail: 'A janela que já estava em execução foi trazida para frente.',
+      buttons: ['OK'],
+      defaultId: 0,
+      noLink: true
+    };
+    if (ui && !ui.isDestroyed()) dialog.showMessageBox(ui, options).catch(() => {});
+    else dialog.showMessageBox(options).catch(() => {});
+  });
+
+  app.whenReady().then(() => {
+    loadState(); startServer(); createAll(); if (S.streak.hotkey) hotkey(S.streak.hotkey); setTimeout(pushState, 300);
+  });
+}
 app.on('before-quit', () => { quitting = true; globalShortcut.unregisterAll(); server?.close(); });
 app.on('window-all-closed', () => { if (quitting) app.quit(); });
