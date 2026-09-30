@@ -5,7 +5,7 @@ const DEF={
  language:'pt',
  streak:{enabled:true,x:40,y:40,w:350,h:285,scale:1,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:36,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0,recordY:0,
  record2Show:false,record2Title:'OPCIONAL',record2Value:0,record2NameColor:'#ffffff',record2ValueColor:'#d7b84a',record2Bg:'#15191f',record2Accent:'#d7b84a',record2X:0,record2Y:0},
- match:{enabled:false,x:500,y:55,w:820,h:250,scale:1,style:0,mode:'manual',
+ match:{enabled:false,x:500,y:55,w:700,h:210,scale:1,style:0,mode:'manual',
  autoStages:3,autoFresh:2,autoUseFresh:true,
  killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
 teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',footerBg:'#15181d',footerCenter:false,edgeBorder:false,headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
@@ -20,9 +20,17 @@ function clone(x){return JSON.parse(JSON.stringify(x))}
 const killerDir=()=>path.join(__dirname,'killers');
 function killerFiles(){try{return fs.readdirSync(killerDir()).filter(x=>/\.(png|jpe?g|webp)$/i.test(x)).sort()}catch{return []}}
 
-function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile(),'utf8'));S.streak={...S.streak,...(x.streak||{})};S.match={...S.match,...(x.match||{})};if(Array.isArray(x.match?.rows))S.match.rows=x.match.rows.slice(0,4).map((v,i)=>({...DEF.match.rows[i],...v}));S.language=x.language||'pt'}catch{}
- // Estado inicial deliberado: sempre inicia com WinStreak visível e Confronto oculto.
- if(S.match.setText==='SET 1/1')S.match.setText=S.language==='en'?'CHAMPIONSHIP':'CAMPEONATO';if(S.match.footer==='MAP / MATCH')S.match.footer='SET / MAP';
+function load(){
+ S=clone(DEF);
+ try{
+  const x=JSON.parse(fs.readFileSync(settingsFile(),'utf8'));
+  S.streak={...S.streak,...(x.streak||{})};S.match={...S.match,...(x.match||{})};
+  if(Array.isArray(x.match?.rows))S.match.rows=x.match.rows.slice(0,4).map((v,i)=>({...DEF.match.rows[i],...v}));
+  S.language=x.language||'pt';
+  Object.keys(x).filter(k=>/^_migrated\d+$/.test(k)).forEach(k=>S[k]=x[k]);
+ }catch{}
+ if(S.match.setText==='SET 1/1')S.match.setText=S.language==='en'?'CHAMPIONSHIP':'CAMPEONATO';
+ if(S.match.footer==='MAP / MATCH')S.match.footer='SET / MAP';
  if(!S._migrated269){S.streak.style=Math.max(0,(+S.streak.style||0)-1);S._migrated269=true}
  if(!S._migrated2611){S.streak.h=Math.max(180,+S.streak.h||180);S._migrated2611=true}
  if(!S._migrated2614){S.streak.w=Math.max(350,+S.streak.w||350);S.streak.h=Math.max(285,+S.streak.h||285);S._migrated2614=true}
@@ -30,22 +38,20 @@ function load(){S=clone(DEF);try{const x=JSON.parse(fs.readFileSync(settingsFile
  if(!S._migrated2617){S.streak.recordShow=false;S.streak.record2Show=false;S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2617=true}
  if(!S._migrated2618){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2618=true}
  if(!S._migrated2619){if((+S.streak.style||0)>9)S.streak.style=9;S.streak.valueSize=Math.min(+S.streak.valueSize||46,46);if(S.match.footerCenter==null)S.match.footerCenter=false;S._migrated2619=true}
- if(!S._migrated2620){
-  if(S.streak.scale==null)S.streak.scale=1;
-  if(S.match.scale==null)S.match.scale=1;
-  if((+S.streak.valueSize||46)>=46)S.streak.valueSize=36;
-  const oldStyle=+S.streak.style||0;
-  if(oldStyle===2)S.streak.style=9; else if(oldStyle>2)S.streak.style=oldStyle-1;
-  S._migrated2620=true;
-
+ if(!S._migrated2620){if(S.streak.scale==null)S.streak.scale=1;if(S.match.scale==null)S.match.scale=1;if((+S.streak.valueSize||46)>=46)S.streak.valueSize=36;const oldStyle=+S.streak.style||0;if(oldStyle===2)S.streak.style=9;else if(oldStyle>2)S.streak.style=oldStyle-1;S._migrated2620=true}
  if(!S._migrated2621){if(S.match.scale==null||Math.abs((+S.match.scale)-.82)<.001)S.match.scale=1;S._migrated2621=true}
  if(!S._migrated2622){S.streak.record2Y=0;if(S.match.scale==null)S.match.scale=1;S._migrated2622=true}
+ if(!S._migrated2624){
+  S.streak.scale=1;S.streak.nameX=0;S.streak.valueX=0;
+  if((+S.match.w||820)>=780)S.match.w=700;if((+S.match.h||250)>=235)S.match.h=210;S.match.scale=1;
+  S._migrated2624=true;
  }
- if(S.match.style===4||S.match.style===5)S.match.style=0;else if(S.match.style===6)S.match.style=4;
- S.streak.enabled=true; S.match.enabled=false;
+ S.streak.value=Math.max(0,Number(S.streak.value)||0);
+ S.streak.enabled=true;S.match.enabled=false;
 }
 function save(){fs.writeFileSync(settingsFile(),JSON.stringify(S,null,2));push()}
 function push(){[ui,streakWin,matchWin].forEach(w=>{if(w&&!w.isDestroyed())w.webContents.send('state',S)})}
+function applyScale(key){const w=key==='streak'?streakWin:matchWin;if(!w||w.isDestroyed())return;const v=Math.max(key==='streak'?.6:.6,Math.min(key==='streak'?1.4:1.3,Number(S[key].scale)||1));try{w.webContents.setZoomFactor(v)}catch{}}
 function displayClamp(rect){const d=screen.getDisplayMatching(rect),b=d.bounds,w=Math.min(rect.width,b.width),h=Math.min(rect.height,b.height);let x=Math.max(b.x,Math.min(rect.x,b.x+b.width-w)),y=Math.max(b.y,Math.min(rect.y,b.y+b.height-h));const snap=12;if(Math.abs(x-b.x)<=snap)x=b.x;if(Math.abs((x+w)-(b.x+b.width))<=snap)x=b.x+b.width-w;if(Math.abs(y-b.y)<=snap)y=b.y;if(Math.abs((y+h)-(b.y+b.height))<=snap)y=b.y+b.height-h;return{x,y,width:w,height:h}}
 function overlay(file,cfg,key){
  const w=new BrowserWindow({
@@ -60,6 +66,7 @@ function overlay(file,cfg,key){
  w.loadFile(file);
  w.webContents.on('did-finish-load',()=>{
    w.webContents.send('state',S);
+   applyScale(key);
    w.webContents.send('edit',editing);
   const g=guideFor(w);if(g&&!g.isDestroyed()){if(editing){g.setBounds(w.getBounds());g.showInactive();g.moveTop()}else g.hide()}
    if(S[key].enabled) w.showInactive(); else w.hide();
@@ -122,7 +129,7 @@ function recreateOverlays(){
  attachBounds(streakWin,'streak'); attachBounds(matchWin,'match');
  setTimeout(()=>{visibility();push()},250); return S
 }
-function hotkey(k){globalShortcut.unregisterAll();S.streak.hotkey=k||'';if(k){try{if(!globalShortcut.register(k,()=>{const n=Date.now();if(n-lastHotkey<2000)return;lastHotkey=n;S.streak.value++;save()}))return false}catch{return false}}save();return true}
+function hotkey(k){globalShortcut.unregisterAll();const next=k||'';if(next){try{if(!globalShortcut.register(next,()=>{const n=Date.now();if(n-lastHotkey<2000)return;lastHotkey=n;S.streak.value=Math.max(0,(Number(S.streak.value)||0)+1);save()}))return false}catch{return false}}S.streak.hotkey=next;save();return true}
 function startServer(){server=http.createServer((req,res)=>{
  if(req.url.startsWith('/killer?')){try{const u=new URL(req.url,'http://127.0.0.1');const name=path.basename(u.searchParams.get('name')||'');const file=path.join(killerDir(),name);if(!name||!fs.existsSync(file)){res.writeHead(404);return res.end()}const ext=path.extname(name).toLowerCase();const type=ext==='.png'?'image/png':ext==='.webp'?'image/webp':'image/jpeg';res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store'});return fs.createReadStream(file).pipe(res)}catch{res.writeHead(400);return res.end()}}
 if(req.url.startsWith('/state')){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store','Access-Control-Allow-Origin':'*'});return res.end(JSON.stringify(S))}if(req.url==='/overlay'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs.html'),'utf8'))}if(req.url==='/obs-streak'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs-streak.html'),'utf8'))}if(req.url==='/obs-match'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs-match.html'),'utf8'))}res.writeHead(404);res.end()}).listen(PORT,'127.0.0.1')}
@@ -130,6 +137,7 @@ ipcMain.handle('get',()=>({state:S,url:`http://127.0.0.1:${PORT}/overlay`,killer
 ipcMain.handle('patch',(_,section,p)=>{
  const oldK=section==='match'?S.match.killerImage:'';const oldLeft=section==='match'?S.match.killerLeft:true;
  if(section==='root')S={...S,...p};else S[section]={...S[section],...p};
+ if((section==='streak'||section==='match')&&Object.prototype.hasOwnProperty.call(p,'scale'))applyScale(section);
  if(section==='match'&&Object.prototype.hasOwnProperty.call(p,'killerImage')&&!!oldK!==!!S.match.killerImage){
    let b=matchWin.getBounds();
    if(S.match.killerImage){b.width+=140;if(S.match.killerLeft)b.x-=140}
@@ -143,7 +151,8 @@ ipcMain.handle('patch',(_,section,p)=>{
  if(section==='match'&&(p.w!==undefined||p.h!==undefined)){const b=displayClamp({...matchWin.getBounds(),width:S.match.w,height:S.match.h});matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height})}
  save();visibility();push();return S});
 ipcMain.handle('edit',(_,v)=>{setEdit(v);return S});ipcMain.handle('save-bounds',()=>{syncBounds();setEdit(false);ui.webContents.send('dirty',false);return S});
-ipcMain.handle('reset',(_,section)=>{if(section==='streak'){const keep={value:S.streak.value,hotkey:S.streak.hotkey,x:S.streak.x,y:S.streak.y,w:S.streak.w,h:S.streak.h,enabled:S.streak.enabled};S.streak={...clone(DEF.streak),...keep}}else{const pos={x:S.match.x,y:S.match.y,w:S.match.w,h:S.match.h,enabled:S.match.enabled};S.match={...clone(DEF.match),...pos}}save();visibility();return S});
+ipcMain.handle('reset',(_,section)=>{if(section==='streak'){const keep={hotkey:S.streak.hotkey,x:S.streak.x,y:S.streak.y,w:S.streak.w,h:S.streak.h,enabled:S.streak.enabled};S.streak={...clone(DEF.streak),...keep,value:0,scale:1,nameX:0,valueX:0};applyScale('streak')}else{const keep={x:S.match.x,y:S.match.y,enabled:S.match.enabled,killerImage:S.match.killerImage,killerName:S.match.killerName,showKillerName:S.match.showKillerName,killerLeft:S.match.killerLeft};S.match={...clone(DEF.match),...keep,w:700,h:210,scale:1};try{matchWin.setBounds(displayClamp({...matchWin.getBounds(),width:700,height:210}))}catch{}applyScale('match')}save();visibility();return S});
+ipcMain.handle('streak-value',(_,mode,n)=>{let v=Math.max(0,Number(S.streak.value)||0);if(mode==='delta')v=Math.max(0,v+(Number(n)||0));else v=Math.max(0,Number(n)||0);S.streak.value=v;save();return S});
 ipcMain.handle('hotkey',(_,k)=>hotkey(k));ipcMain.handle('quit-app',()=>{quitting=true;app.quit()});
 let dragSession=null;
 ipcMain.on('drag-start',(e,key,mouse)=>{
