@@ -1,19 +1,22 @@
-# DBD Overlay Studio — Beta 2.7.6
+# DBD Overlay Studio — Beta 2.7.7
 
-Base: Beta 2.7.5.
+Base: Beta 2.7.6.
 
-## Ajustes de interface
-- O botão "Usar seletor personalizado" ficou compacto.
-- Em modo de edição de posição, "Ativar para arrastar" e "Salvar / Bloquear" ficam verdes em todos os temas.
-- O botão "Fechar aplicativo" acompanha a cor de destaque do tema:
-  - Escuro: vinho/vermelho
-  - Claro: rosa claro
-  - Azul noite: azul
-  - Violeta: violeta
+## Confronto
+- Killer horizontal agora começa exatamente no topo da HUD e acompanha a altura do placar.
+- Nos layouts verticais, somente a arte do Killer ficou cerca de 7% maior dentro do mesmo card.
+- Adicionados 2 layouts verticais:
+  - Orbit Card (Vertical)
+  - Soft Capsule (Vertical)
+- Total: 16 layouts de Confronto, sendo 6 verticais.
 
-## Confronto / título destacado
-- O placar e as INFOs passam a começar no topo útil da janela, logo abaixo da caixa CAMPEONATO.
-- A caixa CAMPEONATO permanece no topo.
-- O espaço entre CAMPEONATO e a HUD é de 2 px.
-- Nos layouts verticais, isso remove o grande espaço vazio acima do placar e facilita encostar a composição no topo do monitor.
-- Mesma correção aplicada ao renderer OBS.
+## WinStreak
+- Adicionados 2 layouts:
+  - Side Dock
+  - Crown Rail
+- Total: 14 layouts de WinStreak.
+
+## Botões / temas
+- "Definir atalho" e "Apagar atalho" acompanham a cor de destaque do tema.
+- "Resetar valor" e todos os "Resetar personalização" permanecem vermelhos por serem ações destrutivas.
+- O comportamento é consistente em Escuro, Claro, Azul noite e Violeta.
