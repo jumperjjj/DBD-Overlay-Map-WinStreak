@@ -21,7 +21,7 @@ let dragSession = null;
 let resizeSession = null;
 
 const DEF = {
-  schema: 278,
+  schema: 279,
   language: 'pt',
   uiTheme: 'dark',
   uiSize: 'standard',
@@ -79,7 +79,7 @@ function loadState() {
         S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
       }
       if (savedSchema < 272 && Number(S.streak.record2Y) === 0) S.streak.record2Y = 25;
-      S.schema = 278;
+      S.schema = 279;
     }
   } catch {}
   normalizeState();
@@ -106,6 +106,7 @@ function normalizeState() {
   S.streak.record2Value = Math.max(0, Number(S.streak.record2Value) || 0);
   S.streak.style = clampInt(S.streak.style, 0, 13);
   S.match.style = clampInt(S.match.style, 0, 15);
+  if (S.match.style === 12) S.match.style = 14;
   if (!['dark','light','midnight','violet'].includes(S.uiTheme)) S.uiTheme = 'dark';
   if (!['compact','standard','large'].includes(S.uiSize)) S.uiSize = 'standard';
   S.quickPalette = !!S.quickPalette;
