@@ -91,8 +91,8 @@ function normalizeState() {
   S.streak.value = Math.max(0, Number(S.streak.value) || 0);
   S.streak.recordValue = Math.max(0, Number(S.streak.recordValue) || 0);
   S.streak.record2Value = Math.max(0, Number(S.streak.record2Value) || 0);
-  S.streak.style = clampInt(S.streak.style, 0, 7);
-  S.match.style = clampInt(S.match.style, 0, 7);
+  S.streak.style = clampInt(S.streak.style, 0, 11);
+  S.match.style = clampInt(S.match.style, 0, 9);
   S.match.scoreA = Math.max(0, Number(S.match.scoreA) || 0);
   S.match.scoreB = Math.max(0, Number(S.match.scoreB) || 0);
 }
@@ -324,9 +324,9 @@ ipcMain.handle('patch', (_, section, patch) => {
     const oldK = S.match.killerImage;
     S[section] = { ...S[section], ...patch };
     normalizeState();
-    if (Object.prototype.hasOwnProperty.call(patch, 'scale')) applyWindowGeometry(section, true);
+    if (Object.prototype.hasOwnProperty.call(patch, 'scale')) applyWindowGeometry(section, false);
     if (section === 'match' && Object.prototype.hasOwnProperty.call(patch, 'killerImage') && !!oldK !== !!S.match.killerImage) {
-      applyWindowGeometry('match', true);
+      applyWindowGeometry('match', false);
     }
   }
   saveState(); visibility(); return S;

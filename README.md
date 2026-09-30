@@ -1,27 +1,22 @@
-# DBD Overlay Studio — Beta 2.7.0
+# DBD Overlay Studio — Beta 2.7.1
 
-Rebuild estrutural limpo, baseado no visual/funções aprovados das versões anteriores.
+Base: rebuild limpo 2.7.0.
 
-## O que foi refeito
-- Estado novo em `settings-v270.json`: sem cadeia de migrações antigas.
-- WinStreak e Confronto usam dimensões lógicas fixas + escala real da BrowserWindow/zoom.
-- Arrastar/editar posição não altera o layout interno dos overlays.
-- Resize pelas quinas altera a escala proporcionalmente.
-- Inputs do editor são estáticos: digitar não reconstrói a interface nem perde o cursor.
-- PT / EN / ES refeitos para a interface principal.
-- Valor da WinStreak usa uma única fonte de verdade; +, -, Reset e Aplicar sincronizam painel e overlay.
-- Hotkey de +1 com cooldown de 1 segundo.
-- Resetar personalização restaura alinhamento canônico e valor 0, preservando posição e hotkey.
-- Tamanho geral da WinStreak e do Confronto agora redimensiona janela + conteúdo juntos.
-- Confronto usa base compacta 640×200 (760×200 com Killer), antes da escala.
-- Killer preservado como card lateral e escala junto com o Confronto.
+## WinStreak
+- Botão Mostrar overlay maior.
+- Mini Estilo 1/2 usam o mesmo botão grande de ativação.
+- Botão "Apagar atalho" aparece quando existe atalho configurado.
+- Escala preserva a posição da janela (ancorada no canto superior esquerdo).
+- Painéis principais ficaram ~3 px menores em cada borda, sem reduzir fonte/número.
+- +4 layouts novos: Bracket Edge, Split Blade, Top Rail e Pulse Cut.
+- Total: 12 layouts.
 
-## Layouts WinStreak
-Mantidos 8: Neon Panel, Score Tab, Round Badge, Arcade Box, Broadcast Bar, Cyber Cut, Elegant e Ribbon Core.
-Removidos: Glass Pill e Minimal Line.
-Mini Estilo 1/2 usam a mesma geometria do layout principal e iniciam desligados.
-
-## Limpeza
-O pacote de runtime contém apenas:
-`main.js`, `preload.js`, `app.html`, renderers WinStreak/Confronto/OBS e `killers/`.
-Não há pasta de mapas nem arquivos do sistema antigo de detecção.
+## Confronto
+- Botão Mostrar overlay usa o mesmo botão grande da WinStreak.
+- SET / MAP alinhado às colunas de INFO (cor e texto); Centralizar permanece à direita.
+- Card do Killer passa a ter a mesma altura real do overlay.
+- Troca esquerda/direita feita por ordem CSS estável, sem mover o DOM.
+- Imagem do Killer só recarrega quando o Killer muda, reduzindo piscadas.
+- Escala preserva a posição da janela.
+- +2 layouts novos: Centerline e Bracket HUD.
+- Total: 10 layouts.
