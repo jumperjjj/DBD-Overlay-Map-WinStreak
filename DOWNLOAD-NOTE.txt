@@ -1,10 +1,15 @@
-DBD Overlay Studio 2.6.19
+DBD Overlay Studio 2.7.3 — distribution-only refresh
 
-Este pacote preserva integralmente o runtime da Beta 2.6.19.
-A alteração deste pacote é somente de metadados/nomenclatura de build.
+This patch does NOT change the application runtime or layouts.
 
-IMPORTANTE:
-Chrome/Windows SmartScreen podem continuar alertando sobre um instalador
-Electron novo e não assinado. Renomear o arquivo não cria reputação nem
-assinatura digital. Para eliminar esse tipo de alerta de forma confiável,
-é necessário assinar o executável/instalador com um certificado de code signing.
+Changes:
+- stable installer filename:
+  DBD-Overlay-Studio-Windows-x64-Setup.exe
+- stable GitHub Actions artifact name:
+  DBD-Overlay-Studio-Windows
+- clean artifact containing only installer, SHA256 checksum and README
+- same appId preserved
+
+This is a no-cost best-effort distribution cleanup.
+The executable is still unsigned, so browser/SmartScreen reputation warnings
+can still occur on some systems.
