@@ -1,7 +1,4 @@
-DBD Overlay Studio 2.7.4
+DBD Overlay Studio 2.7.5
 
-Installer filename remains stable:
-DBD-Overlay-Studio-Windows-x64-Setup.exe
-
-The application is unsigned. The no-cost download packaging introduced in
-the previous Download Fix remains in place.
+Stable installer filename: DBD-Overlay-Studio-Windows-x64-Setup.exe
+Same appId and local OBS URL are preserved.

@@ -1,35 +1,34 @@
-# DBD Overlay Studio — Beta 2.7.4
+# DBD Overlay Studio — Beta 2.7.5
 
-Base: 2.7.3 Download Fix.
+Base: 2.7.4 + stable Download Fix packaging.
 
-## Nova aba Configuração
-- Janela principal do aplicativo agora é fixa: não redimensiona pelo mouse nas bordas.
-- Tamanhos disponíveis:
-  - Compacta — 1020×720
-  - Padrão — 1120×820
-  - Grande — 1280×900
-- Temas de interface:
-  - Escuro
-  - Claro
-  - Azul noite
-  - Violeta
-- Temas alteram somente o painel do aplicativo, nunca as overlays.
+## Cores
+- Cores prontas agora são o padrão do aplicativo.
+- Em Configuração, a opção virou **Usar seletor personalizado**.
+- Desligada (padrão): clicar numa cor abre a paleta rápida.
+- Ligada: volta ao seletor completo de cor.
 
-## Paleta rápida de cores
-- Opção global "Usar cores prontas".
-- Desligada por padrão: mantém o seletor de cor tradicional.
-- Ligada: qualquer caixinha de cor abre uma paleta compacta com cores comuns.
-- Funciona em WinStreak, Mini Estilos, Confronto, INFO 1–4, SET/MAP etc.
-- Para voltar a escolher qualquer cor manualmente, basta desligar a opção.
+## Configuração
+- Os temas Dark / Light / Midnight / Violet agora são selecionados diretamente pelos cartões grandes.
+- O antigo seletor de tema foi removido.
+- O botão **Fechar aplicativo** foi movido para baixo do seletor de idioma no cabeçalho.
+- Tamanho fixo da janela foi mantido.
+
+## WinStreak
+- Split Blade: detalhe amarelo direito dos Mini Estilos ficou mais fino.
+- Pulse Cut: painel principal levemente menor e linhas dos Mini Estilos encurtadas/afastadas do número.
 
 ## Confronto
-- Minimal (Vertical) recebeu um fundo muito sutil em Time A / Time B.
-- Adicionados:
-  - Rounded Deck (Vertical)
-  - Halo Stack (Vertical)
-- Total do Confronto: 14 layouts, sendo 4 verticais.
+- Minimal (Vertical) foi redesenhado do zero com fundo visível, escuro e compacto.
+- Layouts verticais agora ficam ancorados no topo da janela/guia de posição.
+- O texto sobre o placar virou uma caixa independente acima da HUD.
+- A caixa do título cresce horizontalmente conforme o texto (até o limite seguro da janela).
+- Mostrar/ocultar continua funcionando.
+- O tamanho do texto continua controlável.
+- Nos layouts verticais existe uma separação de 2 px entre a caixa do título e a HUD.
+- Cada layout recebe um estilo próprio para essa caixa de título.
 
 ## Distribuição
-- Mantido o instalador estável:
-  DBD-Overlay-Studio-Windows-x64-Setup.exe
-- Mantido o mesmo appId para continuar sendo o mesmo aplicativo no Windows.
+- Mesmo appId.
+- Mesmo link OBS.
+- Instalador estável: `DBD-Overlay-Studio-Windows-x64-Setup.exe`.

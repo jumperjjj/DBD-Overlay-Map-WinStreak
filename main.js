@@ -21,11 +21,11 @@ let dragSession = null;
 let resizeSession = null;
 
 const DEF = {
-  schema: 274,
+  schema: 275,
   language: 'pt',
   uiTheme: 'dark',
   uiSize: 'standard',
-  quickPalette: false,
+  quickPalette: true,
   streak: {
     enabled: true, x: 40, y: 40, scale: 1,
     style: 0, title: 'WIN STREAK', value: 0,
@@ -72,14 +72,14 @@ function loadState() {
       S.language = ['pt','en','es'].includes(saved.language) ? saved.language : 'pt';
       S.uiTheme = ['dark','light','midnight','violet'].includes(saved.uiTheme) ? saved.uiTheme : 'dark';
       S.uiSize = ['compact','standard','large'].includes(saved.uiSize) ? saved.uiSize : 'standard';
-      S.quickPalette = !!saved.quickPalette;
+      S.quickPalette = savedSchema < 275 ? true : saved.quickPalette !== false;
       if (saved.streak) S.streak = { ...S.streak, ...saved.streak };
       if (saved.match) S.match = { ...S.match, ...saved.match };
       if (Array.isArray(saved.match?.rows)) {
         S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
       }
       if (savedSchema < 272 && Number(S.streak.record2Y) === 0) S.streak.record2Y = 25;
-      S.schema = 274;
+      S.schema = 275;
     }
   } catch {}
   normalizeState();
@@ -129,15 +129,17 @@ function killerFiles() {
   catch { return []; }
 }
 
-function matchTopExtra() {
+function matchTitleSpace() {
   if (S.match.showSetText === false) return 0;
-  return Math.max(0, clampInt(S.match.setTextSize ?? 9, 8, 16) - 10) * 2;
+  const fs = clampInt(S.match.setTextSize ?? 9, 8, 16);
+  const titleH = Math.max(24, fs + 14);
+  return titleH + 2;
 }
 function isVerticalMatch() { return Number(S.match.style) >= 10; }
 function logicalBase(key) {
   if (key === 'streak') return STREAK_BASE;
   const base = isVerticalMatch() ? MATCH_VERTICAL_BASE : MATCH_BASE;
-  return { w: base.w + (S.match.killerImage ? KILLER_GUTTER : 0), h: base.h + matchTopExtra() };
+  return { w: base.w + (S.match.killerImage ? KILLER_GUTTER : 0), h: base.h + matchTitleSpace() };
 }
 function scaleFor(key) { return S[key].scale; }
 function windowSize(key) {
