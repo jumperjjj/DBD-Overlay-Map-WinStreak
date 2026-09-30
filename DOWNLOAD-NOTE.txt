@@ -1,4 +1,0 @@
-DBD Overlay Studio — Beta 1.0.1
-
-Build de testes. Ainda não é release oficial.
-Installer esperado: DBD-Overlay-Studio-Windows-x64-Setup.exe
