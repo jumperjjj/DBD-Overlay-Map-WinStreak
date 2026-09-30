@@ -1,15 +1,7 @@
-DBD Overlay Studio 2.7.3 — distribution-only refresh
+DBD Overlay Studio 2.7.4
 
-This patch does NOT change the application runtime or layouts.
+Installer filename remains stable:
+DBD-Overlay-Studio-Windows-x64-Setup.exe
 
-Changes:
-- stable installer filename:
-  DBD-Overlay-Studio-Windows-x64-Setup.exe
-- stable GitHub Actions artifact name:
-  DBD-Overlay-Studio-Windows
-- clean artifact containing only installer, SHA256 checksum and README
-- same appId preserved
-
-This is a no-cost best-effort distribution cleanup.
-The executable is still unsigned, so browser/SmartScreen reputation warnings
-can still occur on some systems.
+The application is unsigned. The no-cost download packaging introduced in
+the previous Download Fix remains in place.

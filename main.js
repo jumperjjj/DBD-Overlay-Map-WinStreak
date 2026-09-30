@@ -21,8 +21,11 @@ let dragSession = null;
 let resizeSession = null;
 
 const DEF = {
-  schema: 273,
+  schema: 274,
   language: 'pt',
+  uiTheme: 'dark',
+  uiSize: 'standard',
+  quickPalette: false,
   streak: {
     enabled: true, x: 40, y: 40, scale: 1,
     style: 0, title: 'WIN STREAK', value: 0,
@@ -67,13 +70,16 @@ function loadState() {
     if (saved && typeof saved === 'object') {
       const savedSchema = Number(saved.schema) || 0;
       S.language = ['pt','en','es'].includes(saved.language) ? saved.language : 'pt';
+      S.uiTheme = ['dark','light','midnight','violet'].includes(saved.uiTheme) ? saved.uiTheme : 'dark';
+      S.uiSize = ['compact','standard','large'].includes(saved.uiSize) ? saved.uiSize : 'standard';
+      S.quickPalette = !!saved.quickPalette;
       if (saved.streak) S.streak = { ...S.streak, ...saved.streak };
       if (saved.match) S.match = { ...S.match, ...saved.match };
       if (Array.isArray(saved.match?.rows)) {
         S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
       }
       if (savedSchema < 272 && Number(S.streak.record2Y) === 0) S.streak.record2Y = 25;
-      S.schema = 273;
+      S.schema = 274;
     }
   } catch {}
   normalizeState();
@@ -97,7 +103,10 @@ function normalizeState() {
   S.streak.recordValue = Math.max(0, Number(S.streak.recordValue) || 0);
   S.streak.record2Value = Math.max(0, Number(S.streak.record2Value) || 0);
   S.streak.style = clampInt(S.streak.style, 0, 11);
-  S.match.style = clampInt(S.match.style, 0, 11);
+  S.match.style = clampInt(S.match.style, 0, 13);
+  if (!['dark','light','midnight','violet'].includes(S.uiTheme)) S.uiTheme = 'dark';
+  if (!['compact','standard','large'].includes(S.uiSize)) S.uiSize = 'standard';
+  S.quickPalette = !!S.quickPalette;
   S.match.setTextSize = clampInt(S.match.setTextSize ?? 9, 8, 16);
   S.match.showSetText = S.match.showSetText !== false;
   S.match.scoreA = Math.max(0, Number(S.match.scoreA) || 0);
@@ -258,12 +267,32 @@ function setEdit(v) {
   ui?.webContents.send('edit', editing);
 }
 
+const UI_SIZES = {
+  compact: { width: 1020, height: 720 },
+  standard: { width: 1120, height: 820 },
+  large: { width: 1280, height: 900 }
+};
+function uiWindowSize() { return UI_SIZES[S.uiSize] || UI_SIZES.standard; }
+function applyUIWindowSize() {
+  if (!ui || ui.isDestroyed()) return;
+  const next = uiWindowSize(), old = ui.getBounds();
+  const area = screen.getDisplayMatching(old).workArea;
+  const width = Math.min(next.width, area.width), height = Math.min(next.height, area.height);
+  const x = Math.max(area.x, Math.min(old.x, area.x + area.width - width));
+  const y = Math.max(area.y, Math.min(old.y, area.y + area.height - height));
+  ui.setBounds({ x, y, width, height });
+}
+
 function createUI() {
+  const uiSize = uiWindowSize();
   ui = new BrowserWindow({
-    width: 1120, height: 820, minWidth: 940, minHeight: 660,
+    width: uiSize.width, height: uiSize.height,
+    resizable: false, maximizable: false,
     backgroundColor: '#0d0f13',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
+  ui.setResizable(false);
+  ui.setMaximizable(false);
   ui.setMenuBarVisibility(false);
   ui.loadFile('app.html');
   ui.on('close', e => { if (!quitting) { e.preventDefault(); ui.hide(); } });
@@ -346,7 +375,9 @@ ipcMain.handle('get', () => ({ state: S, url: `http://127.0.0.1:${PORT}/overlay`
 ipcMain.handle('patch', (_, section, patch) => {
   if (section === 'root') {
     S = { ...S, ...patch };
+    normalizeState();
     if (Object.prototype.hasOwnProperty.call(patch, 'language')) localizeDefaultMatchText();
+    if (Object.prototype.hasOwnProperty.call(patch, 'uiSize')) applyUIWindowSize();
   } else if (section === 'streak' || section === 'match') {
     const oldK = S.match.killerImage;
     const oldMatchBounds = section === 'match' && matchWin && !matchWin.isDestroyed() ? matchWin.getBounds() : null;

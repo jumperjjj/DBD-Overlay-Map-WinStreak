@@ -1,17 +1,35 @@
-# DBD Overlay Studio — Beta 2.7.3
+# DBD Overlay Studio — Beta 2.7.4
 
-Base: 2.7.2.
+Base: 2.7.3 Download Fix.
+
+## Nova aba Configuração
+- Janela principal do aplicativo agora é fixa: não redimensiona pelo mouse nas bordas.
+- Tamanhos disponíveis:
+  - Compacta — 1020×720
+  - Padrão — 1120×820
+  - Grande — 1280×900
+- Temas de interface:
+  - Escuro
+  - Claro
+  - Azul noite
+  - Violeta
+- Temas alteram somente o painel do aplicativo, nunca as overlays.
+
+## Paleta rápida de cores
+- Opção global "Usar cores prontas".
+- Desligada por padrão: mantém o seletor de cor tradicional.
+- Ligada: qualquer caixinha de cor abre uma paleta compacta com cores comuns.
+- Funciona em WinStreak, Mini Estilos, Confronto, INFO 1–4, SET/MAP etc.
+- Para voltar a escolher qualquer cor manualmente, basta desligar a opção.
 
 ## Confronto
-- Adicionados 2 layouts verticais compactos:
-  - Broadcast (Vertical)
-  - Minimal (Vertical)
-- A indicação "(Vertical)" é gerada pelo sistema de idiomas.
-- Novo checkbox para mostrar/ocultar o texto sobre o placar.
-- Novo slider compacto para tamanho do texto superior: 8–16 px.
-- Quando o texto superior passa do tamanho-base, a janela cresce somente pela parte de cima, preservando a base da HUD.
-- OBS acompanha automaticamente as dimensões horizontal/vertical e o crescimento superior.
+- Minimal (Vertical) recebeu um fundo muito sutil em Time A / Time B.
+- Adicionados:
+  - Rounded Deck (Vertical)
+  - Halo Stack (Vertical)
+- Total do Confronto: 14 layouts, sendo 4 verticais.
 
-## WinStreak
-- Split Blade redesenhado: destaque amarelo virou um recorte estreito no canto direito, sem cobrir o número.
-- Pulse Cut (layout 12) foi redesenhado completamente, com linguagem visual diferente do Ribbon Core.
+## Distribuição
+- Mantido o instalador estável:
+  DBD-Overlay-Studio-Windows-x64-Setup.exe
+- Mantido o mesmo appId para continuar sendo o mesmo aplicativo no Windows.
