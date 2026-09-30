@@ -6,6 +6,7 @@ const http = require('http');
 const PORT = 17384;
 const STREAK_BASE = { w: 350, h: 285 };
 const MATCH_BASE = { w: 640, h: 200 };
+const MATCH_VERTICAL_BASE = { w: 320, h: 360 };
 const KILLER_GUTTER = 120;
 const SCALE_LIMITS = {
   streak: { min: 0.60, max: 1.40 },
@@ -20,7 +21,7 @@ let dragSession = null;
 let resizeSession = null;
 
 const DEF = {
-  schema: 272,
+  schema: 273,
   language: 'pt',
   streak: {
     enabled: true, x: 40, y: 40, scale: 1,
@@ -39,7 +40,7 @@ const DEF = {
     style: 0,
     teamA: 'TIME A', teamB: 'TIME B', scoreA: 0, scoreB: 0,
     colorA: '#3b82f6', colorB: '#22c55e',
-    setText: 'CAMPEONATO', footerShow: true, footer: 'SET / MAP', footerCenter: false,
+    setText: 'CAMPEONATO', showSetText: true, setTextSize: 9, footerShow: true, footer: 'SET / MAP', footerCenter: false,
     bg: '#15181d', panel: '#282c31', text: '#ffffff',
     setColor: '#d7dce5', scoreSepColor: '#f2f2f2', footerColor: '#f2f2f2', footerBg: '#15181d',
     fontName: 'Segoe UI', fontNumber: 'Segoe UI', fontSet: 'Segoe UI', glow: 20,
@@ -72,7 +73,7 @@ function loadState() {
         S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
       }
       if (savedSchema < 272 && Number(S.streak.record2Y) === 0) S.streak.record2Y = 25;
-      S.schema = 272;
+      S.schema = 273;
     }
   } catch {}
   normalizeState();
@@ -96,7 +97,9 @@ function normalizeState() {
   S.streak.recordValue = Math.max(0, Number(S.streak.recordValue) || 0);
   S.streak.record2Value = Math.max(0, Number(S.streak.record2Value) || 0);
   S.streak.style = clampInt(S.streak.style, 0, 11);
-  S.match.style = clampInt(S.match.style, 0, 9);
+  S.match.style = clampInt(S.match.style, 0, 11);
+  S.match.setTextSize = clampInt(S.match.setTextSize ?? 9, 8, 16);
+  S.match.showSetText = S.match.showSetText !== false;
   S.match.scoreA = Math.max(0, Number(S.match.scoreA) || 0);
   S.match.scoreB = Math.max(0, Number(S.match.scoreB) || 0);
 }
@@ -117,9 +120,15 @@ function killerFiles() {
   catch { return []; }
 }
 
+function matchTopExtra() {
+  if (S.match.showSetText === false) return 0;
+  return Math.max(0, clampInt(S.match.setTextSize ?? 9, 8, 16) - 10) * 2;
+}
+function isVerticalMatch() { return Number(S.match.style) >= 10; }
 function logicalBase(key) {
   if (key === 'streak') return STREAK_BASE;
-  return { w: MATCH_BASE.w + (S.match.killerImage ? KILLER_GUTTER : 0), h: MATCH_BASE.h };
+  const base = isVerticalMatch() ? MATCH_VERTICAL_BASE : MATCH_BASE;
+  return { w: base.w + (S.match.killerImage ? KILLER_GUTTER : 0), h: base.h + matchTopExtra() };
 }
 function scaleFor(key) { return S[key].scale; }
 function windowSize(key) {
@@ -160,6 +169,20 @@ function applyWindowGeometry(key, keepCenter = false) {
   try { w.webContents.setZoomFactor(S[key].scale); } catch {}
   S[key].x = b.x; S[key].y = b.y;
   syncGuide(key);
+}
+
+function applyMatchTopGrowth(oldBounds) {
+  const w = matchWin;
+  if (!w || w.isDestroyed()) return;
+  const size = windowSize('match');
+  const old = oldBounds || w.getBounds();
+  const x = S.match.x ?? old.x;
+  const y = Math.round(old.y + old.height - size.height);
+  const b = clampToDisplay({ x, y, ...size });
+  w.setBounds(b);
+  try { w.webContents.setZoomFactor(S.match.scale); } catch {}
+  S.match.x = b.x; S.match.y = b.y;
+  syncGuide('match');
 }
 
 function createOverlay(file, key) {
@@ -326,11 +349,16 @@ ipcMain.handle('patch', (_, section, patch) => {
     if (Object.prototype.hasOwnProperty.call(patch, 'language')) localizeDefaultMatchText();
   } else if (section === 'streak' || section === 'match') {
     const oldK = S.match.killerImage;
+    const oldMatchBounds = section === 'match' && matchWin && !matchWin.isDestroyed() ? matchWin.getBounds() : null;
     S[section] = { ...S[section], ...patch };
     normalizeState();
     if (Object.prototype.hasOwnProperty.call(patch, 'scale')) applyWindowGeometry(section, false);
-    if (section === 'match' && Object.prototype.hasOwnProperty.call(patch, 'killerImage') && !!oldK !== !!S.match.killerImage) {
-      applyWindowGeometry('match', false);
+    if (section === 'match') {
+      const killerChanged = Object.prototype.hasOwnProperty.call(patch, 'killerImage') && !!oldK !== !!S.match.killerImage;
+      const styleChanged = Object.prototype.hasOwnProperty.call(patch, 'style');
+      const topChanged = Object.prototype.hasOwnProperty.call(patch, 'setTextSize') || Object.prototype.hasOwnProperty.call(patch, 'showSetText');
+      if (styleChanged || killerChanged) applyWindowGeometry('match', false);
+      else if (topChanged) applyMatchTopGrowth(oldMatchBounds);
     }
   }
   saveState(); visibility(); return S;
