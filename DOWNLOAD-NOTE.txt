@@ -1,4 +1,7 @@
-DBD Overlay Studio 2.7.5
+DBD Overlay Studio — Beta 1.0.0
 
-Stable installer filename: DBD-Overlay-Studio-Windows-x64-Setup.exe
-Same appId and local OBS URL are preserved.
+This is still a beta/test build, not the official 1.0.0 release.
+The Windows installer filename remains stable:
+DBD-Overlay-Studio-Windows-x64-Setup.exe
+
+The executable is unsigned.

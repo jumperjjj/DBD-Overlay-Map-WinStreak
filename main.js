@@ -21,7 +21,7 @@ let dragSession = null;
 let resizeSession = null;
 
 const DEF = {
-  schema: 279,
+  schema: 280,
   language: 'pt',
   uiTheme: 'dark',
   uiSize: 'standard',
@@ -79,7 +79,7 @@ function loadState() {
         S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
       }
       if (savedSchema < 272 && Number(S.streak.record2Y) === 0) S.streak.record2Y = 25;
-      S.schema = 279;
+      S.schema = 280;
     }
   } catch {}
   normalizeState();
@@ -293,6 +293,7 @@ function createUI() {
   ui = new BrowserWindow({
     width: uiSize.width, height: uiSize.height,
     resizable: false, maximizable: false,
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     backgroundColor: '#0d0f13',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
@@ -450,6 +451,8 @@ ipcMain.on('resize-move', (_, mouse) => {
   ui?.webContents.send('dirty', true);
 });
 ipcMain.on('resize-end', () => { resizeSession = null; saveState(); });
+
+app.setAppUserModelId('com.saranked.dbdoverlaymapwinstreak');
 
 app.whenReady().then(() => {
   loadState(); startServer(); createAll(); if (S.streak.hotkey) hotkey(S.streak.hotkey); setTimeout(pushState, 300);

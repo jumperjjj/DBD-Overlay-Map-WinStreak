@@ -1,9 +1,9 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.7.8-beta.1",
+  "version": "1.0.0-beta.1",
   "description": "DBD Overlay Studio - WinStreak and Match Overlay",
   "main": "main.js",
-  "author": "SA Ranked",
+  "author": "Jumper",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -26,7 +26,8 @@
       "obs.html",
       "obs-streak.html",
       "obs-match.html",
-      "killers/**/*"
+      "killers/**/*",
+      "assets/**/*"
     ],
     "win": {
       "target": [
@@ -38,7 +39,8 @@
         }
       ],
       "artifactName": "DBD-Overlay-Studio-Windows-x64-Setup.${ext}",
-      "executableName": "DBD Overlay Studio"
+      "executableName": "DBD Overlay Studio",
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": true,
@@ -47,7 +49,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "DBD Overlay Studio",
-      "uninstallDisplayName": "DBD Overlay Studio"
+      "uninstallDisplayName": "DBD Overlay Studio",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
     }
   },
   "productName": "DBD Overlay Studio"
