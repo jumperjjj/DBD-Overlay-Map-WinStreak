@@ -1,14 +1,23 @@
-# DBD Overlay Studio — Beta 1.0.1
+# DBD Overlay Studio
 
-Base: Beta 1.0.0.
+**Beta 1.0.1 · By Jumper**
 
-## Alterações
-- Ícone oficial Minimal Lines atualizado no painel, janela, tray, executável, atalhos e instalador.
-- Aplicativo agora aceita apenas uma instância por computador.
-- Ao tentar abrir novamente, a janela existente volta para frente e aparece a mensagem: “O aplicativo já está aberto.”
-- Duplo clique no ícone da bandeja abre novamente a janela principal.
-- Ícone da bandeja deixou de ser vazio e usa o ícone oficial do aplicativo.
-- Portrait do Killer aumentado levemente nos layouts 1, 2, 3, 4, 7, 9, 10, 11, 12, 14, 15 e 16.
-- Numeração dos layouts do Confronto preserva os números originais após a remoção do layout 13.
+Aplicativo para criação e controle de overlays de **WinStreak** e **Confronto** para Dead by Daylight.
 
-Esta continua sendo uma build Beta e ainda não é o release oficial.
+- WinStreak com múltiplos layouts e Mini Estilos
+- Confronto com layouts horizontais e verticais
+- Killer do Set, cores, fontes, placar e INFOs personalizáveis
+- Posicionamento visual e integração com OBS
+- Português, English e Español
+
+## Download
+
+Baixe a versão mais recente na seção **Releases**.
+
+## OBS
+
+Browser Source: `1920 × 1080`
+
+`http://127.0.0.1:17384/overlay`
+
+> Projeto em Beta. O instalador ainda não possui assinatura digital.
