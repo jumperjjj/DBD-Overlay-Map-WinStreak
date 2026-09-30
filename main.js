@@ -20,6 +20,7 @@ let dragSession = null;
 let resizeSession = null;
 
 const DEF = {
+  schema: 272,
   language: 'pt',
   streak: {
     enabled: true, x: 40, y: 40, scale: 1,
@@ -31,7 +32,7 @@ const DEF = {
     recordShow: false, recordTitle: 'RECORD', recordValue: 0,
     recordNameColor: '#ffffff', recordValueColor: '#d7b84a', recordBg: '#15191f', recordAccent: '#d7b84a', recordX: 0, recordY: 0,
     record2Show: false, record2Title: 'OPCIONAL', record2Value: 0,
-    record2NameColor: '#ffffff', record2ValueColor: '#d7b84a', record2Bg: '#15191f', record2Accent: '#d7b84a', record2X: 0, record2Y: 0
+    record2NameColor: '#ffffff', record2ValueColor: '#d7b84a', record2Bg: '#15191f', record2Accent: '#d7b84a', record2X: 0, record2Y: 25
   },
   match: {
     enabled: false, x: 500, y: 55, scale: 1,
@@ -63,12 +64,15 @@ function loadState() {
   try {
     const saved = JSON.parse(fs.readFileSync(settingsFile(), 'utf8'));
     if (saved && typeof saved === 'object') {
+      const savedSchema = Number(saved.schema) || 0;
       S.language = ['pt','en','es'].includes(saved.language) ? saved.language : 'pt';
       if (saved.streak) S.streak = { ...S.streak, ...saved.streak };
       if (saved.match) S.match = { ...S.match, ...saved.match };
       if (Array.isArray(saved.match?.rows)) {
         S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
       }
+      if (savedSchema < 272 && Number(S.streak.record2Y) === 0) S.streak.record2Y = 25;
+      S.schema = 272;
     }
   } catch {}
   normalizeState();
