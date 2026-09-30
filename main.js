@@ -1,189 +1,390 @@
-const {app,BrowserWindow,ipcMain,screen,Tray,Menu,nativeImage,globalShortcut,shell}=require('electron');
-const fs=require('fs'),path=require('path'),http=require('http'); const PORT=17384;
-let ui,streakWin,matchWin,tray,server,quitting=false,editing=false,lastHotkey=0;
-const DEF={
- language:'pt',
- streak:{enabled:true,x:40,y:40,w:350,h:285,scale:1,style:0,title:'WIN STREAK',value:0,nameColor:'#ffffff',valueColor:'#d7b84a',accent:'#d7b84a',bg1:'#15191f',opacity:1,nameSize:18,valueSize:36,nameX:0,valueX:0,bold:true,shadow:true,glow:8,fontName:'Segoe UI',fontValue:'Impact',hotkey:'',recordShow:false,recordTitle:'RECORD',recordValue:0,recordNameColor:'#ffffff',recordValueColor:'#d7b84a',recordBg:'#15191f',recordAccent:'#d7b84a',recordX:0,recordY:0,
- record2Show:false,record2Title:'OPCIONAL',record2Value:0,record2NameColor:'#ffffff',record2ValueColor:'#d7b84a',record2Bg:'#15191f',record2Accent:'#d7b84a',record2X:0,record2Y:0},
- match:{enabled:false,x:500,y:55,w:700,h:210,scale:1,style:0,mode:'manual',
- autoStages:3,autoFresh:2,autoUseFresh:true,
- killerImage:'',killerName:'',showKillerName:true,killerLeft:true,fontName:'Segoe UI',fontNumber:'Segoe UI',fontSet:'Segoe UI',glow:22,
-teamA:'TIME A',teamB:'TIME B',scoreA:0,scoreB:0,colorA:'#3b82f6',colorB:'#22c55e',bg:'#15181d',panel:'#282c31',text:'#ffffff',muted:'#c7c9cc',setText:'CAMPEONATO',footerShow:true,footer:'SET / MAP',footerBg:'#15181d',footerCenter:false,edgeBorder:false,headerH:68,rowH:30,gap:4,padding:10,teamSize:22,scoreSize:32,rows:[
-  {show:true,label:'INFO 1',a:'',b:'',color:'#3b82f6'},
-  {show:true,label:'INFO 2',a:'',b:'',color:'#22c55e'},
-  {show:false,label:'INFO 3',a:'',b:'',color:'#f0b84b'},{show:false,label:'INFO 4',a:'',b:'',color:'#4bb7f0'}
- ]}
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, globalShortcut, clipboard } = require('electron');
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+
+const PORT = 17384;
+const STREAK_BASE = { w: 350, h: 285 };
+const MATCH_BASE = { w: 640, h: 200 };
+const KILLER_GUTTER = 120;
+const SCALE_LIMITS = {
+  streak: { min: 0.60, max: 1.40 },
+  match: { min: 0.60, max: 1.30 }
 };
-let S;
-const settingsFile=()=>path.join(app.getPath('userData'),'settings-v250.json');
-function clone(x){return JSON.parse(JSON.stringify(x))}
-const killerDir=()=>path.join(__dirname,'killers');
-function killerFiles(){try{return fs.readdirSync(killerDir()).filter(x=>/\.(png|jpe?g|webp)$/i.test(x)).sort()}catch{return []}}
 
-function load(){
- S=clone(DEF);
- try{
-  const x=JSON.parse(fs.readFileSync(settingsFile(),'utf8'));
-  S.streak={...S.streak,...(x.streak||{})};S.match={...S.match,...(x.match||{})};
-  if(Array.isArray(x.match?.rows))S.match.rows=x.match.rows.slice(0,4).map((v,i)=>({...DEF.match.rows[i],...v}));
-  S.language=x.language||'pt';
-  Object.keys(x).filter(k=>/^_migrated\d+$/.test(k)).forEach(k=>S[k]=x[k]);
- }catch{}
- if(S.match.setText==='SET 1/1')S.match.setText=S.language==='en'?'CHAMPIONSHIP':'CAMPEONATO';
- if(S.match.footer==='MAP / MATCH')S.match.footer='SET / MAP';
- if(!S._migrated269){S.streak.style=Math.max(0,(+S.streak.style||0)-1);S._migrated269=true}
- if(!S._migrated2611){S.streak.h=Math.max(180,+S.streak.h||180);S._migrated2611=true}
- if(!S._migrated2614){S.streak.w=Math.max(350,+S.streak.w||350);S.streak.h=Math.max(285,+S.streak.h||285);S._migrated2614=true}
- if(!S._migrated2615){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;if(!S.streak.record2Title)S.streak.record2Title='OPCIONAL';S._migrated2615=true}
- if(!S._migrated2617){S.streak.recordShow=false;S.streak.record2Show=false;S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2617=true}
- if(!S._migrated2618){S.streak.recordX=0;S.streak.recordY=0;S.streak.record2X=0;S.streak.record2Y=0;S._migrated2618=true}
- if(!S._migrated2619){if((+S.streak.style||0)>9)S.streak.style=9;S.streak.valueSize=Math.min(+S.streak.valueSize||46,46);if(S.match.footerCenter==null)S.match.footerCenter=false;S._migrated2619=true}
- if(!S._migrated2620){if(S.streak.scale==null)S.streak.scale=1;if(S.match.scale==null)S.match.scale=1;if((+S.streak.valueSize||46)>=46)S.streak.valueSize=36;const oldStyle=+S.streak.style||0;if(oldStyle===2)S.streak.style=9;else if(oldStyle>2)S.streak.style=oldStyle-1;S._migrated2620=true}
- if(!S._migrated2621){if(S.match.scale==null||Math.abs((+S.match.scale)-.82)<.001)S.match.scale=1;S._migrated2621=true}
- if(!S._migrated2622){S.streak.record2Y=0;if(S.match.scale==null)S.match.scale=1;S._migrated2622=true}
- if(!S._migrated2624){
-  S.streak.scale=1;S.streak.nameX=0;S.streak.valueX=0;
-  if((+S.match.w||820)>=780)S.match.w=700;if((+S.match.h||250)>=235)S.match.h=210;S.match.scale=1;
-  S._migrated2624=true;
- }
- S.streak.value=Math.max(0,Number(S.streak.value)||0);
- S.streak.enabled=true;S.match.enabled=false;
-}
-function save(){fs.writeFileSync(settingsFile(),JSON.stringify(S,null,2));push()}
-function push(){[ui,streakWin,matchWin].forEach(w=>{if(w&&!w.isDestroyed())w.webContents.send('state',S)})}
-function applyScale(key){const w=key==='streak'?streakWin:matchWin;if(!w||w.isDestroyed())return;const v=Math.max(key==='streak'?.6:.6,Math.min(key==='streak'?1.4:1.3,Number(S[key].scale)||1));try{w.webContents.setZoomFactor(v)}catch{}}
-function displayClamp(rect){const d=screen.getDisplayMatching(rect),b=d.bounds,w=Math.min(rect.width,b.width),h=Math.min(rect.height,b.height);let x=Math.max(b.x,Math.min(rect.x,b.x+b.width-w)),y=Math.max(b.y,Math.min(rect.y,b.y+b.height-h));const snap=12;if(Math.abs(x-b.x)<=snap)x=b.x;if(Math.abs((x+w)-(b.x+b.width))<=snap)x=b.x+b.width-w;if(Math.abs(y-b.y)<=snap)y=b.y;if(Math.abs((y+h)-(b.y+b.height))<=snap)y=b.y+b.height-h;return{x,y,width:w,height:h}}
-function overlay(file,cfg,key){
- const w=new BrowserWindow({
-  x:cfg.x,y:cfg.y,width:cfg.w,height:cfg.h,
-  show:false,frame:false,transparent:true,hasShadow:false,resizable:false,
-  skipTaskbar:true,focusable:true,backgroundColor:'#00000000',
-  webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}
- });
- w.setAlwaysOnTop(true,'screen-saver');
- w.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});
- w.setIgnoreMouseEvents(true,{forward:true});
- w.loadFile(file);
- w.webContents.on('did-finish-load',()=>{
-   w.webContents.send('state',S);
-   applyScale(key);
-   w.webContents.send('edit',editing);
-  const g=guideFor(w);if(g&&!g.isDestroyed()){if(editing){g.setBounds(w.getBounds());g.showInactive();g.moveTop()}else g.hide()}
-   if(S[key].enabled) w.showInactive(); else w.hide();
- });
- w.webContents.on('did-fail-load',(_,code,desc)=>console.error('Overlay load failed:',key,code,desc));
- return w
-}
-function safeVisible(w,on){if(!w||w.isDestroyed())return;if(!on){w.hide();return}if(w.webContents.isLoading())return;w.showInactive();w.moveTop();w.setAlwaysOnTop(true,'screen-saver')}
-function visibility(){if(editing){safeVisible(streakWin,true);safeVisible(matchWin,true);return}safeVisible(streakWin,S.streak.enabled);safeVisible(matchWin,S.match.enabled)}
-function setEdit(v){
- editing=!!v;
- for(const [w,c] of [[streakWin,S.streak],[matchWin,S.match]]){
-  if(!w||w.isDestroyed())continue;
-  w.setResizable(editing);w.setMovable(editing);
-  w.setMinimumSize(w===streakWin?280:560,w===streakWin?88:145);
-  w.setMaximumSize(w===streakWin?520:1050,w===streakWin?165:420);
-  if(editing){
-   w.setIgnoreMouseEvents(false);
-   w.setFocusable(true);
-   // Position mode deliberately shows BOTH overlays, even if one is disabled,
-   // so both can always be positioned.
-   w.showInactive();w.moveTop();
-  }else{
-   w.setIgnoreMouseEvents(true,{forward:true});
-   w.setFocusable(false);
+let ui, streakWin, matchWin, streakGuide, matchGuide, tray, server;
+let quitting = false;
+let editing = false;
+let lastHotkey = 0;
+let dragSession = null;
+let resizeSession = null;
+
+const DEF = {
+  language: 'pt',
+  streak: {
+    enabled: true, x: 40, y: 40, scale: 1,
+    style: 0, title: 'WIN STREAK', value: 0,
+    nameColor: '#ffffff', valueColor: '#d7b84a', accent: '#d7b84a', bg1: '#15191f',
+    opacity: 1, nameSize: 18, valueSize: 36, nameX: 0, valueX: 0,
+    bold: true, shadow: true, glow: 8,
+    fontName: 'Segoe UI', fontValue: 'Impact', hotkey: '',
+    recordShow: false, recordTitle: 'RECORD', recordValue: 0,
+    recordNameColor: '#ffffff', recordValueColor: '#d7b84a', recordBg: '#15191f', recordAccent: '#d7b84a', recordX: 0, recordY: 0,
+    record2Show: false, record2Title: 'OPCIONAL', record2Value: 0,
+    record2NameColor: '#ffffff', record2ValueColor: '#d7b84a', record2Bg: '#15191f', record2Accent: '#d7b84a', record2X: 0, record2Y: 0
+  },
+  match: {
+    enabled: false, x: 500, y: 55, scale: 1,
+    style: 0,
+    teamA: 'TIME A', teamB: 'TIME B', scoreA: 0, scoreB: 0,
+    colorA: '#3b82f6', colorB: '#22c55e',
+    setText: 'CAMPEONATO', footerShow: true, footer: 'SET / MAP', footerCenter: false,
+    bg: '#15181d', panel: '#282c31', text: '#ffffff',
+    setColor: '#d7dce5', scoreSepColor: '#f2f2f2', footerColor: '#f2f2f2', footerBg: '#15181d',
+    fontName: 'Segoe UI', fontNumber: 'Segoe UI', fontSet: 'Segoe UI', glow: 20,
+    edgeBorder: false,
+    killerImage: '', killerName: '', showKillerName: true, killerLeft: true,
+    rows: [
+      { show: true, label: 'INFO 1', text: '', color: '#3b82f6' },
+      { show: true, label: 'INFO 2', text: '', color: '#22c55e' },
+      { show: false, label: 'INFO 3', text: '', color: '#f0b84b' },
+      { show: false, label: 'INFO 4', text: '', color: '#4bb7f0' }
+    ]
   }
-  w.webContents.send('edit',editing);
-  const g=guideFor(w);if(g&&!g.isDestroyed()){if(editing){g.setBounds(w.getBounds());g.showInactive();g.moveTop()}else g.hide()}
- }
- if(!editing)visibility();
- ui?.webContents.send('edit',editing)
-}
-function syncBounds(){for(const [w,k] of [[streakWin,'streak'],[matchWin,'match']]){const b=displayClamp(w.getBounds());w.setBounds(b);Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height})}save()}
-function attachBounds(w,k){
- const remember=()=>{if(!editing)return;const b=w.getBounds();Object.assign(S[k],{x:b.x,y:b.y,w:b.width,h:b.height});syncGuide(w);ui?.webContents.send('dirty',true);push()};
- w.on('move',remember);w.on('resize',remember);
+};
+
+let S;
+const settingsFile = () => path.join(app.getPath('userData'), 'settings-v270.json');
+const killerDir = () => path.join(__dirname, 'killers');
+const clone = x => JSON.parse(JSON.stringify(x));
+
+function loadState() {
+  S = clone(DEF);
+  try {
+    const saved = JSON.parse(fs.readFileSync(settingsFile(), 'utf8'));
+    if (saved && typeof saved === 'object') {
+      S.language = ['pt','en','es'].includes(saved.language) ? saved.language : 'pt';
+      if (saved.streak) S.streak = { ...S.streak, ...saved.streak };
+      if (saved.match) S.match = { ...S.match, ...saved.match };
+      if (Array.isArray(saved.match?.rows)) {
+        S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
+      }
+    }
+  } catch {}
+  normalizeState();
+  localizeDefaultMatchText();
+  // Clean-start behavior requested for the rebuilt app.
+  S.streak.enabled = true;
+  S.match.enabled = false;
 }
 
-function makeGuide(){
- const g=new BrowserWindow({show:false,frame:false,transparent:true,hasShadow:false,resizable:false,movable:false,focusable:false,skipTaskbar:true,alwaysOnTop:true,backgroundColor:'#00000000'});
- g.setIgnoreMouseEvents(true);
- g.setAlwaysOnTop(true,'screen-saver');
- g.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent('<!doctype html><html><body style="margin:0;box-sizing:border-box;width:100vw;height:100vh;border:4px solid #ff2525;background:transparent"></body></html>'));
- return g
-}
-function guideFor(w){return w===streakWin?streakGuide:matchGuide}
-function syncGuide(w){
- if(!editing||!w||w.isDestroyed())return;
- const g=guideFor(w);if(!g||g.isDestroyed())return;
- g.setBounds(w.getBounds());if(!g.isVisible())g.showInactive();g.moveTop()
+function localizeDefaultMatchText(){
+  const aDefaults=['TIME A','TEAM A','EQUIPO A'], bDefaults=['TIME B','TEAM B','EQUIPO B'], topDefaults=['CAMPEONATO','CHAMPIONSHIP'];
+  if(aDefaults.includes(S.match.teamA)) S.match.teamA=S.language==='en'?'TEAM A':S.language==='es'?'EQUIPO A':'TIME A';
+  if(bDefaults.includes(S.match.teamB)) S.match.teamB=S.language==='en'?'TEAM B':S.language==='es'?'EQUIPO B':'TIME B';
+  if(topDefaults.includes(S.match.setText)) S.match.setText=S.language==='en'?'CHAMPIONSHIP':'CAMPEONATO';
 }
 
-function create(){ui=new BrowserWindow({width:1160,height:820,minWidth:980,minHeight:680,backgroundColor:'#0d0f13',webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false}});ui.setMenuBarVisibility(false);ui.loadFile('app.html');ui.on('close',e=>{if(!quitting){e.preventDefault();ui.hide()}});
- streakWin=overlay('streak.html',S.streak,'streak');matchWin=overlay('match.html',S.match,'match');streakGuide=makeGuide();matchGuide=makeGuide();attachBounds(streakWin,'streak');attachBounds(matchWin,'match');visibility();
- tray=new Tray(nativeImage.createEmpty());tray.setToolTip('DBD Overlay Studio');tray.setContextMenu(Menu.buildFromTemplate([{label:'Abrir',click:()=>ui.show()},{label:'Sair',click:()=>{quitting=true;app.quit()}}]));
+function normalizeState() {
+  S.streak.scale = clamp(Number(S.streak.scale) || 1, SCALE_LIMITS.streak.min, SCALE_LIMITS.streak.max);
+  S.match.scale = clamp(Number(S.match.scale) || 1, SCALE_LIMITS.match.min, SCALE_LIMITS.match.max);
+  S.streak.value = Math.max(0, Number(S.streak.value) || 0);
+  S.streak.recordValue = Math.max(0, Number(S.streak.recordValue) || 0);
+  S.streak.record2Value = Math.max(0, Number(S.streak.record2Value) || 0);
+  S.streak.style = clampInt(S.streak.style, 0, 7);
+  S.match.style = clampInt(S.match.style, 0, 7);
+  S.match.scoreA = Math.max(0, Number(S.match.scoreA) || 0);
+  S.match.scoreB = Math.max(0, Number(S.match.scoreB) || 0);
 }
-function recreateOverlays(){
- try{streakWin?.destroy()}catch{} try{matchWin?.destroy()}catch{}
- streakWin=overlay('streak.html',S.streak,'streak'); matchWin=overlay('match.html',S.match,'match');
- attachBounds(streakWin,'streak'); attachBounds(matchWin,'match');
- setTimeout(()=>{visibility();push()},250); return S
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function clampInt(v, min, max) { return Math.round(clamp(Number(v) || 0, min, max)); }
+function saveState() {
+  try { fs.writeFileSync(settingsFile(), JSON.stringify(S, null, 2)); } catch {}
+  pushState();
 }
-function hotkey(k){globalShortcut.unregisterAll();const next=k||'';if(next){try{if(!globalShortcut.register(next,()=>{const n=Date.now();if(n-lastHotkey<2000)return;lastHotkey=n;S.streak.value=Math.max(0,(Number(S.streak.value)||0)+1);save()}))return false}catch{return false}}S.streak.hotkey=next;save();return true}
-function startServer(){server=http.createServer((req,res)=>{
- if(req.url.startsWith('/killer?')){try{const u=new URL(req.url,'http://127.0.0.1');const name=path.basename(u.searchParams.get('name')||'');const file=path.join(killerDir(),name);if(!name||!fs.existsSync(file)){res.writeHead(404);return res.end()}const ext=path.extname(name).toLowerCase();const type=ext==='.png'?'image/png':ext==='.webp'?'image/webp':'image/jpeg';res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store'});return fs.createReadStream(file).pipe(res)}catch{res.writeHead(400);return res.end()}}
-if(req.url.startsWith('/state')){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store','Access-Control-Allow-Origin':'*'});return res.end(JSON.stringify(S))}if(req.url==='/overlay'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs.html'),'utf8'))}if(req.url==='/obs-streak'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs-streak.html'),'utf8'))}if(req.url==='/obs-match'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});return res.end(fs.readFileSync(path.join(__dirname,'obs-match.html'),'utf8'))}res.writeHead(404);res.end()}).listen(PORT,'127.0.0.1')}
-ipcMain.handle('get',()=>({state:S,url:`http://127.0.0.1:${PORT}/overlay`,killers:killerFiles()}));
-ipcMain.handle('patch',(_,section,p)=>{
- const oldK=section==='match'?S.match.killerImage:'';const oldLeft=section==='match'?S.match.killerLeft:true;
- if(section==='root')S={...S,...p};else S[section]={...S[section],...p};
- if((section==='streak'||section==='match')&&Object.prototype.hasOwnProperty.call(p,'scale'))applyScale(section);
- if(section==='match'&&Object.prototype.hasOwnProperty.call(p,'killerImage')&&!!oldK!==!!S.match.killerImage){
-   let b=matchWin.getBounds();
-   if(S.match.killerImage){b.width+=140;if(S.match.killerLeft)b.x-=140}
-   else{b.width=Math.max(560,b.width-140);if(oldLeft)b.x+=140}
-   b=displayClamp(b);matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height});
- }
- if(section==='match'&&Object.prototype.hasOwnProperty.call(p,'killerLeft')&&S.match.killerImage&&oldLeft!==S.match.killerLeft){
-   let b=matchWin.getBounds();b.x+=S.match.killerLeft?-140:140;b=displayClamp(b);matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height});
- }
- if(section==='streak'&&(p.w!==undefined||p.h!==undefined)){const b=displayClamp({...streakWin.getBounds(),width:S.streak.w,height:S.streak.h});streakWin.setBounds(b);Object.assign(S.streak,{x:b.x,y:b.y,w:b.width,h:b.height})}
- if(section==='match'&&(p.w!==undefined||p.h!==undefined)){const b=displayClamp({...matchWin.getBounds(),width:S.match.w,height:S.match.h});matchWin.setBounds(b);Object.assign(S.match,{x:b.x,y:b.y,w:b.width,h:b.height})}
- save();visibility();push();return S});
-ipcMain.handle('edit',(_,v)=>{setEdit(v);return S});ipcMain.handle('save-bounds',()=>{syncBounds();setEdit(false);ui.webContents.send('dirty',false);return S});
-ipcMain.handle('reset',(_,section)=>{if(section==='streak'){const keep={hotkey:S.streak.hotkey,x:S.streak.x,y:S.streak.y,w:S.streak.w,h:S.streak.h,enabled:S.streak.enabled};S.streak={...clone(DEF.streak),...keep,value:0,scale:1,nameX:0,valueX:0};applyScale('streak')}else{const keep={x:S.match.x,y:S.match.y,enabled:S.match.enabled,killerImage:S.match.killerImage,killerName:S.match.killerName,showKillerName:S.match.showKillerName,killerLeft:S.match.killerLeft};S.match={...clone(DEF.match),...keep,w:700,h:210,scale:1};try{matchWin.setBounds(displayClamp({...matchWin.getBounds(),width:700,height:210}))}catch{}applyScale('match')}save();visibility();return S});
-ipcMain.handle('streak-value',(_,mode,n)=>{let v=Math.max(0,Number(S.streak.value)||0);if(mode==='delta')v=Math.max(0,v+(Number(n)||0));else v=Math.max(0,Number(n)||0);S.streak.value=v;save();return S});
-ipcMain.handle('hotkey',(_,k)=>hotkey(k));ipcMain.handle('quit-app',()=>{quitting=true;app.quit()});
-let dragSession=null;
-ipcMain.on('drag-start',(e,key,mouse)=>{
- if(!editing)return;const w=key==='streak'?streakWin:matchWin;if(!w||w.isDestroyed())return;
- dragSession={w,key,start:w.getBounds(),mx:mouse.x,my:mouse.y};
+function pushState() {
+  [ui, streakWin, matchWin].forEach(w => {
+    if (w && !w.isDestroyed() && !w.webContents.isDestroyed()) w.webContents.send('state', S);
+  });
+}
+function killerFiles() {
+  try { return fs.readdirSync(killerDir()).filter(x => /\.(png|jpe?g|webp)$/i.test(x)).sort(); }
+  catch { return []; }
+}
+
+function logicalBase(key) {
+  if (key === 'streak') return STREAK_BASE;
+  return { w: MATCH_BASE.w + (S.match.killerImage ? KILLER_GUTTER : 0), h: MATCH_BASE.h };
+}
+function scaleFor(key) { return S[key].scale; }
+function windowSize(key) {
+  const b = logicalBase(key), sc = scaleFor(key);
+  return { width: Math.round(b.w * sc), height: Math.round(b.h * sc) };
+}
+function windowFor(key) { return key === 'streak' ? streakWin : matchWin; }
+function guideFor(key) { return key === 'streak' ? streakGuide : matchGuide; }
+
+function clampToDisplay(rect) {
+  const d = screen.getDisplayMatching(rect);
+  const b = d.bounds;
+  const width = Math.min(rect.width, b.width);
+  const height = Math.min(rect.height, b.height);
+  let x = clamp(rect.x, b.x, b.x + b.width - width);
+  let y = clamp(rect.y, b.y, b.y + b.height - height);
+  const snap = 10;
+  if (Math.abs(x - b.x) <= snap) x = b.x;
+  if (Math.abs((x + width) - (b.x + b.width)) <= snap) x = b.x + b.width - width;
+  if (Math.abs(y - b.y) <= snap) y = b.y;
+  if (Math.abs((y + height) - (b.y + b.height)) <= snap) y = b.y + b.height - height;
+  return { x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) };
+}
+
+function applyWindowGeometry(key, keepCenter = false) {
+  const w = windowFor(key);
+  if (!w || w.isDestroyed()) return;
+  const old = w.getBounds();
+  const size = windowSize(key);
+  let x = S[key].x ?? old.x, y = S[key].y ?? old.y;
+  if (keepCenter) {
+    x = Math.round(old.x + old.width / 2 - size.width / 2);
+    y = Math.round(old.y + old.height / 2 - size.height / 2);
+  }
+  const b = clampToDisplay({ x, y, ...size });
+  w.setBounds(b);
+  // Window size scales; zoom makes the renderer keep stable logical dimensions.
+  try { w.webContents.setZoomFactor(S[key].scale); } catch {}
+  S[key].x = b.x; S[key].y = b.y;
+  syncGuide(key);
+}
+
+function createOverlay(file, key) {
+  const size = windowSize(key);
+  const w = new BrowserWindow({
+    x: S[key].x, y: S[key].y, width: size.width, height: size.height,
+    show: false, frame: false, transparent: true, hasShadow: false,
+    resizable: false, movable: true, focusable: true, skipTaskbar: true,
+    backgroundColor: '#00000000',
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
+  });
+  w.setAlwaysOnTop(true, 'screen-saver');
+  w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  w.setIgnoreMouseEvents(true, { forward: true });
+  w.loadFile(file);
+  w.webContents.once('did-finish-load', () => {
+    try { w.webContents.setZoomFactor(S[key].scale); } catch {}
+    pushState();
+    visibility();
+  });
+  return w;
+}
+
+function makeGuide() {
+  const g = new BrowserWindow({
+    show: false, frame: false, transparent: true, hasShadow: false,
+    resizable: false, movable: false, focusable: false, skipTaskbar: true,
+    alwaysOnTop: true, backgroundColor: '#00000000'
+  });
+  g.setIgnoreMouseEvents(true);
+  g.setAlwaysOnTop(true, 'screen-saver');
+  const html = '<!doctype html><html><body style="margin:0;box-sizing:border-box;width:100vw;height:100vh;border:4px solid #ff2a2a;background:transparent"></body></html>';
+  g.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+  return g;
+}
+function syncGuide(key) {
+  if (!editing) return;
+  const w = windowFor(key), g = guideFor(key);
+  if (!w || w.isDestroyed() || !g || g.isDestroyed()) return;
+  g.setBounds(w.getBounds());
+  if (!g.isVisible()) g.showInactive();
+  g.moveTop();
+}
+
+function safeVisible(w, show) {
+  if (!w || w.isDestroyed()) return;
+  if (show) { if (!w.isVisible()) w.showInactive(); w.moveTop(); }
+  else if (w.isVisible()) w.hide();
+}
+function visibility() {
+  if (editing) { safeVisible(streakWin, true); safeVisible(matchWin, true); return; }
+  safeVisible(streakWin, S.streak.enabled);
+  safeVisible(matchWin, S.match.enabled);
+}
+function setEdit(v) {
+  editing = !!v;
+  for (const key of ['streak','match']) {
+    const w = windowFor(key), g = guideFor(key);
+    if (!w || w.isDestroyed()) continue;
+    if (editing) {
+      w.setIgnoreMouseEvents(false);
+      w.setFocusable(true);
+      w.showInactive(); w.moveTop();
+      if (g && !g.isDestroyed()) { g.setBounds(w.getBounds()); g.showInactive(); g.moveTop(); }
+    } else {
+      w.setIgnoreMouseEvents(true, { forward: true });
+      w.setFocusable(false);
+      if (g && !g.isDestroyed()) g.hide();
+    }
+    w.webContents.send('edit', editing);
+  }
+  if (!editing) visibility();
+  ui?.webContents.send('edit', editing);
+}
+
+function createUI() {
+  ui = new BrowserWindow({
+    width: 1120, height: 820, minWidth: 940, minHeight: 660,
+    backgroundColor: '#0d0f13',
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
+  });
+  ui.setMenuBarVisibility(false);
+  ui.loadFile('app.html');
+  ui.on('close', e => { if (!quitting) { e.preventDefault(); ui.hide(); } });
+}
+function createAll() {
+  createUI();
+  streakWin = createOverlay('streak.html', 'streak');
+  matchWin = createOverlay('match.html', 'match');
+  streakGuide = makeGuide(); matchGuide = makeGuide();
+  visibility();
+  tray = new Tray(nativeImage.createEmpty());
+  tray.setToolTip('DBD Overlay Studio');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Abrir', click: () => ui.show() },
+    { label: 'Sair', click: () => { quitting = true; app.quit(); } }
+  ]));
+}
+
+function hotkey(k) {
+  globalShortcut.unregisterAll();
+  const next = k || '';
+  if (next) {
+    try {
+      if (!globalShortcut.register(next, () => {
+        const now = Date.now();
+        if (now - lastHotkey < 1000) return;
+        lastHotkey = now;
+        S.streak.value = Math.max(0, (Number(S.streak.value) || 0) + 1);
+        saveState();
+      })) return false;
+    } catch { return false; }
+  }
+  S.streak.hotkey = next;
+  saveState();
+  return true;
+}
+
+function resetStreak() {
+  const keep = { x: S.streak.x, y: S.streak.y, enabled: S.streak.enabled, hotkey: S.streak.hotkey };
+  S.streak = { ...clone(DEF.streak), ...keep, value: 0 };
+  applyWindowGeometry('streak', false);
+  saveState();
+}
+function resetMatch() {
+  const keep = { x: S.match.x, y: S.match.y, enabled: S.match.enabled };
+  S.match = { ...clone(DEF.match), ...keep };
+  localizeDefaultMatchText();
+  applyWindowGeometry('match', false);
+  saveState();
+}
+
+function startServer() {
+  server = http.createServer((req, res) => {
+    if (req.url.startsWith('/killer?')) {
+      try {
+        const u = new URL(req.url, 'http://127.0.0.1');
+        const name = path.basename(u.searchParams.get('name') || '');
+        const file = path.join(killerDir(), name);
+        if (!name || !fs.existsSync(file)) { res.writeHead(404); return res.end(); }
+        const ext = path.extname(name).toLowerCase();
+        const type = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+        res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store' });
+        return fs.createReadStream(file).pipe(res);
+      } catch { res.writeHead(400); return res.end(); }
+    }
+    if (req.url.startsWith('/state')) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
+      return res.end(JSON.stringify(S));
+    }
+    const files = { '/overlay':'obs.html', '/obs-streak':'obs-streak.html', '/obs-match':'obs-match.html' };
+    if (files[req.url]) {
+      res.writeHead(200, { 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store' });
+      return res.end(fs.readFileSync(path.join(__dirname, files[req.url]), 'utf8'));
+    }
+    res.writeHead(404); res.end();
+  }).listen(PORT, '127.0.0.1');
+}
+
+ipcMain.handle('get', () => ({ state: S, url: `http://127.0.0.1:${PORT}/overlay`, killers: killerFiles() }));
+ipcMain.handle('patch', (_, section, patch) => {
+  if (section === 'root') {
+    S = { ...S, ...patch };
+    if (Object.prototype.hasOwnProperty.call(patch, 'language')) localizeDefaultMatchText();
+  } else if (section === 'streak' || section === 'match') {
+    const oldK = S.match.killerImage;
+    S[section] = { ...S[section], ...patch };
+    normalizeState();
+    if (Object.prototype.hasOwnProperty.call(patch, 'scale')) applyWindowGeometry(section, true);
+    if (section === 'match' && Object.prototype.hasOwnProperty.call(patch, 'killerImage') && !!oldK !== !!S.match.killerImage) {
+      applyWindowGeometry('match', true);
+    }
+  }
+  saveState(); visibility(); return S;
 });
-ipcMain.on('drag-move',(e,mouse)=>{
- const z=dragSession;if(!z||!editing)return;
- const d=screen.getDisplayMatching(z.start),b=d.bounds;
- let x=z.start.x+(mouse.x-z.mx),y=z.start.y+(mouse.y-z.my);
- // Hard monitor bounds while dragging. Small edge magnet, but no persistent lock.
- const maxX=b.x+b.width-z.start.width,maxY=b.y+b.height-z.start.height,snap=10;
- x=Math.max(b.x,Math.min(x,maxX));y=Math.max(b.y,Math.min(y,maxY));
- if(Math.abs(x-b.x)<=snap)x=b.x;if(Math.abs(x-maxX)<=snap)x=maxX;
- if(Math.abs(y-b.y)<=snap)y=b.y;if(Math.abs(y-maxY)<=snap)y=maxY;
- z.w.setPosition(Math.round(x),Math.round(y));syncGuide(z.w);
+ipcMain.handle('reset', (_, section) => { section === 'streak' ? resetStreak() : resetMatch(); return S; });
+ipcMain.handle('streak-value', (_, mode, n) => {
+  let v = Math.max(0, Number(S.streak.value) || 0);
+  if (mode === 'delta') v = Math.max(0, v + (Number(n) || 0));
+  else v = Math.max(0, Number(n) || 0);
+  S.streak.value = v; saveState(); return S;
 });
-ipcMain.on('drag-end',()=>{dragSession=null});
-let resizeSession=null;
-ipcMain.on('resize-start',(e,key,edge,mouse)=>{
- if(!editing)return;const w=key==='streak'?streakWin:matchWin;if(!w||w.isDestroyed())return;
- resizeSession={w,key,edge,start:w.getBounds(),mx:mouse.x,my:mouse.y};
+ipcMain.handle('hotkey', (_, k) => hotkey(k));
+ipcMain.handle('edit', (_, v) => { setEdit(v); return S; });
+ipcMain.handle('save-bounds', () => { setEdit(false); saveState(); ui?.webContents.send('dirty', false); return S; });
+ipcMain.handle('quit-app', () => { quitting = true; app.quit(); });
+ipcMain.handle('copy', (_, text) => { clipboard.writeText(String(text || '')); return true; });
+
+ipcMain.on('drag-start', (_, key, mouse) => {
+  if (!editing) return;
+  const w = windowFor(key); if (!w || w.isDestroyed()) return;
+  dragSession = { key, w, start: w.getBounds(), mx: mouse.x, my: mouse.y };
 });
-ipcMain.on('resize-move',(e,mouse)=>{
- const z=resizeSession;if(!z||!editing)return;let {x,y,width,height}=z.start;const dx=mouse.x-z.mx,dy=mouse.y-z.my;
- if(z.edge.includes('e'))width+=dx;if(z.edge.includes('s'))height+=dy;
- if(z.edge.includes('w')){x+=dx;width-=dx}if(z.edge.includes('n')){y+=dy;height-=dy}
- const minW=z.key==='streak'?280:560,minH=z.key==='streak'?88:145,maxW=z.key==='streak'?520:1050,maxH=z.key==='streak'?165:420;
- if(width<minW){if(z.edge.includes('w'))x-=minW-width;width=minW}if(height<minH){if(z.edge.includes('n'))y-=minH-height;height=minH}
- width=Math.min(maxW,width);height=Math.min(maxH,height);z.w.setBounds({x:Math.round(x),y:Math.round(y),width:Math.round(width),height:Math.round(height)});syncGuide(z.w);
+ipcMain.on('drag-move', (_, mouse) => {
+  const z = dragSession; if (!z || !editing) return;
+  const x = z.start.x + mouse.x - z.mx, y = z.start.y + mouse.y - z.my;
+  const b = clampToDisplay({ x, y, width: z.start.width, height: z.start.height });
+  z.w.setPosition(b.x, b.y); S[z.key].x = b.x; S[z.key].y = b.y; syncGuide(z.key);
+  ui?.webContents.send('dirty', true);
 });
-ipcMain.on('resize-end',()=>{resizeSession=null});
-app.whenReady().then(()=>{load();startServer();create();if(S.streak.hotkey)hotkey(S.streak.hotkey);setTimeout(push,300)});
-app.on('before-quit',()=>{quitting=true;globalShortcut.unregisterAll();server?.close()});app.on('window-all-closed',()=>{if(quitting)app.quit()});
+ipcMain.on('drag-end', () => { dragSession = null; });
+
+ipcMain.on('resize-start', (_, key, edge, mouse) => {
+  if (!editing) return;
+  const w = windowFor(key); if (!w || w.isDestroyed()) return;
+  resizeSession = { key, edge, w, start: w.getBounds(), mx: mouse.x, my: mouse.y, startScale: S[key].scale };
+});
+ipcMain.on('resize-move', (_, mouse) => {
+  const z = resizeSession; if (!z || !editing) return;
+  const base = logicalBase(z.key);
+  const dx = mouse.x - z.mx, dy = mouse.y - z.my;
+  const dw = z.edge.includes('w') ? -dx : dx;
+  const dh = z.edge.includes('n') ? -dy : dy;
+  const desired = Math.max((z.start.width + dw) / base.w, (z.start.height + dh) / base.h);
+  const lim = SCALE_LIMITS[z.key];
+  S[z.key].scale = clamp(desired, lim.min, lim.max);
+  let x = z.start.x, y = z.start.y;
+  const size = windowSize(z.key);
+  if (z.edge.includes('w')) x = z.start.x + z.start.width - size.width;
+  if (z.edge.includes('n')) y = z.start.y + z.start.height - size.height;
+  const b = clampToDisplay({ x, y, ...size });
+  z.w.setBounds(b); try { z.w.webContents.setZoomFactor(S[z.key].scale); } catch {}
+  S[z.key].x = b.x; S[z.key].y = b.y; syncGuide(z.key); pushState();
+  ui?.webContents.send('dirty', true);
+});
+ipcMain.on('resize-end', () => { resizeSession = null; saveState(); });
+
+app.whenReady().then(() => {
+  loadState(); startServer(); createAll(); if (S.streak.hotkey) hotkey(S.streak.hotkey); setTimeout(pushState, 300);
+});
+app.on('before-quit', () => { quitting = true; globalShortcut.unregisterAll(); server?.close(); });
+app.on('window-all-closed', () => { if (quitting) app.quit(); });
