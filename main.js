@@ -21,7 +21,7 @@ let dragSession = null;
 let resizeSession = null;
 
 const DEF = {
-  schema: 277,
+  schema: 278,
   language: 'pt',
   uiTheme: 'dark',
   uiSize: 'standard',
@@ -44,16 +44,16 @@ const DEF = {
     teamA: 'TIME A', teamB: 'TIME B', scoreA: 0, scoreB: 0,
     colorA: '#3b82f6', colorB: '#22c55e',
     setText: 'CAMPEONATO', showSetText: true, setTextSize: 9, footerShow: true, footer: 'SET / MAP', footerCenter: false,
-    bg: '#15181d', panel: '#282c31', text: '#ffffff',
+    bg: '#15181d', panel: '#282c31', text: '#ffffff', killerBg: '#0b0e14',
     setColor: '#d7dce5', scoreSepColor: '#f2f2f2', footerColor: '#f2f2f2', footerBg: '#15181d',
     fontName: 'Segoe UI', fontNumber: 'Segoe UI', fontSet: 'Segoe UI', glow: 20,
     edgeBorder: false,
     killerImage: '', killerName: '', showKillerName: true, killerLeft: true,
     rows: [
-      { show: true, label: 'INFO 1', text: '', color: '#3b82f6' },
-      { show: true, label: 'INFO 2', text: '', color: '#22c55e' },
-      { show: false, label: 'INFO 3', text: '', color: '#f0b84b' },
-      { show: false, label: 'INFO 4', text: '', color: '#4bb7f0' }
+      { show: true, label: 'INFO 1', text: '', color: '#3b82f6', textColor: '#ffffff' },
+      { show: true, label: 'INFO 2', text: '', color: '#22c55e', textColor: '#ffffff' },
+      { show: false, label: 'INFO 3', text: '', color: '#f0b84b', textColor: '#ffffff' },
+      { show: false, label: 'INFO 4', text: '', color: '#4bb7f0', textColor: '#ffffff' }
     ]
   }
 };
@@ -79,7 +79,7 @@ function loadState() {
         S.match.rows = DEF.match.rows.map((r, i) => ({ ...r, ...(saved.match.rows[i] || {}) }));
       }
       if (savedSchema < 272 && Number(S.streak.record2Y) === 0) S.streak.record2Y = 25;
-      S.schema = 277;
+      S.schema = 278;
     }
   } catch {}
   normalizeState();
@@ -99,6 +99,8 @@ function localizeDefaultMatchText(){
 function normalizeState() {
   S.streak.scale = clamp(Number(S.streak.scale) || 1, SCALE_LIMITS.streak.min, SCALE_LIMITS.streak.max);
   S.match.scale = clamp(Number(S.match.scale) || 1, SCALE_LIMITS.match.min, SCALE_LIMITS.match.max);
+  S.match.killerBg = /^#/.test(S.match.killerBg||'') ? S.match.killerBg : '#0b0e14';
+  S.match.rows = (S.match.rows||[]).map((r,i)=>({ ...DEF.match.rows[i], ...r, textColor: /^#/.test(r?.textColor||'') ? r.textColor : '#ffffff' }));
   S.streak.value = Math.max(0, Number(S.streak.value) || 0);
   S.streak.recordValue = Math.max(0, Number(S.streak.recordValue) || 0);
   S.streak.record2Value = Math.max(0, Number(S.streak.record2Value) || 0);
