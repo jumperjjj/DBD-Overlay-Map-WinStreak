@@ -12,10 +12,10 @@ const TIMER_BASES = {
   4: { w: 650, h: 148 }, // Glass Arc
   5: { w: 690, h: 136 }  // Glass Float
 };
-const TIMER_SCALE_UI = { min: 70, max: 110 };
+const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 210,
+  schema: 220,
   enabled: false,
   x: 70,
   y: 360,
@@ -53,6 +53,47 @@ let registeredAction = '';
 let registeredSwap = '';
 let lastActionAt = 0;
 let saveMoveTimer = null;
+let uIOhook = null;
+let mouseHookStarted = false;
+const mouseShortcuts = new Map();
+
+function isMouseAccel(v) { return /^MOUSE[3-5]$/i.test(String(v || '').trim()); }
+function normalizeMouseAccel(v) { const m=String(v||'').trim().toUpperCase(); return isMouseAccel(m)?m:''; }
+function buttonToMouseAccel(button) {
+  const b = Number(button);
+  if (b === 3) return 'MOUSE3';
+  if (b === 4) return 'MOUSE4';
+  if (b === 5) return 'MOUSE5';
+  return '';
+}
+function ensureMouseHook() {
+  if (mouseHookStarted) return true;
+  try {
+    if (!uIOhook) ({ uIOhook } = require('uiohook-napi'));
+    uIOhook.on('mousedown', e => {
+      const key = buttonToMouseAccel(e?.button);
+      if (!key) return;
+      for (const entry of mouseShortcuts.values()) {
+        if (entry?.key === key) { try { entry.cb(); } catch {} }
+      }
+    });
+    uIOhook.start();
+    mouseHookStarted = true;
+    return true;
+  } catch { return false; }
+}
+function registerMouseShortcut(owner, accel, cb) {
+  const key = normalizeMouseAccel(accel);
+  mouseShortcuts.delete(owner);
+  if (!key) return true;
+  if (!ensureMouseHook()) return false;
+  mouseShortcuts.set(owner, { key, cb });
+  return true;
+}
+function unregisterMouseShortcut(owner) { mouseShortcuts.delete(owner); }
+global.__dbdRegisterMouseShortcut = registerMouseShortcut;
+global.__dbdUnregisterMouseShortcut = unregisterMouseShortcut;
+global.__dbdIsMouseAccel = isMouseAccel;
 
 const rawUnregisterAll = globalShortcut.unregisterAll.bind(globalShortcut);
 const rawUnregister = globalShortcut.unregister.bind(globalShortcut);
@@ -64,19 +105,17 @@ function timerFile() { return path.join(app.getPath('userData'), 'timer-v200.jso
 function legacySettingsFile() { return path.join(app.getPath('userData'), 'settings-v270.json'); }
 function baseFor(style = T?.style ?? 2) { return TIMER_BASES[clampInt(style, 0, 5)] || TIMER_BASES[2]; }
 
-// The UI intentionally shows 70–110. 100 is the native size; the last 10
-// steps grow more strongly so displayed 110% reaches the old ~140% maximum.
+// Timer Test 3: compact scale range. 70% is reduced but still readable;
+// 100% is now the true maximum requested for the 1v1 Timer.
 function scaleFactorFromUi(value) {
   const ui = clamp(Number(value) || 100, TIMER_SCALE_UI.min, TIMER_SCALE_UI.max);
-  if (ui <= 100) return 0.78 + ((ui - 70) / 30) * 0.22;
-  return 1 + ((ui - 100) / 10) * 0.40;
+  return 0.78 + ((ui - 70) / 30) * 0.22;
 }
 
 function migrateOldScale(oldScale) {
   const s = Number(oldScale);
   if (!Number.isFinite(s) || s <= 0) return 100;
-  if (s <= 1) return clampInt(70 + ((s - 0.78) / 0.22) * 30, 70, 100);
-  return clampInt(100 + ((s - 1) / 0.40) * 10, 100, 110);
+  return clampInt(70 + ((Math.min(1, s) - 0.78) / 0.22) * 30, 70, 100);
 }
 
 function normalizeTimer() {
@@ -99,10 +138,10 @@ function normalizeTimer() {
   T.player2 = String(T.player2 || 'PLAYER 2').slice(0, 48);
   T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#22c55e';
   T.accentMode = T.accentMode === 'rainbow' ? 'rainbow' : 'solid';
-  T.hotkeyAction = String(T.hotkeyAction || '');
-  T.hotkeySwap = String(T.hotkeySwap || '');
+  T.hotkeyAction = String(T.hotkeyAction || 'F1');
+  T.hotkeySwap = String(T.hotkeySwap || 'F2');
   T.autoSwap = !!T.autoSwap;
-  T.schema = 210;
+  T.schema = 220;
 }
 
 function loadTimer() {
@@ -362,8 +401,10 @@ function hotkeyConflict(accel, owner = '') {
 global.__dbdCheckHotkeyConflict = hotkeyConflict;
 
 function unregisterTimerHotkeys() {
-  if (registeredAction) { try { rawUnregister(registeredAction); } catch {} }
-  if (registeredSwap && registeredSwap !== registeredAction) { try { rawUnregister(registeredSwap); } catch {} }
+  if (registeredAction && !isMouseAccel(registeredAction)) { try { rawUnregister(registeredAction); } catch {} }
+  if (registeredSwap && registeredSwap !== registeredAction && !isMouseAccel(registeredSwap)) { try { rawUnregister(registeredSwap); } catch {} }
+  unregisterMouseShortcut('timer.action');
+  unregisterMouseShortcut('timer.swap');
   registeredAction = '';
   registeredSwap = '';
 }
@@ -374,13 +415,13 @@ function registerTimerHotkeys() {
   let actionOk = true;
   let swapOk = true;
   if (T.hotkeyAction && !hotkeyConflict(T.hotkeyAction, 'timer.action')) {
-    try { actionOk = globalShortcut.register(T.hotkeyAction, timerAction); }
-    catch { actionOk = false; }
+    if (isMouseAccel(T.hotkeyAction)) actionOk = registerMouseShortcut('timer.action', T.hotkeyAction, timerAction);
+    else { try { actionOk = globalShortcut.register(T.hotkeyAction, timerAction); } catch { actionOk = false; } }
     if (actionOk) registeredAction = T.hotkeyAction;
   } else if (T.hotkeyAction) actionOk = false;
   if (T.hotkeySwap && !hotkeyConflict(T.hotkeySwap, 'timer.swap')) {
-    try { swapOk = globalShortcut.register(T.hotkeySwap, timerSwap); }
-    catch { swapOk = false; }
+    if (isMouseAccel(T.hotkeySwap)) swapOk = registerMouseShortcut('timer.swap', T.hotkeySwap, timerSwap);
+    else { try { swapOk = globalShortcut.register(T.hotkeySwap, timerSwap); } catch { swapOk = false; } }
     if (swapOk) registeredSwap = T.hotkeySwap;
   } else if (T.hotkeySwap) swapOk = false;
   return { action: actionOk, swap: swapOk };
@@ -417,6 +458,9 @@ app.on('before-quit', () => {
   timerQuitting = true;
   clearTimeout(saveMoveTimer);
   try { unregisterTimerHotkeys(); } catch {}
+  try { if (mouseHookStarted && uIOhook) uIOhook.stop(); } catch {}
+  mouseHookStarted = false;
+  mouseShortcuts.clear();
   try { timerServer?.close(); } catch {}
 });
 

@@ -19,6 +19,7 @@ let editing = false;
 let lastHotkey = 0;
 let dragSession = null;
 let resizeSession = null;
+const directMoveSaveTimers = { streak: null, match: null };
 
 const DEF = {
   schema: 280,
@@ -27,7 +28,7 @@ const DEF = {
   uiSize: 'standard',
   quickPalette: true,
   streak: {
-    enabled: true, x: 40, y: 40, scale: 1,
+    enabled: false, x: 40, y: 40, scale: 1,
     style: 0, title: 'WIN STREAK', value: 0,
     nameColor: '#ffffff', valueColor: '#d7b84a', accent: '#d7b84a', bg1: '#15191f',
     opacity: 1, nameSize: 18, valueSize: 36, nameX: 0, valueX: 0,
@@ -84,8 +85,8 @@ function loadState() {
   } catch {}
   normalizeState();
   localizeDefaultMatchText();
-  // Clean-start behavior requested for the rebuilt app.
-  S.streak.enabled = true;
+  // Beta 2.0.0: Timer is the default module; legacy overlays start hidden.
+  S.streak.enabled = false;
   S.match.enabled = false;
 }
 
@@ -210,12 +211,20 @@ function createOverlay(file, key) {
   });
   w.setAlwaysOnTop(true, 'screen-saver');
   w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  w.setIgnoreMouseEvents(true, { forward: true });
+  // Beta 2.0.0: every local overlay can be dragged directly with the mouse.
+  w.setIgnoreMouseEvents(false);
   w.loadFile(file);
   w.webContents.once('did-finish-load', () => {
     try { w.webContents.setZoomFactor(S[key].scale); } catch {}
     pushState();
     visibility();
+  });
+  w.on('move', () => {
+    if (!w || w.isDestroyed() || !S?.[key]) return;
+    const [x, y] = w.getPosition();
+    S[key].x = x; S[key].y = y;
+    clearTimeout(directMoveSaveTimers[key]);
+    directMoveSaveTimers[key] = setTimeout(() => saveState(), 180);
   });
   return w;
 }
@@ -262,7 +271,8 @@ function setEdit(v) {
       w.showInactive(); w.moveTop();
       if (g && !g.isDestroyed()) { g.setBounds(w.getBounds()); g.showInactive(); g.moveTop(); }
     } else {
-      w.setIgnoreMouseEvents(true, { forward: true });
+      // Beta 2.0.0: every local overlay can be dragged directly with the mouse.
+  w.setIgnoreMouseEvents(false);
       w.setFocusable(false);
       if (g && !g.isDestroyed()) g.hide();
     }
@@ -329,20 +339,25 @@ function createAll() {
 }
 
 function hotkey(k) {
-  const next = k || '';
+  const next = String(k || '').trim();
   const conflict = next && global.__dbdCheckHotkeyConflict ? global.__dbdCheckHotkeyConflict(next, 'streak.hotkey') : null;
   if (conflict) return false;
+  if (global.__dbdUnregisterMouseShortcut) global.__dbdUnregisterMouseShortcut('streak.hotkey');
   globalShortcut.unregisterAll();
+  const action = () => {
+    const now = Date.now();
+    if (now - lastHotkey < 1000) return;
+    lastHotkey = now;
+    S.streak.value = Math.max(0, (Number(S.streak.value) || 0) + 1);
+    saveState();
+  };
   if (next) {
-    try {
-      if (!globalShortcut.register(next, () => {
-        const now = Date.now();
-        if (now - lastHotkey < 1000) return;
-        lastHotkey = now;
-        S.streak.value = Math.max(0, (Number(S.streak.value) || 0) + 1);
-        saveState();
-      })) return false;
-    } catch { return false; }
+    if (global.__dbdIsMouseAccel?.(next)) {
+      if (!global.__dbdRegisterMouseShortcut?.('streak.hotkey', next, action)) return false;
+    } else {
+      try { if (!globalShortcut.register(next, action)) return false; }
+      catch { return false; }
+    }
   }
   S.streak.hotkey = next;
   saveState();
@@ -490,5 +505,5 @@ if (!gotSingleInstanceLock) {
     loadState(); startServer(); createAll(); if (S.streak.hotkey) hotkey(S.streak.hotkey); setTimeout(pushState, 300);
   });
 }
-app.on('before-quit', () => { quitting = true; globalShortcut.unregisterAll(); server?.close(); });
+app.on('before-quit', () => { quitting = true; clearTimeout(directMoveSaveTimers.streak); clearTimeout(directMoveSaveTimers.match); globalShortcut.unregisterAll(); server?.close(); });
 app.on('window-all-closed', () => { if (quitting) app.quit(); });

@@ -2,8 +2,8 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="timer-render.css">
 <style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;cursor:move}
-#timerRoot{width:100%;height:100%;-webkit-app-region:drag;cursor:move}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;cursor:url("assets/move-cursor.png") 16 16,move}
+#timerRoot{width:100%;height:100%;-webkit-app-region:drag;cursor:url("assets/move-cursor.png") 16 16,move;user-select:none}
 </style></head>
 <body><div id="timerRoot" class="timer-widget"></div>
 <script src="timer-render.js"></script>
