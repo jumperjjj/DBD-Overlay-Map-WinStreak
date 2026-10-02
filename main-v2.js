@@ -5,17 +5,17 @@ const http = require('http');
 
 const TIMER_PORT = 17385;
 const TIMER_BASES = {
-  0: { w: 248, h: 286 }, // Vertical Edge
-  1: { w: 266, h: 300 }, // Vertical Core
-  2: { w: 548, h: 116 }, // Center Beam — compact
-  3: { w: 572, h: 122 }, // Corner Rail — compact
-  4: { w: 576, h: 126 }, // Glass Wings — compact
-  5: { w: 592, h: 116 }  // Glass Ribbon — compact
+  0: { w: 226, h: 274 }, // Side Stack — tighter right edge
+  1: { w: 258, h: 292 }, // Split Tower
+  2: { w: 506, h: 110 }, // Center Beam — tighter horizontal body
+  3: { w: 510, h: 112 }, // Corner Rail — reduced side space
+  4: { w: 526, h: 118 }, // Glass Wings
+  5: { w: 524, h: 110 }  // Glass Ribbon — reduced side space
 };
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 221,
+  schema: 222,
   enabled: false,
   x: 70,
   y: 360,
@@ -40,6 +40,11 @@ const TIMER_DEF = {
   hotkeyAction: 'F1',
   hotkeySwap: 'F2',
   autoSwap: false,
+  bestOf: 3,
+  matchWinner: 0,
+  celebrationWinner: 0,
+  celebrationUntil: 0,
+  celebrationId: 0,
   lastWinner: 0,
   lastDelta: 0,
   round: 1
@@ -142,7 +147,12 @@ function normalizeTimer() {
   T.hotkeyAction = String(T.hotkeyAction || 'F1');
   T.hotkeySwap = String(T.hotkeySwap || 'F2');
   T.autoSwap = !!T.autoSwap;
-  T.schema = 221;
+  T.bestOf = [1,3,5,7].includes(Number(T.bestOf)) ? Number(T.bestOf) : 3;
+  T.matchWinner = [1,2].includes(Number(T.matchWinner)) ? Number(T.matchWinner) : 0;
+  T.celebrationWinner = [1,2].includes(Number(T.celebrationWinner)) ? Number(T.celebrationWinner) : 0;
+  T.celebrationUntil = Math.max(0, Number(T.celebrationUntil) || 0);
+  T.celebrationId = Math.max(0, Math.floor(Number(T.celebrationId) || 0));
+  T.schema = 222;
 }
 
 function loadTimer() {
@@ -327,8 +337,44 @@ function stopRunningTimer() {
   return true;
 }
 
+function winsNeeded() {
+  return Math.floor((Number(T.bestOf) || 3) / 2) + 1;
+}
+
+function evaluateMatchWinner(triggerCelebration = false) {
+  const need = winsNeeded();
+  const s1 = Number(T.score1) || 0;
+  const s2 = Number(T.score2) || 0;
+  let winner = 0;
+  if (s1 >= need && s1 > s2) winner = 1;
+  else if (s2 >= need && s2 > s1) winner = 2;
+
+  if (!winner) {
+    T.matchWinner = 0;
+    if (T.celebrationUntil > Date.now()) {
+      T.celebrationUntil = 0;
+      T.celebrationWinner = 0;
+    }
+    return 0;
+  }
+
+  const changed = winner !== T.matchWinner;
+  T.matchWinner = winner;
+  T.active = winner;
+  T.running = false;
+  T.runningPlayer = 0;
+  T.startedAt = 0;
+
+  if (triggerCelebration && changed) {
+    T.celebrationWinner = winner;
+    T.celebrationUntil = Date.now() + 4000;
+    T.celebrationId = (Number(T.celebrationId) || 0) + 1;
+  }
+  return winner;
+}
+
 function resolveRound() {
-  if (!T.done1 || !T.done2 || T.running) return false;
+  if (!T.done1 || !T.done2 || T.running || T.matchWinner) return false;
   const a = Number(T.time1) || 0;
   const b = Number(T.time2) || 0;
   if (a < b) { T.score1 += 1; T.lastWinner = 1; T.lastDelta = b - a; }
@@ -338,14 +384,17 @@ function resolveRound() {
   T.done1 = false; T.done2 = false;
   T.active = 1;
   T.round += 1;
+  evaluateMatchWinner(true);
   saveTimer();
   return true;
 }
 
 function timerAction() {
   const now = Date.now();
-  if (now - lastActionAt < 180) return T;
+  const cooldown = T.autoSwap ? 1000 : 180;
+  if (now - lastActionAt < cooldown) return T;
   lastActionAt = now;
+  if (T.matchWinner) return T;
   if (T.running) stopRunningTimer();
   else if (T.done1 && T.done2) resolveRound();
   else startActiveTimer();
@@ -353,7 +402,7 @@ function timerAction() {
 }
 
 function timerSwap() {
-  if (T.running) return T;
+  if (T.running || T.matchWinner) return T;
   T.active = T.active === 1 ? 2 : 1;
   saveTimer();
   return T;
@@ -372,9 +421,11 @@ function resetTimerMatch() {
     opacity: T.opacity,
     hotkeyAction: T.hotkeyAction,
     hotkeySwap: T.hotkeySwap,
-    autoSwap: T.autoSwap
+    autoSwap: T.autoSwap,
+    bestOf: T.bestOf
   };
   T = { ...clone(TIMER_DEF), ...keep };
+  lastActionAt = 0;
   normalizeTimer();
   saveTimer();
   timerVisibility();
@@ -476,8 +527,10 @@ ipcMain.handle('timer-get', () => ({ state: T, url: `http://127.0.0.1:${TIMER_PO
 ipcMain.handle('timer-patch', (_, patch) => {
   const prevStyle = T.style;
   const prevScaleUi = T.scaleUi;
+  const bestOfChanged = Object.prototype.hasOwnProperty.call(patch || {}, 'bestOf');
   T = { ...T, ...(patch || {}) };
   normalizeTimer();
+  if (bestOfChanged) evaluateMatchWinner(false);
   if (T.style !== prevStyle || T.scaleUi !== prevScaleUi) applyTimerGeometry(true);
   saveTimer();
   timerVisibility();
@@ -487,7 +540,9 @@ ipcMain.handle('timer-action', () => timerAction());
 ipcMain.handle('timer-swap', () => timerSwap());
 ipcMain.handle('timer-score', (_, player, delta) => {
   const key = Number(player) === 2 ? 'score2' : 'score1';
-  T[key] = Math.max(0, (Number(T[key]) || 0) + (Number(delta) || 0));
+  const d = Number(delta) || 0;
+  T[key] = Math.max(0, (Number(T[key]) || 0) + d);
+  evaluateMatchWinner(d > 0);
   saveTimer();
   return T;
 });

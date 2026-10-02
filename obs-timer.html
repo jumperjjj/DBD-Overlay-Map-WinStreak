@@ -7,7 +7,7 @@
 <body><div id="stage"><div id="timerRoot" class="timer-widget"></div></div>
 <script src="/timer-render.js"></script>
 <script>
-const BASES={0:[248,286],1:[266,300],2:[620,136],3:[652,146],4:[650,148],5:[690,136]};let T=null,lastFetch=0;
+const BASES={0:[226,274],1:[258,292],2:[506,110],3:[510,112],4:[526,118],5:[524,110]};let T=null,lastFetch=0;
 async function refresh(){try{T=await fetch('/state',{cache:'no-store'}).then(r=>r.json())}catch{}}
 function frame(now){if(now-lastFetch>120){lastFetch=now;refresh()}if(T){const style=Math.max(0,Math.min(5,+T.style||0)),b=BASES[style]||BASES[2],scale=Math.max(.78,Math.min(1,+T.scale||1));stage.style.display=T.enabled?'block':'none';stage.style.left=(+T.x||0)+'px';stage.style.top=(+T.y||0)+'px';stage.style.width=b[0]+'px';stage.style.height=b[1]+'px';stage.style.transform=`scale(${scale})`;TimerRenderer.apply(timerRoot,T,Date.now())}requestAnimationFrame(frame)}
 refresh();requestAnimationFrame(frame);

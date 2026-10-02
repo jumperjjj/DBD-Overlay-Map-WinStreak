@@ -1,23 +1,13 @@
-# DBD Overlay Studio
+# DBD Overlay Studio — Beta 2.0.2
 
-**Beta 1.0.1 · By Jumper**
+Versão de testes da reformulação geral do DBD Overlay Studio.
 
-Aplicativo para criação e controle de overlays de **WinStreak** e **Confronto** para Dead by Daylight.
+## Em desenvolvimento
+- 1v1 Timer com 6 estilos, atalhos e placar automático.
+- Formatos MD1 / MD3 / MD5 / MD7.
+- WinStreak e Confronto serão reformulados nas próximas etapas.
+- Overlay local para OBS em 1920×1080.
 
-- WinStreak com múltiplos layouts e Mini Estilos
-- Confronto com layouts horizontais e verticais
-- Killer do Set, cores, fontes, placar e INFOs personalizáveis
-- Posicionamento visual e integração com OBS
-- Português, English e Español
+OBS: `http://127.0.0.1:17384/overlay`
 
-## Download
-
-Baixe a versão mais recente na seção **Releases**.
-
-## OBS
-
-Browser Source: `1920 × 1080`
-
-`http://127.0.0.1:17384/overlay`
-
-> Projeto em Beta. O instalador ainda não possui assinatura digital.
+Esta é uma build Beta de testes.
