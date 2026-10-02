@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="timer-render.css">
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
+body.editing{cursor:move}
+body.editing #timerRoot{-webkit-app-region:drag;outline:2px dashed rgba(255,255,255,.78);outline-offset:-3px;border-radius:10px}
+</style></head>
+<body><div id="timerRoot" class="timer-widget"></div>
+<script src="timer-render.js"></script>
+<script>
+let T=null,editing=false;
+function draw(){if(T)TimerRenderer.apply(timerRoot,T,Date.now());requestAnimationFrame(draw)}
+api.onTimerState(s=>{T=s});
+api.onTimerEdit(v=>{editing=!!v;document.body.classList.toggle('editing',editing)});
+(async()=>{const x=await api.timerGet();T=x.state;editing=!!x.editing;document.body.classList.toggle('editing',editing);draw()})();
+</script></body></html>

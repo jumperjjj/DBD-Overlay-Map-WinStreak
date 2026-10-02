@@ -1,8 +1,8 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "1.0.1-beta.1",
-  "description": "DBD Overlay Studio - WinStreak and Match Overlay",
-  "main": "main.js",
+  "version": "2.0.0-beta.1",
+  "description": "DBD Overlay Studio - WinStreak, Match Overlay and 1v1 Timer",
+  "main": "main-v2.js",
   "author": "Jumper",
   "license": "MIT",
   "scripts": {
@@ -18,6 +18,7 @@
     "productName": "DBD Overlay Studio",
     "asar": true,
     "files": [
+      "main-v2.js",
       "main.js",
       "preload.js",
       "app.html",
@@ -26,6 +27,11 @@
       "obs.html",
       "obs-streak.html",
       "obs-match.html",
+      "timer-ui.js",
+      "timer.html",
+      "obs-timer.html",
+      "timer-render.js",
+      "timer-render.css",
       "killers/**/*",
       "assets/**/*"
     ],
@@ -33,12 +39,10 @@
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
-      "artifactName": "DBD-Overlay-Studio-Windows-x64-Setup.${ext}",
+      "artifactName": "DBD-Overlay-Studio-Beta-2.0.0-Windows-x64-Setup.${ext}",
       "executableName": "DBD Overlay Studio",
       "icon": "assets/icon.ico"
     },

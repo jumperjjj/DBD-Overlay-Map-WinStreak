@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=1920,height=1080,initial-scale=1">
+<link rel="stylesheet" href="/timer-render.css">
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transparent}
+#stage{position:absolute;transform-origin:0 0;display:none}
+#timerRoot{width:100%;height:100%}
+</style></head>
+<body><div id="stage"><div id="timerRoot" class="timer-widget"></div></div>
+<script src="/timer-render.js"></script>
+<script>
+const BASES={0:[230,310],1:[640,150],2:[680,160]};let T=null,lastFetch=0;
+async function refresh(){try{T=await fetch('/state',{cache:'no-store'}).then(r=>r.json())}catch{}}
+function frame(now){
+  if(now-lastFetch>120){lastFetch=now;refresh()}
+  if(T){
+    const style=Math.max(0,Math.min(2,+T.style||0));const b=BASES[style]||BASES[1];
+    stage.style.display=T.enabled?'block':'none';
+    stage.style.left=(+T.x||0)+'px';stage.style.top=(+T.y||0)+'px';
+    stage.style.width=b[0]+'px';stage.style.height=b[1]+'px';
+    stage.style.transform=`scale(${Math.max(.5,Math.min(2,+T.scale||1))})`;
+    TimerRenderer.apply(timerRoot,T,Date.now());
+  }
+  requestAnimationFrame(frame)
+}
+refresh();requestAnimationFrame(frame);
+</script></body></html>

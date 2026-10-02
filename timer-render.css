@@ -1,0 +1,49 @@
+:root{font-family:Segoe UI,Arial,sans-serif}
+*{box-sizing:border-box}
+.timer-widget{position:relative;width:100%;height:100%;color:#f4f4f5;--accent:#f4ecec;--panel:rgba(15,16,22,.88);--panel2:rgba(39,40,47,.72);--border:rgba(255,255,255,.20);--muted:#8f9098;--inactive:#7e7f87;--shadow:0 10px 30px rgba(0,0,0,.38);font-variant-numeric:tabular-nums;user-select:none}
+.timer-widget .timer-shell{position:absolute;inset:0;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.timer-widget .timer-player{position:relative;min-width:0}
+.timer-widget .timer-name{font-size:13px;font-weight:900;letter-spacing:1.3px;text-transform:uppercase;color:#ededf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer-widget .timer-time{font-size:34px;line-height:1;font-weight:900;letter-spacing:-1px;color:var(--inactive);text-shadow:0 2px 8px rgba(0,0,0,.45)}
+.timer-widget .timer-player.active .timer-time,.timer-widget .timer-player.running .timer-time{color:var(--accent)}
+.timer-widget .timer-player.active .timer-name{color:#fff}
+.timer-widget .active-mark{position:absolute;background:var(--accent);box-shadow:0 0 14px color-mix(in srgb,var(--accent) 45%,transparent);opacity:0;transition:opacity .15s ease}
+.timer-widget .timer-player.active .active-mark{opacity:1}
+.timer-widget .timer-score{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:900;color:#fff;white-space:nowrap}
+.timer-widget .timer-score .dash{color:var(--accent)}
+.timer-widget .timer-score-label{font-size:9px;letter-spacing:1.5px;font-weight:900;color:var(--muted);text-align:center;text-transform:uppercase;margin-bottom:6px}
+.timer-widget .score-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer-widget .timer-score-box{background:var(--panel2);border:1px solid var(--border);box-shadow:0 4px 18px rgba(0,0,0,.24)}
+.timer-widget.zero-opacity .timer-shell,.timer-widget.zero-opacity .timer-score-box{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important}
+.timer-widget.zero-opacity .active-mark{display:none}
+
+/* Preset 1 — Vertical */
+.timer-widget.style-0 .timer-shell{border-radius:8px;padding:20px 18px;display:grid;grid-template-rows:1fr auto 1fr;gap:12px}
+.timer-widget.style-0 .timer-player{display:flex;flex-direction:column;justify-content:center;padding-left:8px}
+.timer-widget.style-0 .timer-time{font-size:34px;margin-top:6px}
+.timer-widget.style-0 .active-mark{left:-18px;top:5px;bottom:5px;width:4px;border-radius:0 3px 3px 0}
+.timer-widget.style-0 .timer-score-box{min-width:88px;padding:9px 14px;border-radius:6px}
+.timer-widget.style-0 .timer-score{font-size:18px;gap:8px}
+
+/* Preset 2 — Horizontal */
+.timer-widget.style-1 .timer-shell{border-radius:16px;padding:22px 20px;display:grid;grid-template-columns:1fr 126px 1fr;align-items:center;gap:18px}
+.timer-widget.style-1 .timer-player.p1{text-align:left;padding-left:2px}
+.timer-widget.style-1 .timer-player.p2{text-align:right;padding-right:2px}
+.timer-widget.style-1 .timer-time{font-size:35px;margin-top:7px}
+.timer-widget.style-1 .timer-player.p2 .timer-name,.timer-widget.style-1 .timer-player.p2 .timer-time{text-align:right}
+.timer-widget.style-1 .active-mark{height:3px;left:0;right:0;bottom:-12px;border-radius:3px}
+.timer-widget.style-1 .timer-score-box{min-width:105px;padding:11px 16px;border-radius:8px}
+.timer-widget.style-1 .timer-score{font-size:20px}
+
+/* Preset 3 — Glass */
+.timer-widget.style-2 .timer-shell{border-radius:28px;padding:22px 24px;display:grid;grid-template-columns:1fr 132px 1fr;align-items:center;gap:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:linear-gradient(100deg,var(--panel),color-mix(in srgb,var(--panel) 72%,white 7%));border-width:2px}
+.timer-widget.style-2 .timer-player.p1{text-align:left}
+.timer-widget.style-2 .timer-player.p2{text-align:right}
+.timer-widget.style-2 .timer-player.p2 .timer-name,.timer-widget.style-2 .timer-player.p2 .timer-time{text-align:right}
+.timer-widget.style-2 .timer-time{font-size:36px;margin-top:7px}
+.timer-widget.style-2 .active-mark{height:3px;left:0;right:0;bottom:-11px;border-radius:999px}
+.timer-widget.style-2 .timer-score-box{min-width:110px;padding:11px 16px;border-radius:999px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.timer-widget.style-2 .timer-score{font-size:20px}
+
+.timer-widget.winner-1 .p1 .timer-name,.timer-widget.winner-1 .p1 .timer-time,
+.timer-widget.winner-2 .p2 .timer-name,.timer-widget.winner-2 .p2 .timer-time{color:var(--accent)}

@@ -1,0 +1,414 @@
+const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+
+const TIMER_PORT = 17385;
+const TIMER_BASES = {
+  0: { w: 230, h: 310 },
+  1: { w: 640, h: 150 },
+  2: { w: 680, h: 160 }
+};
+const TIMER_SCALE = { min: 0.50, max: 2.00 };
+
+const TIMER_DEF = {
+  schema: 200,
+  enabled: false,
+  x: 70,
+  y: 360,
+  scale: 1,
+  style: 1,
+  player1: 'PLAYER 1',
+  player2: 'PLAYER 2',
+  score1: 0,
+  score2: 0,
+  active: 1,
+  time1: 0,
+  time2: 0,
+  done1: false,
+  done2: false,
+  running: false,
+  runningPlayer: 0,
+  startedAt: 0,
+  accent: '#f4ecec',
+  opacity: 0.88,
+  hotkeyAction: 'F1',
+  hotkeySwap: 'F2',
+  lastWinner: 0,
+  lastDelta: 0,
+  round: 1
+};
+
+let T = null;
+let timerWin = null;
+let timerServer = null;
+let timerEditing = false;
+let timerQuitting = false;
+let registeredAction = '';
+let registeredSwap = '';
+let lastActionAt = 0;
+
+const rawUnregisterAll = globalShortcut.unregisterAll.bind(globalShortcut);
+const rawUnregister = globalShortcut.unregister.bind(globalShortcut);
+
+function clone(v) { return JSON.parse(JSON.stringify(v)); }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)); }
+function clampInt(v, min, max) { return Math.round(clamp(v, min, max)); }
+function timerFile() { return path.join(app.getPath('userData'), 'timer-v200.json'); }
+function baseFor(style = T?.style ?? 1) { return TIMER_BASES[clampInt(style, 0, 2)] || TIMER_BASES[1]; }
+
+function normalizeTimer() {
+  if (!T) T = clone(TIMER_DEF);
+  T.scale = clamp(T.scale || 1, TIMER_SCALE.min, TIMER_SCALE.max);
+  T.style = clampInt(T.style, 0, 2);
+  T.opacity = clamp(T.opacity, 0, 1);
+  T.score1 = Math.max(0, Math.floor(Number(T.score1) || 0));
+  T.score2 = Math.max(0, Math.floor(Number(T.score2) || 0));
+  T.active = Number(T.active) === 2 ? 2 : 1;
+  T.time1 = Math.max(0, Number(T.time1) || 0);
+  T.time2 = Math.max(0, Number(T.time2) || 0);
+  T.done1 = !!T.done1;
+  T.done2 = !!T.done2;
+  T.running = !!T.running;
+  T.runningPlayer = T.running ? (Number(T.runningPlayer) === 2 ? 2 : 1) : 0;
+  T.player1 = String(T.player1 || 'PLAYER 1').slice(0, 36);
+  T.player2 = String(T.player2 || 'PLAYER 2').slice(0, 36);
+  T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#f4ecec';
+  T.hotkeyAction = String(T.hotkeyAction || '');
+  T.hotkeySwap = String(T.hotkeySwap || '');
+  T.schema = 200;
+}
+
+function loadTimer() {
+  T = clone(TIMER_DEF);
+  try {
+    const saved = JSON.parse(fs.readFileSync(timerFile(), 'utf8'));
+    if (saved && typeof saved === 'object') T = { ...T, ...saved };
+  } catch {}
+  // A running timer never resumes across application restarts.
+  T.running = false;
+  T.runningPlayer = 0;
+  T.startedAt = 0;
+  normalizeTimer();
+}
+
+function saveTimer() {
+  normalizeTimer();
+  try { fs.writeFileSync(timerFile(), JSON.stringify(T, null, 2)); } catch {}
+  pushTimer();
+}
+
+function pushTimer() {
+  const snapshot = { ...T };
+  BrowserWindow.getAllWindows().forEach(w => {
+    if (!w || w.isDestroyed() || w.webContents.isDestroyed()) return;
+    try { w.webContents.send('timer-state', snapshot); } catch {}
+  });
+}
+
+function timerWindowSize() {
+  const b = baseFor();
+  return { width: Math.round(b.w * T.scale), height: Math.round(b.h * T.scale) };
+}
+
+function clampTimerToDisplay(rect) {
+  const d = screen.getDisplayMatching(rect);
+  const b = d.bounds;
+  const width = Math.min(rect.width, b.width);
+  const height = Math.min(rect.height, b.height);
+  let x = Math.max(b.x, Math.min(rect.x, b.x + b.width - width));
+  let y = Math.max(b.y, Math.min(rect.y, b.y + b.height - height));
+  if (Math.abs(x - b.x) <= 10) x = b.x;
+  if (Math.abs(y - b.y) <= 10) y = b.y;
+  if (Math.abs((x + width) - (b.x + b.width)) <= 10) x = b.x + b.width - width;
+  if (Math.abs((y + height) - (b.y + b.height)) <= 10) y = b.y + b.height - height;
+  return { x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) };
+}
+
+function applyTimerGeometry(keepCenter = false) {
+  if (!timerWin || timerWin.isDestroyed()) return;
+  const old = timerWin.getBounds();
+  const size = timerWindowSize();
+  let x = Number.isFinite(+T.x) ? +T.x : old.x;
+  let y = Number.isFinite(+T.y) ? +T.y : old.y;
+  if (keepCenter) {
+    x = Math.round(old.x + old.width / 2 - size.width / 2);
+    y = Math.round(old.y + old.height / 2 - size.height / 2);
+  }
+  const next = clampTimerToDisplay({ x, y, ...size });
+  timerWin.setBounds(next);
+  try { timerWin.webContents.setZoomFactor(T.scale); } catch {}
+  T.x = next.x;
+  T.y = next.y;
+}
+
+function timerVisibility() {
+  if (!timerWin || timerWin.isDestroyed()) return;
+  if (T.enabled || timerEditing) {
+    if (!timerWin.isVisible()) timerWin.showInactive();
+    timerWin.moveTop();
+  } else if (timerWin.isVisible()) {
+    timerWin.hide();
+  }
+}
+
+function createTimerWindow() {
+  const size = timerWindowSize();
+  timerWin = new BrowserWindow({
+    x: T.x,
+    y: T.y,
+    width: size.width,
+    height: size.height,
+    show: false,
+    frame: false,
+    transparent: true,
+    hasShadow: false,
+    resizable: false,
+    movable: true,
+    focusable: true,
+    skipTaskbar: true,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      backgroundThrottling: false
+    }
+  });
+  timerWin.setAlwaysOnTop(true, 'screen-saver');
+  timerWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  timerWin.setIgnoreMouseEvents(true, { forward: true });
+  timerWin.loadFile('timer.html');
+  timerWin.webContents.once('did-finish-load', () => {
+    try { timerWin.webContents.setZoomFactor(T.scale); } catch {}
+    pushTimer();
+    timerVisibility();
+  });
+  timerWin.on('move', () => {
+    if (!timerEditing || !timerWin || timerWin.isDestroyed()) return;
+    const [x, y] = timerWin.getPosition();
+    T.x = x; T.y = y;
+    pushTimer();
+  });
+}
+
+function setTimerEdit(v) {
+  timerEditing = !!v;
+  if (!timerWin || timerWin.isDestroyed()) return T;
+  timerWin.setIgnoreMouseEvents(!timerEditing, { forward: true });
+  timerWin.setFocusable(timerEditing);
+  if (timerEditing) { timerWin.show(); timerWin.focus(); timerWin.moveTop(); }
+  else { saveTimer(); timerVisibility(); }
+  try { timerWin.webContents.send('timer-edit', timerEditing); } catch {}
+  BrowserWindow.getAllWindows().forEach(w => {
+    if (w === timerWin || w.isDestroyed()) return;
+    try { w.webContents.send('timer-edit', timerEditing); } catch {}
+  });
+  return T;
+}
+
+function startTimerServer() {
+  timerServer = http.createServer((req, res) => {
+    const url = (req.url || '').split('?')[0];
+    if (url === '/state') {
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+        'Access-Control-Allow-Origin': '*'
+      });
+      return res.end(JSON.stringify(T));
+    }
+    const files = {
+      '/obs-timer': ['obs-timer.html', 'text/html; charset=utf-8'],
+      '/timer-render.js': ['timer-render.js', 'application/javascript; charset=utf-8'],
+      '/timer-render.css': ['timer-render.css', 'text/css; charset=utf-8']
+    };
+    if (files[url]) {
+      const [file, type] = files[url];
+      try {
+        const body = fs.readFileSync(path.join(__dirname, file));
+        res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
+        return res.end(body);
+      } catch {
+        res.writeHead(404); return res.end();
+      }
+    }
+    res.writeHead(404); res.end();
+  });
+  timerServer.on('error', () => {});
+  timerServer.listen(TIMER_PORT, '127.0.0.1');
+}
+
+function currentMs(player, now = Date.now()) {
+  if (T.running && T.runningPlayer === player) return Math.max(0, now - T.startedAt);
+  return player === 1 ? T.time1 : T.time2;
+}
+
+function startActiveTimer() {
+  const p = T.active;
+  const alreadyDone = p === 1 ? T.done1 : T.done2;
+  if (alreadyDone) return false;
+  if (p === 1) T.time1 = 0; else T.time2 = 0;
+  T.running = true;
+  T.runningPlayer = p;
+  T.startedAt = Date.now();
+  T.lastWinner = 0;
+  T.lastDelta = 0;
+  saveTimer();
+  return true;
+}
+
+function stopRunningTimer() {
+  if (!T.running) return false;
+  const p = T.runningPlayer;
+  const elapsed = currentMs(p);
+  if (p === 1) { T.time1 = elapsed; T.done1 = true; }
+  else { T.time2 = elapsed; T.done2 = true; }
+  T.running = false;
+  T.runningPlayer = 0;
+  T.startedAt = 0;
+  saveTimer();
+  return true;
+}
+
+function resolveRound() {
+  if (!T.done1 || !T.done2 || T.running) return false;
+  const a = Number(T.time1) || 0;
+  const b = Number(T.time2) || 0;
+  if (a < b) { T.score1 += 1; T.lastWinner = 1; T.lastDelta = b - a; }
+  else if (b < a) { T.score2 += 1; T.lastWinner = 2; T.lastDelta = a - b; }
+  else { T.lastWinner = 3; T.lastDelta = 0; }
+  T.time1 = 0; T.time2 = 0;
+  T.done1 = false; T.done2 = false;
+  T.active = 1;
+  T.round += 1;
+  saveTimer();
+  return true;
+}
+
+function timerAction() {
+  const now = Date.now();
+  if (now - lastActionAt < 180) return T;
+  lastActionAt = now;
+  if (T.running) stopRunningTimer();
+  else if (T.done1 && T.done2) resolveRound();
+  else startActiveTimer();
+  return T;
+}
+
+function timerSwap() {
+  if (T.running) return T;
+  T.active = T.active === 1 ? 2 : 1;
+  saveTimer();
+  return T;
+}
+
+function resetTimerMatch() {
+  const keep = {
+    enabled: T.enabled,
+    x: T.x, y: T.y,
+    scale: T.scale,
+    style: T.style,
+    player1: T.player1,
+    player2: T.player2,
+    accent: T.accent,
+    opacity: T.opacity,
+    hotkeyAction: T.hotkeyAction,
+    hotkeySwap: T.hotkeySwap
+  };
+  T = { ...clone(TIMER_DEF), ...keep };
+  saveTimer();
+  timerVisibility();
+  return T;
+}
+
+function unregisterTimerHotkeys() {
+  if (registeredAction) { try { rawUnregister(registeredAction); } catch {} }
+  if (registeredSwap && registeredSwap !== registeredAction) { try { rawUnregister(registeredSwap); } catch {} }
+  registeredAction = '';
+  registeredSwap = '';
+}
+
+function registerTimerHotkeys() {
+  if (!app.isReady() || timerQuitting || !T) return { action: false, swap: false };
+  unregisterTimerHotkeys();
+  let actionOk = true;
+  let swapOk = true;
+  if (T.hotkeyAction) {
+    try { actionOk = globalShortcut.register(T.hotkeyAction, timerAction); }
+    catch { actionOk = false; }
+    if (actionOk) registeredAction = T.hotkeyAction;
+  }
+  if (T.hotkeySwap && T.hotkeySwap !== T.hotkeyAction) {
+    try { swapOk = globalShortcut.register(T.hotkeySwap, timerSwap); }
+    catch { swapOk = false; }
+    if (swapOk) registeredSwap = T.hotkeySwap;
+  } else if (T.hotkeySwap && T.hotkeySwap === T.hotkeyAction) {
+    swapOk = false;
+  }
+  return { action: actionOk, swap: swapOk };
+}
+
+function setTimerHotkey(which, accel) {
+  accel = String(accel || '');
+  const old = which === 'swap' ? T.hotkeySwap : T.hotkeyAction;
+  if (which === 'swap') T.hotkeySwap = accel; else T.hotkeyAction = accel;
+  const result = registerTimerHotkeys();
+  const ok = which === 'swap' ? result.swap : result.action;
+  if (!ok && accel) {
+    if (which === 'swap') T.hotkeySwap = old; else T.hotkeyAction = old;
+    registerTimerHotkeys();
+    return { ok: false, state: T };
+  }
+  saveTimer();
+  return { ok: true, state: T };
+}
+
+// The legacy main process clears all Electron global shortcuts when the WinStreak
+// hotkey changes. Re-register the new 1v1 timer shortcuts right after that clear.
+globalShortcut.unregisterAll = function patchedUnregisterAll() {
+  rawUnregisterAll();
+  registeredAction = '';
+  registeredSwap = '';
+  if (!timerQuitting && app.isReady()) setTimeout(() => registerTimerHotkeys(), 0);
+};
+
+app.on('before-quit', () => {
+  timerQuitting = true;
+  try { unregisterTimerHotkeys(); } catch {}
+  try { timerServer?.close(); } catch {}
+});
+
+// Keep the existing WinStreak + Confronto app intact and layer the timer module on top.
+require('./main.js');
+
+ipcMain.handle('timer-get', () => ({ state: T, url: `http://127.0.0.1:${TIMER_PORT}/obs-timer`, editing: timerEditing }));
+ipcMain.handle('timer-patch', (_, patch) => {
+  const prevStyle = T.style;
+  const prevScale = T.scale;
+  T = { ...T, ...(patch || {}) };
+  normalizeTimer();
+  if (T.style !== prevStyle || T.scale !== prevScale) applyTimerGeometry(true);
+  saveTimer();
+  timerVisibility();
+  return T;
+});
+ipcMain.handle('timer-action', () => timerAction());
+ipcMain.handle('timer-swap', () => timerSwap());
+ipcMain.handle('timer-score', (_, player, delta) => {
+  const key = Number(player) === 2 ? 'score2' : 'score1';
+  T[key] = Math.max(0, (Number(T[key]) || 0) + (Number(delta) || 0));
+  saveTimer();
+  return T;
+});
+ipcMain.handle('timer-reset', () => resetTimerMatch());
+ipcMain.handle('timer-hotkey', (_, which, accel) => setTimerHotkey(which === 'swap' ? 'swap' : 'action', accel));
+ipcMain.handle('timer-edit', (_, v) => setTimerEdit(v));
+
+app.whenReady().then(() => {
+  loadTimer();
+  createTimerWindow();
+  startTimerServer();
+  registerTimerHotkeys();
+  setTimeout(pushTimer, 400);
+});
