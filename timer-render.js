@@ -30,8 +30,8 @@
     root.style.setProperty('--panel-soft',`rgba(${sr},${sg},${sb},${(opacity*.54).toFixed(3)})`);
     root.style.setProperty('--border',`rgba(255,255,255,${(opacity*.18).toFixed(3)})`);
     root.style.setProperty('--shadow',opacity<=.001?'none':`0 10px 28px rgba(0,0,0,${(.12+.22*opacity).toFixed(3)})`);
-    root.querySelector('[data-name="1"]').innerHTML=esc(s.player1||'PLAYER 1');
-    root.querySelector('[data-name="2"]').innerHTML=esc(s.player2||'PLAYER 2');
+    root.querySelector('[data-name="1"]').innerHTML=esc(s.player1??'PLAYER 1');
+    root.querySelector('[data-name="2"]').innerHTML=esc(s.player2??'PLAYER 2');
     root.querySelector('[data-score="1"]').textContent=Math.max(0,Number(s.score1)||0);
     root.querySelector('[data-score="2"]').textContent=Math.max(0,Number(s.score2)||0);
     const time1=root.querySelector('[data-time="1"]'),time2=root.querySelector('[data-time="2"]');

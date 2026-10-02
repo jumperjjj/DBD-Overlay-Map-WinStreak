@@ -73,54 +73,11 @@ let saveMoveTimer = null;
 let timerWriteTimer = null;
 let pendingRoundTimer = null;
 const timerSseClients = new Set();
-let uIOhook = null;
-let mouseHookStarted = false;
-const mouseShortcuts = new Map();
-
+// Beta 2.1.0 safety build: native global mouse hooks remain removed.
+// Electron's built-in globalShortcut remains for keyboard shortcuts only.
 function isMouseAccel(v) { return /^MOUSE[3-5]$/i.test(String(v || '').trim()); }
-function normalizeMouseAccel(v) { const m=String(v||'').trim().toUpperCase(); return isMouseAccel(m)?m:''; }
-function buttonToMouseAccel(button) {
-  const b = Number(button);
-  if (b === 3) return 'MOUSE3';
-  if (b === 4) return 'MOUSE4';
-  if (b === 5) return 'MOUSE5';
-  return '';
-}
-function ensureMouseHook() {
-  if (mouseHookStarted) return true;
-  try {
-    if (!uIOhook) ({ uIOhook } = require('uiohook-napi'));
-    uIOhook.on('mousedown', e => {
-      const key = buttonToMouseAccel(e?.button);
-      if (!key) return;
-      for (const entry of mouseShortcuts.values()) {
-        if (entry?.key === key) { try { entry.cb(); } catch {} }
-      }
-    });
-    uIOhook.start();
-    mouseHookStarted = true;
-    return true;
-  } catch { return false; }
-}
-function registerMouseShortcut(owner, accel, cb) {
-  const key = normalizeMouseAccel(accel);
-  mouseShortcuts.delete(owner);
-  if (!key) return true;
-  if (!ensureMouseHook()) return false;
-  mouseShortcuts.set(owner, { key, cb });
-  return true;
-}
-function unregisterMouseShortcut(owner) {
-  mouseShortcuts.delete(owner);
-  // uiohook hooks the whole mouse. Do not leave it running after the last
-  // mouse shortcut is removed; this was a likely source of cursor stutter.
-  if (mouseHookStarted && mouseShortcuts.size === 0) {
-    try { uIOhook?.stop(); } catch {}
-    mouseHookStarted = false;
-  }
-}
-global.__dbdRegisterMouseShortcut = registerMouseShortcut;
-global.__dbdUnregisterMouseShortcut = unregisterMouseShortcut;
+global.__dbdRegisterMouseShortcut = () => false;
+global.__dbdUnregisterMouseShortcut = () => {};
 global.__dbdIsMouseAccel = isMouseAccel;
 
 const rawUnregisterAll = globalShortcut.unregisterAll.bind(globalShortcut);
@@ -171,14 +128,19 @@ function normalizeTimer() {
   T.done2 = !!T.done2;
   T.running = !!T.running;
   T.runningPlayer = T.running ? (Number(T.runningPlayer) === 2 ? 2 : 1) : 0;
-  T.player1 = String(T.player1 || 'PLAYER 1').slice(0, 48);
-  T.player2 = String(T.player2 || 'PLAYER 2').slice(0, 48);
+  T.player1 = String(T.player1 ?? 'PLAYER 1').slice(0, 48);
+  T.player2 = String(T.player2 ?? 'PLAYER 2').slice(0, 48);
   T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#22c55e';
   // Beta 2.0.1: Rainbow preset removed; keep one solid accent color.
   T.accentMode = 'solid';
   T.hotkeyAction = String(T.hotkeyAction || 'F1');
   T.hotkeySwap = String(T.hotkeySwap || 'F2');
   T.hotkeyReset = String(T.hotkeyReset || 'F3');
+  // Older test builds allowed MOUSE3/4/5 through a native low-level hook.
+  // Migrate those saved values back to the safe keyboard defaults.
+  if (isMouseAccel(T.hotkeyAction)) T.hotkeyAction = 'F1';
+  if (isMouseAccel(T.hotkeySwap)) T.hotkeySwap = 'F2';
+  if (isMouseAccel(T.hotkeyReset)) T.hotkeyReset = 'F3';
   T.autoSwap = !!T.autoSwap;
   T.bestOf = [1,3,5,7].includes(Number(T.bestOf)) ? Number(T.bestOf) : 3;
   T.matchWinner = [1,2].includes(Number(T.matchWinner)) ? Number(T.matchWinner) : 0;
@@ -610,9 +572,6 @@ function unregisterTimerHotkeys() {
   if (registeredAction && !isMouseAccel(registeredAction)) { try { rawUnregister(registeredAction); } catch {} }
   if (registeredSwap && registeredSwap !== registeredAction && !isMouseAccel(registeredSwap)) { try { rawUnregister(registeredSwap); } catch {} }
   if (registeredReset && registeredReset !== registeredAction && registeredReset !== registeredSwap && !isMouseAccel(registeredReset)) { try { rawUnregister(registeredReset); } catch {} }
-  unregisterMouseShortcut('timer.action');
-  unregisterMouseShortcut('timer.swap');
-  unregisterMouseShortcut('timer.reset');
   registeredAction = '';
   registeredSwap = '';
   registeredReset = '';
@@ -625,17 +584,17 @@ function registerTimerHotkeys() {
   let swapOk = true;
   let resetOk = true;
   if (T.hotkeyAction && !hotkeyConflict(T.hotkeyAction, 'timer.action')) {
-    if (isMouseAccel(T.hotkeyAction)) actionOk = registerMouseShortcut('timer.action', T.hotkeyAction, timerAction);
+    if (isMouseAccel(T.hotkeyAction)) actionOk = false;
     else { try { actionOk = globalShortcut.register(T.hotkeyAction, timerAction); } catch { actionOk = false; } }
     if (actionOk) registeredAction = T.hotkeyAction;
   } else if (T.hotkeyAction) actionOk = false;
   if (T.hotkeySwap && !hotkeyConflict(T.hotkeySwap, 'timer.swap')) {
-    if (isMouseAccel(T.hotkeySwap)) swapOk = registerMouseShortcut('timer.swap', T.hotkeySwap, timerSwap);
+    if (isMouseAccel(T.hotkeySwap)) swapOk = false;
     else { try { swapOk = globalShortcut.register(T.hotkeySwap, timerSwap); } catch { swapOk = false; } }
     if (swapOk) registeredSwap = T.hotkeySwap;
   } else if (T.hotkeySwap) swapOk = false;
   if (T.hotkeyReset && !hotkeyConflict(T.hotkeyReset, 'timer.reset')) {
-    if (isMouseAccel(T.hotkeyReset)) resetOk = registerMouseShortcut('timer.reset', T.hotkeyReset, resetTimerMatch);
+    if (isMouseAccel(T.hotkeyReset)) resetOk = false;
     else { try { resetOk = globalShortcut.register(T.hotkeyReset, resetTimerMatch); } catch { resetOk = false; } }
     if (resetOk) registeredReset = T.hotkeyReset;
   } else if (T.hotkeyReset) resetOk = false;
@@ -680,9 +639,6 @@ app.on('before-quit', () => {
   clearPendingRound();
   try { flushTimerFile(); } catch {}
   try { unregisterTimerHotkeys(); } catch {}
-  try { if (mouseHookStarted && uIOhook) uIOhook.stop(); } catch {}
-  mouseHookStarted = false;
-  mouseShortcuts.clear();
   for (const res of [...timerSseClients]) { try { res.end(); } catch {} }
   timerSseClients.clear();
   try { timerServer?.close(); } catch {}
