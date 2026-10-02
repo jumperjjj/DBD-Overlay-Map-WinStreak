@@ -3,19 +3,21 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
 const TIMER_PORT = 17385;
 const TIMER_BASES = {
-  0: { w: 226, h: 274 }, // Side Stack — tighter right edge
+  0: { w: 210, h: 250 }, // Side Stack — compact independent cards
   1: { w: 258, h: 292 }, // Split Tower
-  2: { w: 506, h: 110 }, // Center Beam — tighter horizontal body
-  3: { w: 510, h: 112 }, // Corner Rail — reduced side space
+  2: { w: 520, h: 116 }, // Center Beam
+  3: { w: 520, h: 116 }, // Corner Rail
   4: { w: 526, h: 118 }, // Glass Wings
-  5: { w: 524, h: 110 }  // Glass Ribbon — reduced side space
+  5: { w: 520, h: 116 }  // Glass Ribbon
 };
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 222,
+  schema: 223,
   enabled: false,
   x: 70,
   y: 360,
@@ -45,6 +47,8 @@ const TIMER_DEF = {
   celebrationWinner: 0,
   celebrationUntil: 0,
   celebrationId: 0,
+  audioEventId: 0,
+  audioEventType: '',
   lastWinner: 0,
   lastDelta: 0,
   round: 1
@@ -108,6 +112,13 @@ function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)
 function clampInt(v, min, max) { return Math.round(clamp(v, min, max)); }
 function timerFile() { return path.join(app.getPath('userData'), 'timer-v200.json'); }
 function legacySettingsFile() { return path.join(app.getPath('userData'), 'settings-v270.json'); }
+function currentLanguage() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(legacySettingsFile(), 'utf8'));
+    return ['pt','en','es'].includes(saved?.language) ? saved.language : 'pt';
+  } catch { return 'pt'; }
+}
+function timerSnapshot() { return { ...T, language: currentLanguage() }; }
 function baseFor(style = T?.style ?? 2) { return TIMER_BASES[clampInt(style, 0, 5)] || TIMER_BASES[2]; }
 
 // Timer Test 3: compact scale range. 70% is reduced but still readable;
@@ -152,7 +163,9 @@ function normalizeTimer() {
   T.celebrationWinner = [1,2].includes(Number(T.celebrationWinner)) ? Number(T.celebrationWinner) : 0;
   T.celebrationUntil = Math.max(0, Number(T.celebrationUntil) || 0);
   T.celebrationId = Math.max(0, Math.floor(Number(T.celebrationId) || 0));
-  T.schema = 222;
+  T.audioEventId = Math.max(0, Math.floor(Number(T.audioEventId) || 0));
+  T.audioEventType = ['start','stop','victory'].includes(String(T.audioEventType || '')) ? String(T.audioEventType) : '';
+  T.schema = 223;
 }
 
 function loadTimer() {
@@ -175,7 +188,7 @@ function saveTimer() { writeTimerFile(); pushTimer(); }
 
 function pushTimer() {
   if (!T) return;
-  const snapshot = { ...T };
+  const snapshot = timerSnapshot();
   BrowserWindow.getAllWindows().forEach(w => {
     if (!w || w.isDestroyed() || w.webContents.isDestroyed()) return;
     try { w.webContents.send('timer-state', snapshot); } catch {}
@@ -281,7 +294,7 @@ function startTimerServer() {
         'Cache-Control': 'no-store',
         'Access-Control-Allow-Origin': '*'
       });
-      return res.end(JSON.stringify(T));
+      return res.end(JSON.stringify(timerSnapshot()));
     }
     const files = {
       '/obs-timer': ['obs-timer.html', 'text/html; charset=utf-8'],
@@ -309,6 +322,11 @@ function currentMs(player, now = Date.now()) {
   return player === 1 ? T.time1 : T.time2;
 }
 
+function setTimerAudioEvent(type) {
+  T.audioEventType = ['start','stop','victory'].includes(type) ? type : '';
+  T.audioEventId = (Number(T.audioEventId) || 0) + 1;
+}
+
 function startActiveTimer() {
   const p = T.active;
   const alreadyDone = p === 1 ? T.done1 : T.done2;
@@ -319,6 +337,7 @@ function startActiveTimer() {
   T.startedAt = Date.now();
   T.lastWinner = 0;
   T.lastDelta = 0;
+  setTimerAudioEvent('start');
   saveTimer();
   return true;
 }
@@ -333,6 +352,7 @@ function stopRunningTimer() {
   T.runningPlayer = 0;
   T.startedAt = 0;
   if (T.autoSwap && !(T.done1 && T.done2)) T.active = p === 1 ? 2 : 1;
+  setTimerAudioEvent('stop');
   saveTimer();
   return true;
 }
@@ -369,6 +389,7 @@ function evaluateMatchWinner(triggerCelebration = false) {
     T.celebrationWinner = winner;
     T.celebrationUntil = Date.now() + 4000;
     T.celebrationId = (Number(T.celebrationId) || 0) + 1;
+    setTimerAudioEvent('victory');
   }
   return winner;
 }
@@ -425,6 +446,8 @@ function resetTimerMatch() {
     bestOf: T.bestOf
   };
   T = { ...clone(TIMER_DEF), ...keep };
+  T.active = 1;
+  T.audioEventType = '';
   lastActionAt = 0;
   normalizeTimer();
   saveTimer();
@@ -523,7 +546,7 @@ ipcMain.handle('hotkey-conflict-check', (_, accel, owner) => {
   const c = hotkeyConflict(accel, String(owner || ''));
   return c ? { conflict: true, label: c.label } : { conflict: false };
 });
-ipcMain.handle('timer-get', () => ({ state: T, url: `http://127.0.0.1:${TIMER_PORT}/obs-timer`, editing: false }));
+ipcMain.handle('timer-get', () => ({ state: timerSnapshot(), url: `http://127.0.0.1:${TIMER_PORT}/obs-timer`, editing: false }));
 ipcMain.handle('timer-patch', (_, patch) => {
   const prevStyle = T.style;
   const prevScaleUi = T.scaleUi;

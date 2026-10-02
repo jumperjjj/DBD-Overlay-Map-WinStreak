@@ -1,13 +1,14 @@
-# DBD Overlay Studio — Beta 2.0.2
+# DBD Overlay Studio — Beta 2.0.3
 
-Versão de testes da reformulação geral do DBD Overlay Studio.
+Teste incremental da reformulação do **1v1 Timer**.
 
-## Em desenvolvimento
-- 1v1 Timer com 6 estilos, atalhos e placar automático.
-- Formatos MD1 / MD3 / MD5 / MD7.
-- WinStreak e Confronto serão reformulados nas próximas etapas.
-- Overlay local para OBS em 1920×1080.
+Nesta build o foco continua sendo somente o Timer antes da reformulação completa de WinStreak e Confronto.
 
-OBS: `http://127.0.0.1:17384/overlay`
-
-Esta é uma build Beta de testes.
+## Principais ajustes
+- layouts horizontais com mais respiro entre players e placar;
+- nomes e cronômetros centralizados nas respectivas áreas;
+- Side Stack reformulado e mais compacto;
+- reset volta a selecionar o Player 1;
+- efeito de vitória mais forte com VITÓRIA / WIN / VICTORIA no lugar do cronômetro;
+- sons distintos para início, parada e vitória da série;
+- ajustes de placar e espaçamento no painel.

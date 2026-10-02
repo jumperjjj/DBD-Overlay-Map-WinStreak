@@ -8,14 +8,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent
 <body><div id="timerRoot" class="timer-widget"></div>
 <script src="timer-render.js"></script>
 <script>
-let T=null,lastCelebrationId=0;
+let T=null;
 function draw(){if(T)TimerRenderer.apply(timerRoot,T,Date.now());requestAnimationFrame(draw)}
-function playVictoryChime(){
-  try{
-    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC();const start=ctx.currentTime+.02;
-    [523.25,659.25,783.99,1046.5].forEach((freq,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type=i%2?'triangle':'sine';o.frequency.value=freq;const t=start+i*.11;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.055,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+.34);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+.36)});setTimeout(()=>ctx.close().catch(()=>{}),1100)
-  }catch{}
-}
-api.onTimerState(s=>{T=s;const id=Number(s?.celebrationId)||0;if(id&&id!==lastCelebrationId&&Number(s?.celebrationUntil)>Date.now()){lastCelebrationId=id;playVictoryChime()}else if(id)lastCelebrationId=id});
-(async()=>{const x=await api.timerGet();T=x.state;lastCelebrationId=Number(T?.celebrationId)||0;draw()})();
+api.onTimerState(s=>{T=s});
+(async()=>{const x=await api.timerGet();T=x.state;draw()})();
 </script></body></html>
