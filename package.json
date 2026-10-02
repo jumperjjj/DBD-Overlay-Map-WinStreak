@@ -1,7 +1,7 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.0.0-beta.1",
-  "description": "DBD Overlay Studio - WinStreak, Match Overlay and 1v1 Timer",
+  "version": "2.0.0-beta.2",
+  "description": "DBD Overlay Studio - Beta 2.0.0 Timer Test 2",
   "main": "main-v2.js",
   "author": "Jumper",
   "license": "MIT",
@@ -39,10 +39,12 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "artifactName": "DBD-Overlay-Studio-Beta-2.0.0-Windows-x64-Setup.${ext}",
+      "artifactName": "DBD-Overlay-Studio-Beta-2.0.0-Timer-Test-2-Windows-x64-Setup.${ext}",
       "executableName": "DBD Overlay Studio",
       "icon": "assets/icon.ico"
     },

@@ -329,8 +329,10 @@ function createAll() {
 }
 
 function hotkey(k) {
-  globalShortcut.unregisterAll();
   const next = k || '';
+  const conflict = next && global.__dbdCheckHotkeyConflict ? global.__dbdCheckHotkeyConflict(next, 'streak.hotkey') : null;
+  if (conflict) return false;
+  globalShortcut.unregisterAll();
   if (next) {
     try {
       if (!globalShortcut.register(next, () => {

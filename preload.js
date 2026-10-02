@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   reset: section => ipcRenderer.invoke('reset', section),
   streakValue: (mode, n) => ipcRenderer.invoke('streak-value', mode, n),
   hotkey: k => ipcRenderer.invoke('hotkey', k),
+  checkHotkeyConflict: (accel, owner) => ipcRenderer.invoke('hotkey-conflict-check', accel, owner),
   edit: v => ipcRenderer.invoke('edit', v),
   saveBounds: () => ipcRenderer.invoke('save-bounds'),
   quitApp: () => ipcRenderer.invoke('quit-app'),

@@ -5,19 +5,23 @@ const http = require('http');
 
 const TIMER_PORT = 17385;
 const TIMER_BASES = {
-  0: { w: 230, h: 310 },
-  1: { w: 640, h: 150 },
-  2: { w: 680, h: 160 }
+  0: { w: 248, h: 286 }, // Vertical Edge
+  1: { w: 266, h: 300 }, // Vertical Core
+  2: { w: 620, h: 136 }, // Horizontal Line
+  3: { w: 652, h: 146 }, // Horizontal Split
+  4: { w: 650, h: 148 }, // Glass Arc
+  5: { w: 690, h: 136 }  // Glass Float
 };
-const TIMER_SCALE = { min: 0.50, max: 2.00 };
+const TIMER_SCALE_UI = { min: 70, max: 110 };
 
 const TIMER_DEF = {
-  schema: 200,
+  schema: 210,
   enabled: false,
   x: 70,
   y: 360,
+  scaleUi: 100,
   scale: 1,
-  style: 1,
+  style: 2,
   player1: 'PLAYER 1',
   player2: 'PLAYER 2',
   score1: 0,
@@ -30,10 +34,12 @@ const TIMER_DEF = {
   running: false,
   runningPlayer: 0,
   startedAt: 0,
-  accent: '#f4ecec',
+  accent: '#22c55e',
+  accentMode: 'solid',
   opacity: 0.88,
   hotkeyAction: 'F1',
   hotkeySwap: 'F2',
+  autoSwap: false,
   lastWinner: 0,
   lastDelta: 0,
   round: 1
@@ -42,11 +48,11 @@ const TIMER_DEF = {
 let T = null;
 let timerWin = null;
 let timerServer = null;
-let timerEditing = false;
 let timerQuitting = false;
 let registeredAction = '';
 let registeredSwap = '';
 let lastActionAt = 0;
+let saveMoveTimer = null;
 
 const rawUnregisterAll = globalShortcut.unregisterAll.bind(globalShortcut);
 const rawUnregister = globalShortcut.unregister.bind(globalShortcut);
@@ -55,12 +61,30 @@ function clone(v) { return JSON.parse(JSON.stringify(v)); }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)); }
 function clampInt(v, min, max) { return Math.round(clamp(v, min, max)); }
 function timerFile() { return path.join(app.getPath('userData'), 'timer-v200.json'); }
-function baseFor(style = T?.style ?? 1) { return TIMER_BASES[clampInt(style, 0, 2)] || TIMER_BASES[1]; }
+function legacySettingsFile() { return path.join(app.getPath('userData'), 'settings-v270.json'); }
+function baseFor(style = T?.style ?? 2) { return TIMER_BASES[clampInt(style, 0, 5)] || TIMER_BASES[2]; }
+
+// The UI intentionally shows 70–110. 100 is the native size; the last 10
+// steps grow more strongly so displayed 110% reaches the old ~140% maximum.
+function scaleFactorFromUi(value) {
+  const ui = clamp(Number(value) || 100, TIMER_SCALE_UI.min, TIMER_SCALE_UI.max);
+  if (ui <= 100) return 0.78 + ((ui - 70) / 30) * 0.22;
+  return 1 + ((ui - 100) / 10) * 0.40;
+}
+
+function migrateOldScale(oldScale) {
+  const s = Number(oldScale);
+  if (!Number.isFinite(s) || s <= 0) return 100;
+  if (s <= 1) return clampInt(70 + ((s - 0.78) / 0.22) * 30, 70, 100);
+  return clampInt(100 + ((s - 1) / 0.40) * 10, 100, 110);
+}
 
 function normalizeTimer() {
   if (!T) T = clone(TIMER_DEF);
-  T.scale = clamp(T.scale || 1, TIMER_SCALE.min, TIMER_SCALE.max);
-  T.style = clampInt(T.style, 0, 2);
+  if (!Number.isFinite(Number(T.scaleUi))) T.scaleUi = migrateOldScale(T.scale);
+  T.scaleUi = clampInt(T.scaleUi, TIMER_SCALE_UI.min, TIMER_SCALE_UI.max);
+  T.scale = scaleFactorFromUi(T.scaleUi);
+  T.style = clampInt(T.style, 0, 5);
   T.opacity = clamp(T.opacity, 0, 1);
   T.score1 = Math.max(0, Math.floor(Number(T.score1) || 0));
   T.score2 = Math.max(0, Math.floor(Number(T.score2) || 0));
@@ -71,12 +95,14 @@ function normalizeTimer() {
   T.done2 = !!T.done2;
   T.running = !!T.running;
   T.runningPlayer = T.running ? (Number(T.runningPlayer) === 2 ? 2 : 1) : 0;
-  T.player1 = String(T.player1 || 'PLAYER 1').slice(0, 36);
-  T.player2 = String(T.player2 || 'PLAYER 2').slice(0, 36);
-  T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#f4ecec';
+  T.player1 = String(T.player1 || 'PLAYER 1').slice(0, 48);
+  T.player2 = String(T.player2 || 'PLAYER 2').slice(0, 48);
+  T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#22c55e';
+  T.accentMode = T.accentMode === 'rainbow' ? 'rainbow' : 'solid';
   T.hotkeyAction = String(T.hotkeyAction || '');
   T.hotkeySwap = String(T.hotkeySwap || '');
-  T.schema = 200;
+  T.autoSwap = !!T.autoSwap;
+  T.schema = 210;
 }
 
 function loadTimer() {
@@ -85,20 +111,20 @@ function loadTimer() {
     const saved = JSON.parse(fs.readFileSync(timerFile(), 'utf8'));
     if (saved && typeof saved === 'object') T = { ...T, ...saved };
   } catch {}
-  // A running timer never resumes across application restarts.
   T.running = false;
   T.runningPlayer = 0;
   T.startedAt = 0;
   normalizeTimer();
 }
 
-function saveTimer() {
+function writeTimerFile() {
   normalizeTimer();
   try { fs.writeFileSync(timerFile(), JSON.stringify(T, null, 2)); } catch {}
-  pushTimer();
 }
+function saveTimer() { writeTimerFile(); pushTimer(); }
 
 function pushTimer() {
+  if (!T) return;
   const snapshot = { ...T };
   BrowserWindow.getAllWindows().forEach(w => {
     if (!w || w.isDestroyed() || w.webContents.isDestroyed()) return;
@@ -144,7 +170,7 @@ function applyTimerGeometry(keepCenter = false) {
 
 function timerVisibility() {
   if (!timerWin || timerWin.isDestroyed()) return;
-  if (T.enabled || timerEditing) {
+  if (T.enabled) {
     if (!timerWin.isVisible()) timerWin.showInactive();
     timerWin.moveTop();
   } else if (timerWin.isVisible()) {
@@ -155,6 +181,7 @@ function timerVisibility() {
 function createTimerWindow() {
   const size = timerWindowSize();
   timerWin = new BrowserWindow({
+    title: 'DBD Overlay Studio — 1v1 Timer Overlay',
     x: T.x,
     y: T.y,
     width: size.width,
@@ -166,7 +193,7 @@ function createTimerWindow() {
     resizable: false,
     movable: true,
     focusable: true,
-    skipTaskbar: true,
+    skipTaskbar: false,
     backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -177,7 +204,8 @@ function createTimerWindow() {
   });
   timerWin.setAlwaysOnTop(true, 'screen-saver');
   timerWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  timerWin.setIgnoreMouseEvents(true, { forward: true });
+  // The overlay itself is the drag handle now; no separate edit-position mode.
+  timerWin.setIgnoreMouseEvents(false);
   timerWin.loadFile('timer.html');
   timerWin.webContents.once('did-finish-load', () => {
     try { timerWin.webContents.setZoomFactor(T.scale); } catch {}
@@ -185,26 +213,13 @@ function createTimerWindow() {
     timerVisibility();
   });
   timerWin.on('move', () => {
-    if (!timerEditing || !timerWin || timerWin.isDestroyed()) return;
+    if (!timerWin || timerWin.isDestroyed() || !T) return;
     const [x, y] = timerWin.getPosition();
-    T.x = x; T.y = y;
-    pushTimer();
+    T.x = x;
+    T.y = y;
+    clearTimeout(saveMoveTimer);
+    saveMoveTimer = setTimeout(() => { writeTimerFile(); pushTimer(); }, 160);
   });
-}
-
-function setTimerEdit(v) {
-  timerEditing = !!v;
-  if (!timerWin || timerWin.isDestroyed()) return T;
-  timerWin.setIgnoreMouseEvents(!timerEditing, { forward: true });
-  timerWin.setFocusable(timerEditing);
-  if (timerEditing) { timerWin.show(); timerWin.focus(); timerWin.moveTop(); }
-  else { saveTimer(); timerVisibility(); }
-  try { timerWin.webContents.send('timer-edit', timerEditing); } catch {}
-  BrowserWindow.getAllWindows().forEach(w => {
-    if (w === timerWin || w.isDestroyed()) return;
-    try { w.webContents.send('timer-edit', timerEditing); } catch {}
-  });
-  return T;
 }
 
 function startTimerServer() {
@@ -267,6 +282,7 @@ function stopRunningTimer() {
   T.running = false;
   T.runningPlayer = 0;
   T.startedAt = 0;
+  if (T.autoSwap && !(T.done1 && T.done2)) T.active = p === 1 ? 2 : 1;
   saveTimer();
   return true;
 }
@@ -307,20 +323,43 @@ function resetTimerMatch() {
   const keep = {
     enabled: T.enabled,
     x: T.x, y: T.y,
-    scale: T.scale,
+    scaleUi: T.scaleUi,
     style: T.style,
     player1: T.player1,
     player2: T.player2,
     accent: T.accent,
+    accentMode: T.accentMode,
     opacity: T.opacity,
     hotkeyAction: T.hotkeyAction,
-    hotkeySwap: T.hotkeySwap
+    hotkeySwap: T.hotkeySwap,
+    autoSwap: T.autoSwap
   };
   T = { ...clone(TIMER_DEF), ...keep };
+  normalizeTimer();
   saveTimer();
   timerVisibility();
   return T;
 }
+
+function normalizeAccel(v) { return String(v || '').trim().toLowerCase(); }
+function legacyWinStreakHotkey() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(legacySettingsFile(), 'utf8'));
+    return String(saved?.streak?.hotkey || '');
+  } catch { return ''; }
+}
+function hotkeyConflict(accel, owner = '') {
+  const wanted = normalizeAccel(accel);
+  if (!wanted) return null;
+  const candidates = [
+    { owner: 'timer.action', key: T?.hotkeyAction || '', label: '1v1 Timer — Iniciar / Parar / Pontuar' },
+    { owner: 'timer.swap', key: T?.hotkeySwap || '', label: '1v1 Timer — Trocar player' },
+    { owner: 'streak.hotkey', key: legacyWinStreakHotkey(), label: 'WinStreak' }
+  ];
+  return candidates.find(c => c.owner !== owner && normalizeAccel(c.key) === wanted) || null;
+}
+
+global.__dbdCheckHotkeyConflict = hotkeyConflict;
 
 function unregisterTimerHotkeys() {
   if (registeredAction) { try { rawUnregister(registeredAction); } catch {} }
@@ -334,23 +373,24 @@ function registerTimerHotkeys() {
   unregisterTimerHotkeys();
   let actionOk = true;
   let swapOk = true;
-  if (T.hotkeyAction) {
+  if (T.hotkeyAction && !hotkeyConflict(T.hotkeyAction, 'timer.action')) {
     try { actionOk = globalShortcut.register(T.hotkeyAction, timerAction); }
     catch { actionOk = false; }
     if (actionOk) registeredAction = T.hotkeyAction;
-  }
-  if (T.hotkeySwap && T.hotkeySwap !== T.hotkeyAction) {
+  } else if (T.hotkeyAction) actionOk = false;
+  if (T.hotkeySwap && !hotkeyConflict(T.hotkeySwap, 'timer.swap')) {
     try { swapOk = globalShortcut.register(T.hotkeySwap, timerSwap); }
     catch { swapOk = false; }
     if (swapOk) registeredSwap = T.hotkeySwap;
-  } else if (T.hotkeySwap && T.hotkeySwap === T.hotkeyAction) {
-    swapOk = false;
-  }
+  } else if (T.hotkeySwap) swapOk = false;
   return { action: actionOk, swap: swapOk };
 }
 
 function setTimerHotkey(which, accel) {
   accel = String(accel || '');
+  const owner = which === 'swap' ? 'timer.swap' : 'timer.action';
+  const conflict = hotkeyConflict(accel, owner);
+  if (conflict && accel) return { ok: false, reason: 'internal', conflict: conflict.label, state: T };
   const old = which === 'swap' ? T.hotkeySwap : T.hotkeyAction;
   if (which === 'swap') T.hotkeySwap = accel; else T.hotkeyAction = accel;
   const result = registerTimerHotkeys();
@@ -358,14 +398,14 @@ function setTimerHotkey(which, accel) {
   if (!ok && accel) {
     if (which === 'swap') T.hotkeySwap = old; else T.hotkeyAction = old;
     registerTimerHotkeys();
-    return { ok: false, state: T };
+    return { ok: false, reason: 'system', state: T };
   }
   saveTimer();
   return { ok: true, state: T };
 }
 
-// The legacy main process clears all Electron global shortcuts when the WinStreak
-// hotkey changes. Re-register the new 1v1 timer shortcuts right after that clear.
+// The legacy WinStreak module clears all Electron global shortcuts when its
+// shortcut changes. Re-register the timer shortcuts immediately afterwards.
 globalShortcut.unregisterAll = function patchedUnregisterAll() {
   rawUnregisterAll();
   registeredAction = '';
@@ -375,20 +415,25 @@ globalShortcut.unregisterAll = function patchedUnregisterAll() {
 
 app.on('before-quit', () => {
   timerQuitting = true;
+  clearTimeout(saveMoveTimer);
   try { unregisterTimerHotkeys(); } catch {}
   try { timerServer?.close(); } catch {}
 });
 
-// Keep the existing WinStreak + Confronto app intact and layer the timer module on top.
+// Keep WinStreak + Confronto intact while the new Timer is tested.
 require('./main.js');
 
-ipcMain.handle('timer-get', () => ({ state: T, url: `http://127.0.0.1:${TIMER_PORT}/obs-timer`, editing: timerEditing }));
+ipcMain.handle('hotkey-conflict-check', (_, accel, owner) => {
+  const c = hotkeyConflict(accel, String(owner || ''));
+  return c ? { conflict: true, label: c.label } : { conflict: false };
+});
+ipcMain.handle('timer-get', () => ({ state: T, url: `http://127.0.0.1:${TIMER_PORT}/obs-timer`, editing: false }));
 ipcMain.handle('timer-patch', (_, patch) => {
   const prevStyle = T.style;
-  const prevScale = T.scale;
+  const prevScaleUi = T.scaleUi;
   T = { ...T, ...(patch || {}) };
   normalizeTimer();
-  if (T.style !== prevStyle || T.scale !== prevScale) applyTimerGeometry(true);
+  if (T.style !== prevStyle || T.scaleUi !== prevScaleUi) applyTimerGeometry(true);
   saveTimer();
   timerVisibility();
   return T;
@@ -403,7 +448,8 @@ ipcMain.handle('timer-score', (_, player, delta) => {
 });
 ipcMain.handle('timer-reset', () => resetTimerMatch());
 ipcMain.handle('timer-hotkey', (_, which, accel) => setTimerHotkey(which === 'swap' ? 'swap' : 'action', accel));
-ipcMain.handle('timer-edit', (_, v) => setTimerEdit(v));
+// Kept only for compatibility with the first Timer test; position editing is now direct.
+ipcMain.handle('timer-edit', () => T);
 
 app.whenReady().then(() => {
   loadTimer();
