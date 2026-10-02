@@ -9,10 +9,42 @@ body.overlayLocked,body.overlayLocked #timerRoot{cursor:default;-webkit-app-regi
 <body><div id="timerRoot" class="timer-widget"></div>
 <script src="timer-render.js"></script>
 <script>
-let T=null,lastSecond=-1,lastCelebration=0;
-function render(force=false){if(!T)return;const now=Date.now(),second=Math.floor(now/100);const celeb=Number(T.celebrationId)||0;if(force||T.running||second!==lastSecond||celeb!==lastCelebration){lastSecond=second;lastCelebration=celeb;TimerRenderer.apply(timerRoot,T,now)}}
+let T=null,lastAudioEventId=0,tickTimer=null,celebrationTimer=null;
+const AUDIO={
+  start:{src:'assets/timer-start.wav',volume:.88},
+  stop:{src:'assets/timer-stop.wav',volume:.80},
+  victory:{src:'assets/timer-victory.wav',volume:1}
+};
+const audioBank={};
+function getAudio(kind){
+  const cfg=AUDIO[kind];if(!cfg)return null;
+  if(!audioBank[kind]){const a=new Audio(cfg.src);a.preload='auto';a.volume=cfg.volume;try{a.load()}catch{}audioBank[kind]=a}
+  return audioBank[kind];
+}
+Object.keys(AUDIO).forEach(getAudio);
+function playSound(kind){
+  try{
+    const a=getAudio(kind);if(!a)return;
+    a.pause();try{a.currentTime=0}catch{}a.volume=AUDIO[kind].volume;
+    const p=a.play();if(p?.catch)p.catch(()=>{});
+  }catch{}
+}
 function applyLock(){document.body.classList.toggle('overlayLocked',!!T?.locked)}
-api.onTimerState(s=>{T=s;applyLock();render(true)});
+function renderFull(){if(T)TimerRenderer.apply(timerRoot,T,Date.now())}
+function stopTimers(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}if(celebrationTimer){clearTimeout(celebrationTimer);celebrationTimer=null}}
+function scheduleRenderWork(){
+  stopTimers();
+  if(T?.running)tickTimer=setInterval(()=>{if(T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},100);
+  const remain=Number(T?.celebrationUntil||0)-Date.now();
+  if(remain>0)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null},remain+40);
+}
+function applyState(next,allowAudio=true){
+  if(!next)return;T=next;applyLock();renderFull();scheduleRenderWork();
+  const id=Number(T.audioEventId)||0;
+  if(allowAudio&&id&&id!==lastAudioEventId)playSound(String(T.audioEventType||''));
+  if(id)lastAudioEventId=id;
+}
+api.onTimerState(s=>applyState(s,true));
 api.onTimerEdit?.(()=>{});
-(async()=>{const x=await api.timerGet();T=x.state;applyLock();render(true);setInterval(()=>render(false),100)})();
+(async()=>{const x=await api.timerGet();T=x.state;lastAudioEventId=Number(T?.audioEventId)||0;applyState(T,false)})();
 </script></body></html>

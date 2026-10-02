@@ -7,7 +7,7 @@ app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 const TIMER_PORT = 17385;
 const TIMER_BASES = {
-  0: { w: 226, h: 274 }, // Side Stack — restored continuous proportions
+  0: { w: 248, h: 264 }, // Side Stack — redesigned compact vertical card
   1: { w: 258, h: 292 }, // Split Tower
   2: { w: 506, h: 110 }, // Center Beam
   3: { w: 510, h: 112 }, // Corner Rail
@@ -17,9 +17,9 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 225,
-  enabled: false,
-  locked: false,
+  schema: 227,
+  enabled: true,
+  locked: true,
   x: 70,
   y: 360,
   scaleUi: 100,
@@ -43,17 +43,20 @@ const TIMER_DEF = {
   opacity: 0.88,
   hotkeyAction: 'F1',
   hotkeySwap: 'F2',
+  hotkeyReset: 'F3',
   autoSwap: false,
   bestOf: 3,
   matchWinner: 0,
   celebrationWinner: 0,
   celebrationUntil: 0,
   celebrationId: 0,
+  victoryCooldownUntil: 0,
   audioEventId: 0,
   audioEventType: '',
   lastWinner: 0,
   lastDelta: 0,
-  round: 1
+  round: 1,
+  language: 'pt'
 };
 
 let T = null;
@@ -62,8 +65,11 @@ let timerServer = null;
 let timerQuitting = false;
 let registeredAction = '';
 let registeredSwap = '';
+let registeredReset = '';
 let lastActionAt = 0;
 let saveMoveTimer = null;
+let timerWriteTimer = null;
+const timerSseClients = new Set();
 let uIOhook = null;
 let mouseHookStarted = false;
 const mouseShortcuts = new Map();
@@ -101,7 +107,15 @@ function registerMouseShortcut(owner, accel, cb) {
   mouseShortcuts.set(owner, { key, cb });
   return true;
 }
-function unregisterMouseShortcut(owner) { mouseShortcuts.delete(owner); }
+function unregisterMouseShortcut(owner) {
+  mouseShortcuts.delete(owner);
+  // uiohook hooks the whole mouse. Do not leave it running after the last
+  // mouse shortcut is removed; this was a likely source of cursor stutter.
+  if (mouseHookStarted && mouseShortcuts.size === 0) {
+    try { uIOhook?.stop(); } catch {}
+    mouseHookStarted = false;
+  }
+}
 global.__dbdRegisterMouseShortcut = registerMouseShortcut;
 global.__dbdUnregisterMouseShortcut = unregisterMouseShortcut;
 global.__dbdIsMouseAccel = isMouseAccel;
@@ -114,13 +128,13 @@ function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)
 function clampInt(v, min, max) { return Math.round(clamp(v, min, max)); }
 function timerFile() { return path.join(app.getPath('userData'), 'timer-v200.json'); }
 function legacySettingsFile() { return path.join(app.getPath('userData'), 'settings-v270.json'); }
-function currentLanguage() {
+function readLegacyLanguageOnce() {
   try {
     const saved = JSON.parse(fs.readFileSync(legacySettingsFile(), 'utf8'));
     return ['pt','en','es'].includes(saved?.language) ? saved.language : 'pt';
   } catch { return 'pt'; }
 }
-function timerSnapshot() { return { ...T, language: currentLanguage() }; }
+function timerSnapshot() { return { ...T }; }
 function baseFor(style = T?.style ?? 2) { return TIMER_BASES[clampInt(style, 0, 5)] || TIMER_BASES[2]; }
 
 // Timer Test 3: compact scale range. 70% is reduced but still readable;
@@ -161,15 +175,18 @@ function normalizeTimer() {
   T.accentMode = 'solid';
   T.hotkeyAction = String(T.hotkeyAction || 'F1');
   T.hotkeySwap = String(T.hotkeySwap || 'F2');
+  T.hotkeyReset = String(T.hotkeyReset || 'F3');
   T.autoSwap = !!T.autoSwap;
   T.bestOf = [1,3,5,7].includes(Number(T.bestOf)) ? Number(T.bestOf) : 3;
   T.matchWinner = [1,2].includes(Number(T.matchWinner)) ? Number(T.matchWinner) : 0;
   T.celebrationWinner = [1,2].includes(Number(T.celebrationWinner)) ? Number(T.celebrationWinner) : 0;
   T.celebrationUntil = Math.max(0, Number(T.celebrationUntil) || 0);
   T.celebrationId = Math.max(0, Math.floor(Number(T.celebrationId) || 0));
+  T.victoryCooldownUntil = Math.max(0, Number(T.victoryCooldownUntil) || 0);
   T.audioEventId = Math.max(0, Math.floor(Number(T.audioEventId) || 0));
   T.audioEventType = ['start','stop','victory'].includes(String(T.audioEventType || '')) ? String(T.audioEventType) : '';
-  T.schema = 225;
+  T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
+  T.schema = 227;
 }
 
 function loadTimer() {
@@ -181,14 +198,40 @@ function loadTimer() {
   T.running = false;
   T.runningPlayer = 0;
   T.startedAt = 0;
+  T.language = readLegacyLanguageOnce();
+  // Beta 2.0.7: every launch starts with the Timer visible and protected.
+  T.enabled = true;
+  T.locked = true;
   normalizeTimer();
 }
 
-function writeTimerFile() {
+function timerPayload() {
   normalizeTimer();
-  try { fs.writeFileSync(timerFile(), JSON.stringify(T, null, 2)); } catch {}
+  return JSON.stringify(T, null, 2);
 }
-function saveTimer() { writeTimerFile(); pushTimer(); }
+function writeTimerFile() {
+  clearTimeout(timerWriteTimer);
+  timerWriteTimer = null;
+  const payload = timerPayload();
+  try { fs.writeFile(timerFile(), payload, () => {}); } catch {}
+}
+function scheduleTimerWrite(delay = 140) {
+  clearTimeout(timerWriteTimer);
+  timerWriteTimer = setTimeout(writeTimerFile, delay);
+}
+function flushTimerFile() {
+  clearTimeout(timerWriteTimer);
+  timerWriteTimer = null;
+  try { fs.writeFileSync(timerFile(), timerPayload()); } catch {}
+}
+function broadcastTimerSse(snapshot) {
+  if (!timerSseClients.size) return;
+  const packet = `data: ${JSON.stringify(snapshot)}\n\n`;
+  for (const res of [...timerSseClients]) {
+    try { res.write(packet); } catch { timerSseClients.delete(res); }
+  }
+}
+function saveTimer() { scheduleTimerWrite(); pushTimer(); }
 
 function pushTimer() {
   if (!T) return;
@@ -197,6 +240,7 @@ function pushTimer() {
     if (!w || w.isDestroyed() || w.webContents.isDestroyed()) return;
     try { w.webContents.send('timer-state', snapshot); } catch {}
   });
+  broadcastTimerSse(snapshot);
 }
 
 function timerWindowSize() {
@@ -238,7 +282,7 @@ function applyTimerGeometry(keepCenter = false) {
 function applyTimerInteractivity() {
   if (!timerWin || timerWin.isDestroyed() || !T) return;
   if (T.locked) {
-    timerWin.setIgnoreMouseEvents(true, { forward: true });
+    timerWin.setIgnoreMouseEvents(true);
     try { timerWin.setFocusable(false); } catch {}
   } else {
     timerWin.setIgnoreMouseEvents(false);
@@ -281,7 +325,7 @@ function createTimerWindow() {
     resizable: false,
     movable: true,
     focusable: true,
-    skipTaskbar: false,
+    skipTaskbar: true,
     backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -307,13 +351,25 @@ function createTimerWindow() {
     T.x = x;
     T.y = y;
     clearTimeout(saveMoveTimer);
-    saveMoveTimer = setTimeout(() => { writeTimerFile(); pushTimer(); }, 160);
+    saveMoveTimer = setTimeout(() => { scheduleTimerWrite(0); pushTimer(); }, 180);
   });
 }
 
 function startTimerServer() {
   timerServer = http.createServer((req, res) => {
     const url = (req.url || '').split('?')[0];
+    if (url === '/events') {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+      });
+      try { res.write(`data: ${JSON.stringify(timerSnapshot())}\n\n`); } catch {}
+      timerSseClients.add(res);
+      req.on('close', () => timerSseClients.delete(res));
+      return;
+    }
     if (url === '/state') {
       res.writeHead(200, {
         'Content-Type': 'application/json',
@@ -412,10 +468,14 @@ function evaluateMatchWinner(triggerCelebration = false) {
   T.startedAt = 0;
 
   if (triggerCelebration && changed) {
-    T.celebrationWinner = winner;
-    T.celebrationUntil = Date.now() + 4000;
-    T.celebrationId = (Number(T.celebrationId) || 0) + 1;
-    setTimerAudioEvent('victory');
+    const now = Date.now();
+    if (now >= Number(T.victoryCooldownUntil || 0)) {
+      T.celebrationWinner = winner;
+      T.celebrationUntil = now + 4000;
+      T.celebrationId = (Number(T.celebrationId) || 0) + 1;
+      T.victoryCooldownUntil = now + 10000;
+      setTimerAudioEvent('victory');
+    }
   }
   return winner;
 }
@@ -470,8 +530,11 @@ function resetTimerMatch() {
     locked: T.locked,
     hotkeyAction: T.hotkeyAction,
     hotkeySwap: T.hotkeySwap,
+    hotkeyReset: T.hotkeyReset,
     autoSwap: T.autoSwap,
-    bestOf: T.bestOf
+    bestOf: T.bestOf,
+    victoryCooldownUntil: T.victoryCooldownUntil,
+    language: T.language
   };
   T = { ...clone(TIMER_DEF), ...keep };
   T.active = 1;
@@ -496,6 +559,7 @@ function hotkeyConflict(accel, owner = '') {
   const candidates = [
     { owner: 'timer.action', key: T?.hotkeyAction || '', label: '1v1 Timer — Iniciar / Parar / Pontuar' },
     { owner: 'timer.swap', key: T?.hotkeySwap || '', label: '1v1 Timer — Trocar player' },
+    { owner: 'timer.reset', key: T?.hotkeyReset || '', label: '1v1 Timer — Resetar partida' },
     { owner: 'streak.hotkey', key: legacyWinStreakHotkey(), label: 'WinStreak' }
   ];
   return candidates.find(c => c.owner !== owner && normalizeAccel(c.key) === wanted) || null;
@@ -506,17 +570,21 @@ global.__dbdCheckHotkeyConflict = hotkeyConflict;
 function unregisterTimerHotkeys() {
   if (registeredAction && !isMouseAccel(registeredAction)) { try { rawUnregister(registeredAction); } catch {} }
   if (registeredSwap && registeredSwap !== registeredAction && !isMouseAccel(registeredSwap)) { try { rawUnregister(registeredSwap); } catch {} }
+  if (registeredReset && registeredReset !== registeredAction && registeredReset !== registeredSwap && !isMouseAccel(registeredReset)) { try { rawUnregister(registeredReset); } catch {} }
   unregisterMouseShortcut('timer.action');
   unregisterMouseShortcut('timer.swap');
+  unregisterMouseShortcut('timer.reset');
   registeredAction = '';
   registeredSwap = '';
+  registeredReset = '';
 }
 
 function registerTimerHotkeys() {
-  if (!app.isReady() || timerQuitting || !T) return { action: false, swap: false };
+  if (!app.isReady() || timerQuitting || !T) return { action: false, swap: false, reset: false };
   unregisterTimerHotkeys();
   let actionOk = true;
   let swapOk = true;
+  let resetOk = true;
   if (T.hotkeyAction && !hotkeyConflict(T.hotkeyAction, 'timer.action')) {
     if (isMouseAccel(T.hotkeyAction)) actionOk = registerMouseShortcut('timer.action', T.hotkeyAction, timerAction);
     else { try { actionOk = globalShortcut.register(T.hotkeyAction, timerAction); } catch { actionOk = false; } }
@@ -527,20 +595,28 @@ function registerTimerHotkeys() {
     else { try { swapOk = globalShortcut.register(T.hotkeySwap, timerSwap); } catch { swapOk = false; } }
     if (swapOk) registeredSwap = T.hotkeySwap;
   } else if (T.hotkeySwap) swapOk = false;
-  return { action: actionOk, swap: swapOk };
+  if (T.hotkeyReset && !hotkeyConflict(T.hotkeyReset, 'timer.reset')) {
+    if (isMouseAccel(T.hotkeyReset)) resetOk = registerMouseShortcut('timer.reset', T.hotkeyReset, resetTimerMatch);
+    else { try { resetOk = globalShortcut.register(T.hotkeyReset, resetTimerMatch); } catch { resetOk = false; } }
+    if (resetOk) registeredReset = T.hotkeyReset;
+  } else if (T.hotkeyReset) resetOk = false;
+  return { action: actionOk, swap: swapOk, reset: resetOk };
 }
 
 function setTimerHotkey(which, accel) {
   accel = String(accel || '');
-  const owner = which === 'swap' ? 'timer.swap' : 'timer.action';
+  const map = { action: 'timer.action', swap: 'timer.swap', reset: 'timer.reset' };
+  which = ['action','swap','reset'].includes(which) ? which : 'action';
+  const owner = map[which];
   const conflict = hotkeyConflict(accel, owner);
   if (conflict && accel) return { ok: false, reason: 'internal', conflict: conflict.label, state: T };
-  const old = which === 'swap' ? T.hotkeySwap : T.hotkeyAction;
-  if (which === 'swap') T.hotkeySwap = accel; else T.hotkeyAction = accel;
+  const prop = which === 'swap' ? 'hotkeySwap' : which === 'reset' ? 'hotkeyReset' : 'hotkeyAction';
+  const old = T[prop];
+  T[prop] = accel;
   const result = registerTimerHotkeys();
-  const ok = which === 'swap' ? result.swap : result.action;
+  const ok = result[which];
   if (!ok && accel) {
-    if (which === 'swap') T.hotkeySwap = old; else T.hotkeyAction = old;
+    T[prop] = old;
     registerTimerHotkeys();
     return { ok: false, reason: 'system', state: T };
   }
@@ -554,16 +630,21 @@ globalShortcut.unregisterAll = function patchedUnregisterAll() {
   rawUnregisterAll();
   registeredAction = '';
   registeredSwap = '';
+  registeredReset = '';
   if (!timerQuitting && app.isReady()) setTimeout(() => registerTimerHotkeys(), 0);
 };
 
 app.on('before-quit', () => {
   timerQuitting = true;
   clearTimeout(saveMoveTimer);
+  clearTimeout(timerWriteTimer);
+  try { flushTimerFile(); } catch {}
   try { unregisterTimerHotkeys(); } catch {}
   try { if (mouseHookStarted && uIOhook) uIOhook.stop(); } catch {}
   mouseHookStarted = false;
   mouseShortcuts.clear();
+  for (const res of [...timerSseClients]) { try { res.end(); } catch {} }
+  timerSseClients.clear();
   try { timerServer?.close(); } catch {}
 });
 
@@ -595,13 +676,18 @@ ipcMain.handle('timer-swap', () => timerSwap());
 ipcMain.handle('timer-score', (_, player, delta) => {
   const key = Number(player) === 2 ? 'score2' : 'score1';
   const d = Number(delta) || 0;
+  // Anti-spam protection after a series victory. Minus/corrections stay available.
+  if (d > 0 && Date.now() < Number(T.victoryCooldownUntil || 0)) {
+    pushTimer();
+    return timerSnapshot();
+  }
   T[key] = Math.max(0, (Number(T[key]) || 0) + d);
   evaluateMatchWinner(d > 0);
   saveTimer();
-  return T;
+  return timerSnapshot();
 });
 ipcMain.handle('timer-reset', () => resetTimerMatch());
-ipcMain.handle('timer-hotkey', (_, which, accel) => setTimerHotkey(which === 'swap' ? 'swap' : 'action', accel));
+ipcMain.handle('timer-hotkey', (_, which, accel) => setTimerHotkey(['action','swap','reset'].includes(which) ? which : 'action', accel));
 // Kept only for compatibility with the first Timer test; position editing is now direct.
 ipcMain.handle('timer-edit', () => T);
 

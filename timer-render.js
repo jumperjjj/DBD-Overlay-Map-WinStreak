@@ -11,6 +11,12 @@
     root.dataset.built='1';
     root.innerHTML=`<div class="timer-shell"><div class="timer-player p1"><i class="active-mark"></i><div class="timer-name" data-name="1"></div><div class="timer-time" data-time="1">00:00</div></div><div class="score-wrap"><div class="timer-score"><span data-score="1">0</span><span class="dash">–</span><span data-score="2">0</span></div></div><div class="timer-player p2"><i class="active-mark"></i><div class="timer-name" data-name="2"></div><div class="timer-time" data-time="2">00:00</div></div></div>`
   }
+  function tick(root,s,now){
+    if(!root||!s||!s.running)return;
+    const current=Number(now||Date.now()),p=Number(s.runningPlayer)===2?2:1;
+    const el=root.querySelector(`[data-time="${p}"]`);
+    if(el&&!el.classList.contains('victory-text'))el.textContent=format(elapsed(s,p,current));
+  }
   function apply(root,s,now){
     if(!root||!s)return;ensure(root);
     const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e';
@@ -39,5 +45,5 @@
     p1.classList.toggle('winner',winner===1);p2.classList.toggle('winner',winner===2);
     p1.classList.toggle('loser',!!winner&&winner!==1);p2.classList.toggle('loser',!!winner&&winner!==2);
   }
-  window.TimerRenderer={apply,format,elapsed};
+  window.TimerRenderer={apply,tick,format,elapsed};
 })();
