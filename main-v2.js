@@ -7,15 +7,15 @@ const TIMER_PORT = 17385;
 const TIMER_BASES = {
   0: { w: 248, h: 286 }, // Vertical Edge
   1: { w: 266, h: 300 }, // Vertical Core
-  2: { w: 620, h: 136 }, // Horizontal Line
-  3: { w: 652, h: 146 }, // Horizontal Split
-  4: { w: 650, h: 148 }, // Glass Arc
-  5: { w: 690, h: 136 }  // Glass Float
+  2: { w: 548, h: 116 }, // Center Beam — compact
+  3: { w: 572, h: 122 }, // Corner Rail — compact
+  4: { w: 576, h: 126 }, // Glass Wings — compact
+  5: { w: 592, h: 116 }  // Glass Ribbon — compact
 };
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 220,
+  schema: 221,
   enabled: false,
   x: 70,
   y: 360,
@@ -137,11 +137,12 @@ function normalizeTimer() {
   T.player1 = String(T.player1 || 'PLAYER 1').slice(0, 48);
   T.player2 = String(T.player2 || 'PLAYER 2').slice(0, 48);
   T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#22c55e';
-  T.accentMode = T.accentMode === 'rainbow' ? 'rainbow' : 'solid';
+  // Beta 2.0.1: Rainbow preset removed; keep one solid accent color.
+  T.accentMode = 'solid';
   T.hotkeyAction = String(T.hotkeyAction || 'F1');
   T.hotkeySwap = String(T.hotkeySwap || 'F2');
   T.autoSwap = !!T.autoSwap;
-  T.schema = 220;
+  T.schema = 221;
 }
 
 function loadTimer() {

@@ -7,8 +7,8 @@
   function ensure(root){if(root.dataset.built==='1')return;root.dataset.built='1';root.innerHTML=`<div class="timer-shell"><div class="timer-player p1"><i class="active-mark"></i><div class="timer-name" data-name="1"></div><div class="timer-time" data-time="1">00:00</div></div><div class="score-wrap"><div class="timer-score"><span data-score="1">0</span><span class="dash">–</span><span data-score="2">0</span></div></div><div class="timer-player p2"><i class="active-mark"></i><div class="timer-name" data-name="2"></div><div class="timer-time" data-time="2">00:00</div></div></div>`}
   function apply(root,s,now){
     if(!root||!s)return;ensure(root);
-    const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e',rainbow=s.accentMode==='rainbow';
-    root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}${rainbow?' rainbow':''}`;
+    const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e';
+    root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}`;
     root.style.setProperty('--accent',accent);
     root.style.setProperty('--panel',`rgba(13,14,19,${(opacity*.94).toFixed(3)})`);
     root.style.setProperty('--panel-soft',`rgba(41,43,51,${(opacity*.54).toFixed(3)})`);
