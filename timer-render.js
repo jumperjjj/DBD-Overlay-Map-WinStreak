@@ -22,9 +22,9 @@
     const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e';
     const [br,bg,bb]=rgb(s.backgroundColor||'#0d0e13'),sr=Math.min(255,br+28),sg=Math.min(255,bg+29),sb=Math.min(255,bb+32);
     const current=Number(now||Date.now());
-    const celebrating=Number(s.celebrationUntil)>current&&[1,2].includes(Number(s.celebrationWinner));
+    const celebrating=(!!s.celebrationPersistent||Number(s.celebrationUntil)>current)&&[1,2].includes(Number(s.celebrationWinner));
     const winner=celebrating?Number(s.celebrationWinner):0;
-    root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}${celebrating?' celebrating':''}`;
+    root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}${opacity<=.4?' low-opacity':''}${celebrating?' celebrating':''}`;
     root.style.setProperty('--accent',accent);
     root.style.setProperty('--panel',`rgba(${br},${bg},${bb},${(opacity*.94).toFixed(3)})`);
     root.style.setProperty('--panel-soft',`rgba(${sr},${sg},${sb},${(opacity*.54).toFixed(3)})`);

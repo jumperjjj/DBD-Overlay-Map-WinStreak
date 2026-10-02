@@ -11,22 +11,28 @@ body.overlayLocked,body.overlayLocked #timerRoot{cursor:default;-webkit-app-regi
 <script>
 let T=null,lastAudioEventId=0,tickTimer=null,celebrationTimer=null;
 const AUDIO={
-  start:{src:'assets/timer-start.wav',volume:.88},
-  stop:{src:'assets/timer-stop.wav',volume:.80},
-  victory:{src:'assets/timer-victory.wav',volume:1}
+  start:{src:'assets/timer-start.wav',volume:1.0},
+  stop:{src:'assets/timer-stop.wav',volume:.88},
+  victory:{src:'assets/timer-victory.wav',volume:1.0}
 };
-const audioBank={};
-function getAudio(kind){
-  const cfg=AUDIO[kind];if(!cfg)return null;
-  if(!audioBank[kind]){const a=new Audio(cfg.src);a.preload='auto';a.volume=cfg.volume;try{a.load()}catch{}audioBank[kind]=a}
+const audioBank={},audioCursor={};
+function ensureAudioPool(kind){
+  const cfg=AUDIO[kind];if(!cfg)return[];
+  if(!audioBank[kind]){
+    audioBank[kind]=Array.from({length:4},()=>{const a=new Audio(cfg.src);a.preload='auto';a.volume=cfg.volume;try{a.load()}catch{}return a});
+    audioCursor[kind]=0;
+  }
   return audioBank[kind];
 }
-Object.keys(AUDIO).forEach(getAudio);
+Object.keys(AUDIO).forEach(ensureAudioPool);
+function stopAllSounds(){for(const pool of Object.values(audioBank))for(const a of pool){try{a.pause();a.currentTime=0}catch{}}}
 function playSound(kind){
+  if(T?.soundEnabled===false)return;
   try{
-    const a=getAudio(kind);if(!a)return;
-    a.pause();try{a.currentTime=0}catch{}a.volume=AUDIO[kind].volume;
-    const p=a.play();if(p?.catch)p.catch(()=>{});
+    const pool=ensureAudioPool(kind);if(!pool.length)return;
+    const idx=(audioCursor[kind]||0)%pool.length;audioCursor[kind]=idx+1;
+    const a=pool[idx];try{a.pause();a.currentTime=0}catch{}a.volume=AUDIO[kind].volume;
+    const p=a.play();if(p?.catch)p.catch(()=>setTimeout(()=>{if(T?.soundEnabled!==false){try{a.currentTime=0;a.play().catch(()=>{})}catch{}}},35));
   }catch{}
 }
 function applyLock(){document.body.classList.toggle('overlayLocked',!!T?.locked)}
@@ -36,13 +42,14 @@ function scheduleRenderWork(){
   stopTimers();
   if(T?.running)tickTimer=setInterval(()=>{if(T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},100);
   const remain=Number(T?.celebrationUntil||0)-Date.now();
-  if(remain>0)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null},remain+40);
+  if(!T?.celebrationPersistent&&remain>0&&remain<2147483000)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null},remain+40);
 }
 function applyState(next,allowAudio=true){
   if(!next)return;T=next;applyLock();renderFull();scheduleRenderWork();
   const id=Number(T.audioEventId)||0;
-  if(allowAudio&&id&&id!==lastAudioEventId)playSound(String(T.audioEventType||''));
-  if(id)lastAudioEventId=id;
+  if(T.soundEnabled===false)stopAllSounds();
+  if(allowAudio&&T.soundEnabled!==false&&id&&id!==lastAudioEventId)playSound(String(T.audioEventType||''));
+  lastAudioEventId=id;
 }
 api.onTimerState(s=>applyState(s,true));
 api.onTimerEdit?.(()=>{});

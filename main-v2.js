@@ -17,7 +17,7 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 227,
+  schema: 228,
   enabled: true,
   locked: true,
   x: 70,
@@ -49,10 +49,12 @@ const TIMER_DEF = {
   matchWinner: 0,
   celebrationWinner: 0,
   celebrationUntil: 0,
+  celebrationPersistent: false,
   celebrationId: 0,
   victoryCooldownUntil: 0,
   audioEventId: 0,
   audioEventType: '',
+  soundEnabled: true,
   lastWinner: 0,
   lastDelta: 0,
   round: 1,
@@ -69,6 +71,7 @@ let registeredReset = '';
 let lastActionAt = 0;
 let saveMoveTimer = null;
 let timerWriteTimer = null;
+let pendingRoundTimer = null;
 const timerSseClients = new Set();
 let uIOhook = null;
 let mouseHookStarted = false;
@@ -181,12 +184,14 @@ function normalizeTimer() {
   T.matchWinner = [1,2].includes(Number(T.matchWinner)) ? Number(T.matchWinner) : 0;
   T.celebrationWinner = [1,2].includes(Number(T.celebrationWinner)) ? Number(T.celebrationWinner) : 0;
   T.celebrationUntil = Math.max(0, Number(T.celebrationUntil) || 0);
+  T.celebrationPersistent = !!T.celebrationPersistent;
   T.celebrationId = Math.max(0, Math.floor(Number(T.celebrationId) || 0));
   T.victoryCooldownUntil = Math.max(0, Number(T.victoryCooldownUntil) || 0);
   T.audioEventId = Math.max(0, Math.floor(Number(T.audioEventId) || 0));
   T.audioEventType = ['start','stop','victory'].includes(String(T.audioEventType || '')) ? String(T.audioEventType) : '';
+  T.soundEnabled = T.soundEnabled !== false;
   T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
-  T.schema = 227;
+  T.schema = 228;
 }
 
 function loadTimer() {
@@ -405,6 +410,7 @@ function currentMs(player, now = Date.now()) {
 }
 
 function setTimerAudioEvent(type) {
+  if (!T.soundEnabled) return;
   T.audioEventType = ['start','stop','victory'].includes(type) ? type : '';
   T.audioEventId = (Number(T.audioEventId) || 0) + 1;
 }
@@ -424,6 +430,23 @@ function startActiveTimer() {
   return true;
 }
 
+function clearPendingRound() {
+  if (pendingRoundTimer) {
+    clearTimeout(pendingRoundTimer);
+    pendingRoundTimer = null;
+  }
+}
+
+function scheduleRoundResolution() {
+  clearPendingRound();
+  if (!T || T.running || T.matchWinner || !T.done1 || !T.done2) return;
+  pendingRoundTimer = setTimeout(() => {
+    pendingRoundTimer = null;
+    if (!T || T.running || T.matchWinner || !T.done1 || !T.done2) return;
+    resolveRound(true);
+  }, 500);
+}
+
 function stopRunningTimer() {
   if (!T.running) return false;
   const p = T.runningPlayer;
@@ -436,6 +459,7 @@ function stopRunningTimer() {
   if (T.autoSwap && !(T.done1 && T.done2)) T.active = p === 1 ? 2 : 1;
   setTimerAudioEvent('stop');
   saveTimer();
+  if (T.done1 && T.done2) scheduleRoundResolution();
   return true;
 }
 
@@ -453,10 +477,9 @@ function evaluateMatchWinner(triggerCelebration = false) {
 
   if (!winner) {
     T.matchWinner = 0;
-    if (T.celebrationUntil > Date.now()) {
-      T.celebrationUntil = 0;
-      T.celebrationWinner = 0;
-    }
+    T.celebrationWinner = 0;
+    T.celebrationUntil = 0;
+    T.celebrationPersistent = false;
     return 0;
   }
 
@@ -466,12 +489,15 @@ function evaluateMatchWinner(triggerCelebration = false) {
   T.running = false;
   T.runningPlayer = 0;
   T.startedAt = 0;
+  clearPendingRound();
 
   if (triggerCelebration && changed) {
     const now = Date.now();
     if (now >= Number(T.victoryCooldownUntil || 0)) {
       T.celebrationWinner = winner;
-      T.celebrationUntil = now + 4000;
+      // Keep the victory state visible until Reset Match/F3 without a long-running timeout.
+      T.celebrationUntil = 0;
+      T.celebrationPersistent = true;
       T.celebrationId = (Number(T.celebrationId) || 0) + 1;
       T.victoryCooldownUntil = now + 10000;
       setTimerAudioEvent('victory');
@@ -480,20 +506,31 @@ function evaluateMatchWinner(triggerCelebration = false) {
   return winner;
 }
 
-function resolveRound() {
+function resolveRound(auto = false) {
   if (!T.done1 || !T.done2 || T.running || T.matchWinner) return false;
   const a = Number(T.time1) || 0;
   const b = Number(T.time2) || 0;
-  if (a < b) { T.score1 += 1; T.lastWinner = 1; T.lastDelta = b - a; }
-  else if (b < a) { T.score2 += 1; T.lastWinner = 2; T.lastDelta = a - b; }
+  let roundWinner = 0;
+  if (a < b) { T.score1 += 1; T.lastWinner = 1; T.lastDelta = b - a; roundWinner = 1; }
+  else if (b < a) { T.score2 += 1; T.lastWinner = 2; T.lastDelta = a - b; roundWinner = 2; }
   else { T.lastWinner = 3; T.lastDelta = 0; }
-  T.time1 = 0; T.time2 = 0;
-  T.done1 = false; T.done2 = false;
-  T.active = 1;
-  T.round += 1;
-  evaluateMatchWinner(true);
+
+  const matchWinner = evaluateMatchWinner(true);
+  if (matchWinner) {
+    // Preserve the final times (including milliseconds in the app) until reset.
+    T.done1 = true;
+    T.done2 = true;
+    T.active = matchWinner;
+  } else {
+    T.time1 = 0;
+    T.time2 = 0;
+    T.done1 = false;
+    T.done2 = false;
+    T.active = 1;
+    T.round += 1;
+  }
   saveTimer();
-  return true;
+  return !!roundWinner || T.lastWinner === 3;
 }
 
 function timerAction() {
@@ -503,7 +540,7 @@ function timerAction() {
   lastActionAt = now;
   if (T.matchWinner) return T;
   if (T.running) stopRunningTimer();
-  else if (T.done1 && T.done2) resolveRound();
+  else if (T.done1 && T.done2) scheduleRoundResolution();
   else startActiveTimer();
   return T;
 }
@@ -516,6 +553,7 @@ function timerSwap() {
 }
 
 function resetTimerMatch() {
+  clearPendingRound();
   const keep = {
     enabled: T.enabled,
     x: T.x, y: T.y,
@@ -531,6 +569,7 @@ function resetTimerMatch() {
     hotkeyAction: T.hotkeyAction,
     hotkeySwap: T.hotkeySwap,
     hotkeyReset: T.hotkeyReset,
+    soundEnabled: T.soundEnabled,
     autoSwap: T.autoSwap,
     bestOf: T.bestOf,
     victoryCooldownUntil: T.victoryCooldownUntil,
@@ -638,6 +677,7 @@ app.on('before-quit', () => {
   timerQuitting = true;
   clearTimeout(saveMoveTimer);
   clearTimeout(timerWriteTimer);
+  clearPendingRound();
   try { flushTimerFile(); } catch {}
   try { unregisterTimerHotkeys(); } catch {}
   try { if (mouseHookStarted && uIOhook) uIOhook.stop(); } catch {}

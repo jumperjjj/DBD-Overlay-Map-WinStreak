@@ -23,7 +23,7 @@ function scheduleRenderWork(){
   stopRenderTimers();
   if(T?.enabled&&T?.running)tickTimer=setInterval(()=>TimerRenderer.tick(timerRoot,T,Date.now()),100);
   const remain=Number(T?.celebrationUntil||0)-Date.now();
-  if(T?.enabled&&remain>0)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null},remain+40);
+  if(T?.enabled&&!T?.celebrationPersistent&&remain>0&&remain<2147483000)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null},remain+40);
 }
 function applyState(next){if(!next)return;T=next;renderFull();scheduleRenderWork()}
 async function refresh(){try{applyState(await fetch('/state',{cache:'no-store'}).then(r=>r.json()))}catch{}}
