@@ -207,7 +207,7 @@ function createOverlay(file, key) {
     show: false, frame: false, transparent: true, hasShadow: false,
     resizable: false, movable: true, focusable: true, skipTaskbar: true,
     backgroundColor: '#00000000',
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, backgroundThrottling: true }
   });
   w.setAlwaysOnTop(true, 'screen-saver');
   w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });

@@ -4,12 +4,15 @@
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;cursor:url("assets/move-cursor.png") 16 16,move}
 #timerRoot{width:100%;height:100%;-webkit-app-region:drag;cursor:url("assets/move-cursor.png") 16 16,move;user-select:none}
+body.overlayLocked,body.overlayLocked #timerRoot{cursor:default;-webkit-app-region:no-drag}
 </style></head>
 <body><div id="timerRoot" class="timer-widget"></div>
 <script src="timer-render.js"></script>
 <script>
-let T=null;
-function draw(){if(T)TimerRenderer.apply(timerRoot,T,Date.now());requestAnimationFrame(draw)}
-api.onTimerState(s=>{T=s});
-(async()=>{const x=await api.timerGet();T=x.state;draw()})();
+let T=null,lastSecond=-1,lastCelebration=0;
+function render(force=false){if(!T)return;const now=Date.now(),second=Math.floor(now/100);const celeb=Number(T.celebrationId)||0;if(force||T.running||second!==lastSecond||celeb!==lastCelebration){lastSecond=second;lastCelebration=celeb;TimerRenderer.apply(timerRoot,T,now)}}
+function applyLock(){document.body.classList.toggle('overlayLocked',!!T?.locked)}
+api.onTimerState(s=>{T=s;applyLock();render(true)});
+api.onTimerEdit?.(()=>{});
+(async()=>{const x=await api.timerGet();T=x.state;applyLock();render(true);setInterval(()=>render(false),100)})();
 </script></body></html>

@@ -17,8 +17,9 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 224,
+  schema: 225,
   enabled: false,
+  locked: false,
   x: 70,
   y: 360,
   scaleUi: 100,
@@ -38,6 +39,7 @@ const TIMER_DEF = {
   startedAt: 0,
   accent: '#22c55e',
   accentMode: 'solid',
+  backgroundColor: '#0d0e13',
   opacity: 0.88,
   hotkeyAction: 'F1',
   hotkeySwap: 'F2',
@@ -141,6 +143,8 @@ function normalizeTimer() {
   T.scale = scaleFactorFromUi(T.scaleUi);
   T.style = clampInt(T.style, 0, 5);
   T.opacity = clamp(T.opacity, 0, 1);
+  T.locked = !!T.locked;
+  T.backgroundColor = /^#[0-9a-f]{6}$/i.test(String(T.backgroundColor || '')) ? T.backgroundColor : '#0d0e13';
   T.score1 = Math.max(0, Math.floor(Number(T.score1) || 0));
   T.score2 = Math.max(0, Math.floor(Number(T.score2) || 0));
   T.active = Number(T.active) === 2 ? 2 : 1;
@@ -165,7 +169,7 @@ function normalizeTimer() {
   T.celebrationId = Math.max(0, Math.floor(Number(T.celebrationId) || 0));
   T.audioEventId = Math.max(0, Math.floor(Number(T.audioEventId) || 0));
   T.audioEventType = ['start','stop','victory'].includes(String(T.audioEventType || '')) ? String(T.audioEventType) : '';
-  T.schema = 223;
+  T.schema = 225;
 }
 
 function loadTimer() {
@@ -231,13 +235,34 @@ function applyTimerGeometry(keepCenter = false) {
   T.y = next.y;
 }
 
+function applyTimerInteractivity() {
+  if (!timerWin || timerWin.isDestroyed() || !T) return;
+  if (T.locked) {
+    timerWin.setIgnoreMouseEvents(true, { forward: true });
+    try { timerWin.setFocusable(false); } catch {}
+  } else {
+    timerWin.setIgnoreMouseEvents(false);
+    try { timerWin.setFocusable(true); } catch {}
+  }
+  try { timerWin.webContents.send('timer-lock-state', !!T.locked); } catch {}
+}
+
 function timerVisibility() {
-  if (!timerWin || timerWin.isDestroyed()) return;
+  if (!T) return;
+  if (!timerWin || timerWin.isDestroyed()) {
+    if (T.enabled && app.isReady() && !timerQuitting) createTimerWindow();
+    return;
+  }
   if (T.enabled) {
-    if (!timerWin.isVisible()) timerWin.showInactive();
-    timerWin.moveTop();
-  } else if (timerWin.isVisible()) {
-    timerWin.hide();
+    try { if (timerWin.isMinimized()) timerWin.restore(); } catch {}
+    try { timerWin.setAlwaysOnTop(true, 'screen-saver'); } catch {}
+    applyTimerInteractivity();
+    // Always call showInactive, not only when isVisible() says false. This fixes
+    // the hide -> show edge case seen on some Windows configurations.
+    try { timerWin.showInactive(); } catch { try { timerWin.show(); } catch {} }
+    try { timerWin.moveTop(); } catch {}
+  } else {
+    try { timerWin.hide(); } catch {}
   }
 }
 
@@ -262,17 +287,18 @@ function createTimerWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      backgroundThrottling: false
+      backgroundThrottling: true
     }
   });
   timerWin.setAlwaysOnTop(true, 'screen-saver');
   timerWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  // The overlay itself is the drag handle now; no separate edit-position mode.
-  timerWin.setIgnoreMouseEvents(false);
+  // The overlay itself is the drag handle while unlocked. Locked mode becomes fully click-through.
+  applyTimerInteractivity();
   timerWin.loadFile('timer.html');
   timerWin.webContents.once('did-finish-load', () => {
     try { timerWin.webContents.setZoomFactor(T.scale); } catch {}
     pushTimer();
+    applyTimerInteractivity();
     timerVisibility();
   });
   timerWin.on('move', () => {
@@ -439,7 +465,9 @@ function resetTimerMatch() {
     player2: T.player2,
     accent: T.accent,
     accentMode: T.accentMode,
+    backgroundColor: T.backgroundColor,
     opacity: T.opacity,
+    locked: T.locked,
     hotkeyAction: T.hotkeyAction,
     hotkeySwap: T.hotkeySwap,
     autoSwap: T.autoSwap,
@@ -550,14 +578,17 @@ ipcMain.handle('timer-get', () => ({ state: timerSnapshot(), url: `http://127.0.
 ipcMain.handle('timer-patch', (_, patch) => {
   const prevStyle = T.style;
   const prevScaleUi = T.scaleUi;
+  const lockChanged = Object.prototype.hasOwnProperty.call(patch || {}, 'locked');
+  const enabledChanged = Object.prototype.hasOwnProperty.call(patch || {}, 'enabled');
   const bestOfChanged = Object.prototype.hasOwnProperty.call(patch || {}, 'bestOf');
   T = { ...T, ...(patch || {}) };
   normalizeTimer();
   if (bestOfChanged) evaluateMatchWinner(false);
   if (T.style !== prevStyle || T.scaleUi !== prevScaleUi) applyTimerGeometry(true);
+  if (lockChanged) applyTimerInteractivity();
   saveTimer();
-  timerVisibility();
-  return T;
+  if (enabledChanged || T.enabled) timerVisibility();
+  return timerSnapshot();
 });
 ipcMain.handle('timer-action', () => timerAction());
 ipcMain.handle('timer-swap', () => timerSwap());

@@ -5,6 +5,7 @@
   function elapsed(s,p,now){if(s?.running&&Number(s.runningPlayer)===p)return Math.max(0,(now||Date.now())-(Number(s.startedAt)||Date.now()));return Math.max(0,Number(p===1?s?.time1:s?.time2)||0)}
   function format(ms){ms=Math.max(0,Number(ms)||0);const total=Math.floor(ms/1000),min=Math.floor(total/60),sec=total%60;return String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
   function victoryWord(lang){return lang==='en'?'WIN':lang==='es'?'VICTORIA':'VITÓRIA'}
+  function rgb(hex){const m=/^#([0-9a-f]{6})$/i.exec(String(hex||''));if(!m)return[13,14,19];const n=parseInt(m[1],16);return[(n>>16)&255,(n>>8)&255,n&255]}
   function ensure(root){
     if(root.dataset.built==='1')return;
     root.dataset.built='1';
@@ -13,13 +14,14 @@
   function apply(root,s,now){
     if(!root||!s)return;ensure(root);
     const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e';
+    const [br,bg,bb]=rgb(s.backgroundColor||'#0d0e13'),sr=Math.min(255,br+28),sg=Math.min(255,bg+29),sb=Math.min(255,bb+32);
     const current=Number(now||Date.now());
     const celebrating=Number(s.celebrationUntil)>current&&[1,2].includes(Number(s.celebrationWinner));
     const winner=celebrating?Number(s.celebrationWinner):0;
     root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}${celebrating?' celebrating':''}`;
     root.style.setProperty('--accent',accent);
-    root.style.setProperty('--panel',`rgba(13,14,19,${(opacity*.94).toFixed(3)})`);
-    root.style.setProperty('--panel-soft',`rgba(41,43,51,${(opacity*.54).toFixed(3)})`);
+    root.style.setProperty('--panel',`rgba(${br},${bg},${bb},${(opacity*.94).toFixed(3)})`);
+    root.style.setProperty('--panel-soft',`rgba(${sr},${sg},${sb},${(opacity*.54).toFixed(3)})`);
     root.style.setProperty('--border',`rgba(255,255,255,${(opacity*.18).toFixed(3)})`);
     root.style.setProperty('--shadow',opacity<=.001?'none':`0 10px 28px rgba(0,0,0,${(.12+.22*opacity).toFixed(3)})`);
     root.querySelector('[data-name="1"]').innerHTML=esc(s.player1||'PLAYER 1');
