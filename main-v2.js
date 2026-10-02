@@ -7,17 +7,17 @@ app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 const TIMER_PORT = 17385;
 const TIMER_BASES = {
-  0: { w: 210, h: 250 }, // Side Stack — compact independent cards
+  0: { w: 226, h: 274 }, // Side Stack — restored continuous proportions
   1: { w: 258, h: 292 }, // Split Tower
-  2: { w: 520, h: 116 }, // Center Beam
-  3: { w: 520, h: 116 }, // Corner Rail
+  2: { w: 506, h: 110 }, // Center Beam
+  3: { w: 510, h: 112 }, // Corner Rail
   4: { w: 526, h: 118 }, // Glass Wings
-  5: { w: 520, h: 116 }  // Glass Ribbon
+  5: { w: 524, h: 110 }  // Glass Ribbon
 };
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 223,
+  schema: 224,
   enabled: false,
   x: 70,
   y: 360,
