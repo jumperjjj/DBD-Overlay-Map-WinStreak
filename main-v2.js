@@ -518,8 +518,8 @@ function evaluateMatchWinner(triggerCelebration = false) {
   if (triggerCelebration && changed) {
     const now = Date.now();
     if (now >= Number(T.victoryCooldownUntil || 0)) {
-      // Audio and visual effect are separate controls. The winner timer is replaced
-      // by the victory label for 5 seconds, followed by a light 10-second afterglow.
+      // Audio and visual effect are separate controls. The visual sequence lasts 20s:
+      // VICTORY (5s) -> final timer (5s) -> VICTORY (5s) -> final timer (5s).
       T.victoryCooldownUntil = now + 5000;
       setTimerAudioEvent('victory');
       if (T.victoryEffectEnabled !== false) {
