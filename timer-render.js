@@ -43,9 +43,10 @@
     root.querySelector('[data-name="2"]').innerHTML=esc(s.player2??'PLAYER 2');
     root.querySelector('[data-score="1"]').textContent=Math.max(0,Number(s.score1)||0);
     root.querySelector('[data-score="2"]').textContent=Math.max(0,Number(s.score2)||0);
+    const name1=root.querySelector('[data-name="1"]'),name2=root.querySelector('[data-name="2"]');
     const time1=root.querySelector('[data-time="1"]'),time2=root.querySelector('[data-time="2"]');
     time1.textContent=format(elapsed(s,1,current));time2.textContent=format(elapsed(s,2,current));
-    time1.dataset.victoryLabel=victoryWord(s.language);time2.dataset.victoryLabel=victoryWord(s.language);
+    name1.dataset.victoryLabel=victoryWord(s.language);name2.dataset.victoryLabel=victoryWord(s.language);
     time1.classList.toggle('victory-target',winner===1);time2.classList.toggle('victory-target',winner===2);
     const p1=root.querySelector('.p1'),p2=root.querySelector('.p2'),active=Number(s.active)===2?2:1;
     p1.classList.toggle('active',active===1);p2.classList.toggle('active',active===2);
