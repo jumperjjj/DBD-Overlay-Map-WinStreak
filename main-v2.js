@@ -524,8 +524,8 @@ function evaluateMatchWinner(triggerCelebration = false) {
       setTimerAudioEvent('victory');
       if (T.victoryEffectEnabled !== false) {
         T.celebrationWinner = winner;
-        T.celebrationIntroUntil = now + 7000;
-        T.celebrationUntil = now + 14000;
+        T.celebrationIntroUntil = now + 5000;
+        T.celebrationUntil = now + 10000;
         T.celebrationPersistent = false;
         T.celebrationId = (Number(T.celebrationId) || 0) + 1;
       } else {

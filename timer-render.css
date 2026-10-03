@@ -8,8 +8,8 @@
 .score-wrap{display:flex;align-items:center;justify-content:center;min-width:0}.timer-score{display:flex;align-items:center;justify-content:center;gap:10px;font-size:44px;font-weight:950;letter-spacing:.2px;color:#fff;white-space:nowrap;text-shadow:0 0 8px rgba(255,255,255,.5),0 0 18px rgba(255,255,255,.18),0 2px 8px #000d}.timer-score .dash{color:#c8cad0;font-size:.68em;text-shadow:0 2px 7px #000c}
 .zero-opacity .timer-player,.zero-opacity .timer-shell{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.zero-opacity .timer-player:before,.zero-opacity .timer-shell:before,.zero-opacity .timer-shell:after{opacity:0!important}
 
-/* Victory sequence: 14 seconds total.
-   0–7s VICTORY centered directly under the winner name, 7–14s final timer.
+/* Victory sequence: 10 seconds total.
+   0–5s VICTORY centered directly under the winner name, 5–10s final timer.
    The animation uses transform/opacity only so it stays light while the game is running. */
 .celebrating .timer-player.winner{z-index:8;overflow:visible}
 .celebrating .timer-player.winner .timer-name{z-index:20;overflow:visible;color:#fff!important;text-shadow:0 0 7px #fff,0 0 18px color-mix(in srgb,var(--accent) 62%,transparent),0 2px 8px #000!important;transform-origin:center center;will-change:transform;animation:winner-name-pulse 1.6s ease-in-out infinite}
@@ -25,9 +25,9 @@
   color:color-mix(in srgb,var(--accent) 88%,white 12%);
   text-shadow:0 0 7px color-mix(in srgb,var(--accent) 96%,white),0 0 16px color-mix(in srgb,var(--accent) 66%,transparent),0 2px 7px #000;
   transform:translate3d(-50%,0,0) scale(.98);transform-origin:center center;opacity:0;
-  will-change:transform,opacity;transition:opacity .34s ease,transform .34s ease;
+  will-change:transform,opacity;transition:opacity .52s ease,transform .52s cubic-bezier(.22,.8,.26,1);
 }
-.victory-label-phase .timer-player.winner .timer-name:after{opacity:1;animation:victory-label-pulse 1.55s ease-in-out infinite}
+.victory-label-phase .timer-player.winner .timer-name:after{opacity:1;animation:victory-label-pulse 1.6s ease-in-out infinite}
 
 /* One lightweight burst. The dot pattern itself is static; only the whole layer scales/fades. */
 .victory-label-phase .timer-player.winner .timer-name:before{
@@ -47,9 +47,11 @@
 .victory-timer-phase.celebrating .timer-player.winner .timer-name:after,
 .victory-timer-phase.celebrating .timer-player.winner .timer-name:before{opacity:0!important;animation:none!important}
 .victory-timer-phase.celebrating .timer-player.winner .timer-time{
+  opacity:1;
+  transition:opacity .52s ease,transform .52s cubic-bezier(.22,.8,.26,1),color .18s ease,text-shadow .18s ease;
   color:color-mix(in srgb,var(--accent) 88%,white 12%)!important;
   text-shadow:0 0 8px color-mix(in srgb,var(--accent) 92%,white),0 0 18px color-mix(in srgb,var(--accent) 60%,transparent),0 2px 8px #000!important;
-  transform-origin:center center;will-change:transform;animation:winner-time-pulse 1.55s ease-in-out infinite
+  transform-origin:center center;will-change:transform;animation:winner-time-pulse 1.6s ease-in-out infinite
 }
 
 @keyframes winner-name-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
@@ -72,3 +74,20 @@
 
 /* Optional black text shadow slider. Active white/accent glow remains independent. */
 .timer-name,.timer-time,.timer-score{filter:var(--text-shadow-filter,none)}
+
+
+/* Beta 2.0.9 — center player content inside each side for Center Beam, Corner Rail and Glass Ribbon.
+   Side padding keeps names/timers comfortably away from the center score. */
+.style-2 .timer-player,.style-3 .timer-player,.style-5 .timer-player{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding-left:14px;padding-right:14px;
+}
+.style-2 .p1,.style-2 .p2,.style-3 .p1,.style-3 .p2,.style-5 .p1,.style-5 .p2{
+  align-items:center;text-align:center;padding-left:14px;padding-right:14px;
+}
+.style-2 .timer-name,.style-3 .timer-name,.style-5 .timer-name{display:inline-block;text-align:center}
+
+/* Keep winner name + winner timer on the same pulse cadence, without blinking. */
+.celebrating .timer-player.winner .timer-name,
+.victory-timer-phase.celebrating .timer-player.winner .timer-time{animation-duration:1.6s;animation-timing-function:ease-in-out}
+.celebrating .timer-player.winner .timer-time{transition:opacity .52s ease,transform .52s cubic-bezier(.22,.8,.26,1)}
