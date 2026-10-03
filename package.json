@@ -1,7 +1,7 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.0.3-beta.1",
-  "description": "DBD Overlay Studio - Beta 2.0.3",
+  "version": "2.0.4-beta.1",
+  "description": "DBD Overlay Studio - Beta 2.0.4",
   "main": "main-v2.js",
   "author": "Jumper",
   "license": "MIT",

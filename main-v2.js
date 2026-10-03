@@ -17,12 +17,12 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 231,
+  schema: 232,
   enabled: true,
   locked: true,
   x: 70,
   y: 360,
-  scaleUi: 100,
+  scaleUi: 90,
   scale: 1,
   style: 2,
   player1: 'PLAYER 1',
@@ -37,11 +37,11 @@ const TIMER_DEF = {
   running: false,
   runningPlayer: 0,
   startedAt: 0,
-  accent: '#22c55e',
+  accent: '#3b82f6',
   accentMode: 'solid',
   backgroundColor: '#0d0e13',
-  opacity: 0.88,
-  textShadow: 28,
+  opacity: 1,
+  textShadow: 20,
   hotkeyAction: 'F1',
   hotkeySwap: 'F2',
   hotkeyReset: 'F3',
@@ -149,18 +149,18 @@ function readLegacyLanguageOnce() {
 function timerSnapshot() { return { ...T }; }
 function baseFor(style = T?.style ?? 2) { return TIMER_BASES[clampInt(style, 0, 5)] || TIMER_BASES[2]; }
 
-// UI remains 70–100%, but Beta 2.0.3 makes the actual overlay about 20% larger.
-// 100% in the app maps to 1.20x while preserving the same simple slider.
+// UI remains 70–100%. Beta 2.0.4 keeps the overlay slightly larger than the original baseline.
+// 100% in the app maps to 1.10x; fresh installs start at 90%.
 function scaleFactorFromUi(value) {
   const ui = clamp(Number(value) || 100, TIMER_SCALE_UI.min, TIMER_SCALE_UI.max);
   const previousScale = 0.78 + ((ui - 70) / 30) * 0.22;
-  return previousScale * 1.20;
+  return previousScale * 1.10;
 }
 
 function migrateOldScale(oldScale) {
   const s = Number(oldScale);
   if (!Number.isFinite(s) || s <= 0) return 100;
-  const previousScale = s / 1.20;
+  const previousScale = s / 1.10;
   return clampInt(70 + ((Math.min(1, previousScale) - 0.78) / 0.22) * 30, 70, 100);
 }
 
@@ -171,7 +171,7 @@ function normalizeTimer() {
   T.scale = scaleFactorFromUi(T.scaleUi);
   T.style = clampInt(T.style, 0, 5);
   T.opacity = clamp(T.opacity, 0, 1);
-  T.textShadow = Number.isFinite(Number(T.textShadow)) ? clampInt(T.textShadow, 0, 100) : 28;
+  T.textShadow = Number.isFinite(Number(T.textShadow)) ? clampInt(T.textShadow, 0, 100) : 20;
   T.locked = !!T.locked;
   T.backgroundColor = /^#[0-9a-f]{6}$/i.test(String(T.backgroundColor || '')) ? T.backgroundColor : '#0d0e13';
   T.score1 = Math.max(0, Math.floor(Number(T.score1) || 0));
@@ -185,7 +185,7 @@ function normalizeTimer() {
   T.runningPlayer = T.running ? (Number(T.runningPlayer) === 2 ? 2 : 1) : 0;
   T.player1 = String(T.player1 ?? 'PLAYER 1').slice(0, 48);
   T.player2 = String(T.player2 ?? 'PLAYER 2').slice(0, 48);
-  T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#22c55e';
+  T.accent = /^#[0-9a-f]{6}$/i.test(String(T.accent || '')) ? T.accent : '#3b82f6';
   // Beta 2.0.1: Rainbow preset removed; keep one solid accent color.
   T.accentMode = 'solid';
   T.hotkeyAction = String(T.hotkeyAction || 'F1');
@@ -205,7 +205,7 @@ function normalizeTimer() {
   T.soundEnabled = T.soundEnabled !== false;
   T.victoryEffectEnabled = T.victoryEffectEnabled !== false;
   T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
-  T.schema = 231;
+  T.schema = 232;
 }
 
 function loadTimer() {
@@ -518,14 +518,14 @@ function evaluateMatchWinner(triggerCelebration = false) {
   if (triggerCelebration && changed) {
     const now = Date.now();
     if (now >= Number(T.victoryCooldownUntil || 0)) {
-      // Audio and visual effect are separate controls. The center "victory"
-      // transition lasts 4 seconds, followed by a light 10-second winner afterglow.
-      T.victoryCooldownUntil = now + 10000;
+      // Audio and visual effect are separate controls. The winner timer is replaced
+      // by the victory label for 5 seconds, followed by a light 10-second afterglow.
+      T.victoryCooldownUntil = now + 5000;
       setTimerAudioEvent('victory');
       if (T.victoryEffectEnabled !== false) {
         T.celebrationWinner = winner;
-        T.celebrationIntroUntil = now + 4000;
-        T.celebrationUntil = now + 14000;
+        T.celebrationIntroUntil = now + 5000;
+        T.celebrationUntil = now + 15000;
         T.celebrationPersistent = false;
         T.celebrationId = (Number(T.celebrationId) || 0) + 1;
       } else {
@@ -568,7 +568,7 @@ function resolveRound(auto = false) {
 
 function timerAction() {
   const now = Date.now();
-  const cooldown = T.autoSwap ? 1000 : 180;
+  const cooldown = T.autoSwap ? 2000 : 180;
   if (now - lastActionAt < cooldown) return T;
   lastActionAt = now;
   if (T.matchWinner) return T;
