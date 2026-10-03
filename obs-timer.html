@@ -10,7 +10,7 @@ let T=null,lastGeometry='',tickTimer=null,fallbackTimer=null,es=null;
 function stopRenderTimer(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}}
 function applyGeometry(){if(!T)return;const style=Math.max(0,Math.min(5,+T.style||0)),b=BASES[style]||BASES[2],scale=Math.max(.78,Math.min(1.10,+T.scale||1));const g=[T.enabled,+T.x||0,+T.y||0,b[0],b[1],scale].join('|');if(g!==lastGeometry){lastGeometry=g;stage.style.display=T.enabled?'block':'none';stage.style.left=(+T.x||0)+'px';stage.style.top=(+T.y||0)+'px';stage.style.width=b[0]+'px';stage.style.height=b[1]+'px';stage.style.transform=`scale(${scale})`}}
 function renderFull(){if(!T)return;applyGeometry();if(T.enabled)TimerRenderer.apply(timerRoot,T,Date.now())}
-function scheduleRenderWork(){stopRenderTimer();const now=Date.now(),celebrating=Number(T?.celebrationUntil||0)>now;if(T?.enabled&&(T?.running||celebrating))tickTimer=setInterval(()=>{if(T?.enabled)TimerRenderer.apply(timerRoot,T,Date.now())},100)}
+function scheduleRenderWork(){stopRenderTimer();const now=Date.now(),celebrating=Number(T?.celebrationUntil||0)>now;if(T?.enabled&&(T?.running||celebrating))tickTimer=setInterval(()=>{if(!T?.enabled)return;const t=Date.now();TimerRenderer.apply(timerRoot,T,t);if(!T.running&&Number(T?.celebrationUntil||0)<=t)stopRenderTimer()},100)}
 function applyState(next){if(!next)return;T=next;renderFull();scheduleRenderWork()}
 async function refresh(){try{applyState(await fetch('/state',{cache:'no-store'}).then(r=>r.json()))}catch{}}
 function startFallback(){if(fallbackTimer)return;fallbackTimer=setInterval(refresh,1000)}

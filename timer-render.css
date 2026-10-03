@@ -8,28 +8,32 @@
 .score-wrap{display:flex;align-items:center;justify-content:center;min-width:0}.timer-score{display:flex;align-items:center;justify-content:center;gap:10px;font-size:44px;font-weight:950;letter-spacing:.2px;color:#fff;white-space:nowrap;text-shadow:0 0 8px rgba(255,255,255,.5),0 0 18px rgba(255,255,255,.18),0 2px 8px #000d}.timer-score .dash{color:#c8cad0;font-size:.68em;text-shadow:0 2px 7px #000c}
 .zero-opacity .timer-player,.zero-opacity .timer-shell{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.zero-opacity .timer-player:before,.zero-opacity .timer-shell:before,.zero-opacity .timer-shell:after{opacity:0!important}
 
-/* Victory sequence: 20 seconds total, alternating every 5 seconds.
-   0–5s VICTORY, 5–10s timer, 10–15s VICTORY, 15–20s timer. */
+/* Victory sequence: 14 seconds total, with one clean transition.
+   0–7s VICTORY, 7–14s final timer. No label blinking. */
 .celebrating .timer-player.winner{z-index:8;overflow:visible}
-.celebrating .timer-player.winner .timer-name{z-index:5;overflow:visible;color:#fff!important;text-shadow:0 0 7px #fff,0 0 18px color-mix(in srgb,var(--accent) 62%,transparent),0 2px 8px #000!important;animation:winner-name-pulse 1.35s ease-in-out infinite}
+.celebrating .timer-player.winner .timer-name{z-index:5;overflow:visible;color:#fff!important;text-shadow:0 0 7px #fff,0 0 18px color-mix(in srgb,var(--accent) 62%,transparent),0 2px 8px #000!important;animation:winner-name-pulse 1.45s ease-in-out infinite}
 .celebrating .timer-player.loser .active-mark{opacity:0!important}
 .celebrating .timer-player.loser .timer-name{font-size:20px!important;color:#868a93!important;text-shadow:0 2px 7px #000a!important}
 .celebrating .timer-player.loser .timer-time{color:#868a93!important;text-shadow:0 2px 8px #000a!important}
 
-/* Victory word lives exactly where the timer lives. The real time remains in layout underneath. */
-.victory-label-phase .timer-player.winner .timer-time{color:transparent!important;text-shadow:none!important;filter:none!important;background:none!important}
-.victory-label-phase .timer-player.winner .timer-time:after{content:attr(data-victory-label);position:absolute;left:50%;top:50%;z-index:30;white-space:nowrap;pointer-events:none;font-size:28px;line-height:1;font-weight:1000;letter-spacing:1.2px;color:color-mix(in srgb,var(--accent) 88%,white 12%);text-shadow:0 0 7px color-mix(in srgb,var(--accent) 96%,white),0 0 16px color-mix(in srgb,var(--accent) 66%,transparent),0 2px 7px #000;animation:victory-label-pulse 1.18s ease-in-out infinite}
-.victory-label-phase .timer-player.winner .timer-time:before{content:'';position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:24;box-shadow:-42px -20px 0 var(--accent),-28px -34px 0 #fff,-6px -40px 0 var(--accent),17px -36px 0 #fff,37px -23px 0 var(--accent),44px -2px 0 #fff,37px 21px 0 var(--accent),16px 36px 0 #fff,-8px 40px 0 var(--accent),-32px 28px 0 #fff,-43px 7px 0 var(--accent);animation:victory-burst 1.25s ease-out 3 both}
-/* No underline/rail while VICTORY is on screen. The line belongs only to the actual timer. */
-.victory-label-phase .timer-player.winner .active-mark{opacity:0!important}
-.victory-label-phase.style-2 .timer-player.winner .timer-time,.victory-label-phase.style-5 .timer-player.winner .timer-time{background:none!important}
+/* The victory word always occupies the timer position. Keeping the pseudo-element
+   alive in both phases lets it fade out smoothly instead of flashing. */
+.celebrating .timer-player.winner .timer-time:after{content:attr(data-victory-label);position:absolute;left:50%;top:50%;z-index:30;white-space:nowrap;pointer-events:none;font-size:28px;line-height:1;font-weight:1000;letter-spacing:1.2px;color:color-mix(in srgb,var(--accent) 88%,white 12%);text-shadow:0 0 7px color-mix(in srgb,var(--accent) 96%,white),0 0 16px color-mix(in srgb,var(--accent) 66%,transparent),0 2px 7px #000;transform:translate(-50%,-50%);scale:.96;opacity:0;transition:opacity .48s ease,scale .48s ease}
+.victory-label-phase .timer-player.winner .timer-time{color:transparent!important;text-shadow:none!important;filter:none!important;background:none!important;background-image:none!important;border:0!important;box-shadow:none!important;text-decoration:none!important}
+.victory-label-phase .timer-player.winner .timer-time:after{opacity:1;animation:victory-label-pulse 1.42s ease-in-out infinite}
+.victory-label-phase .timer-player.winner .timer-time:before{content:'';position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:24;box-shadow:-42px -20px 0 var(--accent),-28px -34px 0 #fff,-6px -40px 0 var(--accent),17px -36px 0 #fff,37px -23px 0 var(--accent),44px -2px 0 #fff,37px 21px 0 var(--accent),16px 36px 0 #fff,-8px 40px 0 var(--accent),-32px 28px 0 #fff,-43px 7px 0 var(--accent);animation:victory-burst 1.35s ease-out 4 both}
+/* The underline belongs only to the timer, never to VICTORY. */
+.victory-label-phase .timer-player.winner .active-mark{display:none!important;opacity:0!important;box-shadow:none!important}
+.victory-label-phase.style-0 .timer-player.winner .active-mark,.victory-label-phase.style-1 .timer-player.winner .active-mark,.victory-label-phase.style-2 .timer-player.winner .active-mark,.victory-label-phase.style-3 .timer-player.winner .active-mark,.victory-label-phase.style-4 .timer-player.winner .active-mark,.victory-label-phase.style-5 .timer-player.winner .active-mark{display:none!important;opacity:0!important}
+.victory-label-phase.style-2 .timer-player.winner .timer-time,.victory-label-phase.style-5 .timer-player.winner .timer-time{background:none!important;background-image:none!important}
 
-/* Timer phases: final time returns and keeps a clear pulse. */
-.victory-timer-phase.celebrating .timer-player.winner .timer-time{color:color-mix(in srgb,var(--accent) 88%,white 12%)!important;text-shadow:0 0 8px color-mix(in srgb,var(--accent) 92%,white),0 0 18px color-mix(in srgb,var(--accent) 60%,transparent),0 2px 8px #000!important;animation:winner-time-pulse 1.22s ease-in-out infinite}
+/* Final timer phase: the saved time fades back in and keeps pulsing for 7 seconds. */
+.victory-timer-phase.celebrating .timer-player.winner .timer-time{color:color-mix(in srgb,var(--accent) 88%,white 12%)!important;text-shadow:0 0 8px color-mix(in srgb,var(--accent) 92%,white),0 0 18px color-mix(in srgb,var(--accent) 60%,transparent),0 2px 8px #000!important;animation:winner-time-pulse 1.38s ease-in-out infinite}
+.victory-timer-phase.celebrating .timer-player.winner .timer-time:after{opacity:0!important;scale:.94}
 
-@keyframes winner-name-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.065)}}
-@keyframes winner-time-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.105)}}
-@keyframes victory-label-pulse{0%{opacity:0;transform:translate(-50%,-50%) scale(.72)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.07)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.13)}90%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}100%{opacity:.95;transform:translate(-50%,-50%) scale(1.07)}}
+@keyframes winner-name-pulse{0%,100%{scale:1}50%{scale:1.055}}
+@keyframes winner-time-pulse{0%,100%{scale:.97}50%{scale:1.085}}
+@keyframes victory-label-pulse{0%,100%{scale:.98;opacity:1}50%{scale:1.075;opacity:1}}
 @keyframes victory-burst{0%{opacity:0;transform:translate(-50%,-50%) scale(.12)}14%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
 
 /* 1 — Side Stack */

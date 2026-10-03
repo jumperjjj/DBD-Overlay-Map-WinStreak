@@ -518,14 +518,14 @@ function evaluateMatchWinner(triggerCelebration = false) {
   if (triggerCelebration && changed) {
     const now = Date.now();
     if (now >= Number(T.victoryCooldownUntil || 0)) {
-      // Audio and visual effect are separate controls. The visual sequence lasts 20s:
-      // VICTORY (5s) -> final timer (5s) -> VICTORY (5s) -> final timer (5s).
+      // Audio and visual effect are separate controls. The visual sequence lasts 14s:
+      // VICTORY (7s) -> final timer (7s), with one smooth transition.
       T.victoryCooldownUntil = now + 5000;
       setTimerAudioEvent('victory');
       if (T.victoryEffectEnabled !== false) {
         T.celebrationWinner = winner;
-        T.celebrationIntroUntil = now + 5000;
-        T.celebrationUntil = now + 20000;
+        T.celebrationIntroUntil = now + 7000;
+        T.celebrationUntil = now + 14000;
         T.celebrationPersistent = false;
         T.celebrationId = (Number(T.celebrationId) || 0) + 1;
       } else {

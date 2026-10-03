@@ -15,10 +15,9 @@
     const current=Number(now||Date.now()),until=Number(s?.celebrationUntil)||0,winner=Number(s?.celebrationWinner)||0;
     const active=s?.victoryEffectEnabled!==false&&until>current&&(winner===1||winner===2);
     if(!active)return{active:false,winner:0,showVictory:false,phase:-1};
-    const start=until-20000;
-    const elapsedMs=Math.max(0,current-start);
-    const phase=Math.max(0,Math.min(3,Math.floor(elapsedMs/5000)));
-    return{active:true,winner,showVictory:phase===0||phase===2,phase};
+    const introUntil=Number(s?.celebrationIntroUntil)||0;
+    const showVictory=introUntil>current;
+    return{active:true,winner,showVictory,phase:showVictory?0:1};
   }
   function tick(root,s,now){
     if(!root||!s||!s.running)return;

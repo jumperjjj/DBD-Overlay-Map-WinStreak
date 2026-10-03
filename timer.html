@@ -23,7 +23,7 @@ function playSound(kind){if(T?.soundEnabled===false)return;try{const pool=ensure
 function applyLock(){document.body.classList.toggle('overlayLocked',!!T?.locked)}
 function renderFull(){if(T)TimerRenderer.apply(timerRoot,T,Date.now())}
 function stopRenderTimer(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}}
-function scheduleRenderWork(){stopRenderTimer();const now=Date.now(),celebrating=Number(T?.celebrationUntil||0)>now;if(T?.running||celebrating)tickTimer=setInterval(()=>{if(T)TimerRenderer.apply(timerRoot,T,Date.now())},100)}
+function scheduleRenderWork(){stopRenderTimer();const now=Date.now(),celebrating=Number(T?.celebrationUntil||0)>now;if(T?.running||celebrating)tickTimer=setInterval(()=>{if(!T)return;const t=Date.now();TimerRenderer.apply(timerRoot,T,t);if(!T.running&&Number(T?.celebrationUntil||0)<=t)stopRenderTimer()},100)}
 function applyState(next,allowAudio=true){if(!next)return;T=next;applyLock();renderFull();scheduleRenderWork();const id=Number(T.audioEventId)||0;if(T.soundEnabled===false)stopAllSounds();if(allowAudio&&T.soundEnabled!==false&&id&&id!==lastAudioEventId)playSound(String(T.audioEventType||''));lastAudioEventId=id}
 api.onTimerState(s=>applyState(s,true));
 api.onTimerEdit?.(()=>{});
