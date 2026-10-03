@@ -528,8 +528,8 @@ function resolveRound(auto = false) {
   const a = Number(T.time1) || 0;
   const b = Number(T.time2) || 0;
   let roundWinner = 0;
-  if (a < b) { T.score1 += 1; T.lastWinner = 1; T.lastDelta = b - a; roundWinner = 1; }
-  else if (b < a) { T.score2 += 1; T.lastWinner = 2; T.lastDelta = a - b; roundWinner = 2; }
+  if (a > b) { T.score1 += 1; T.lastWinner = 1; T.lastDelta = a - b; roundWinner = 1; }
+  else if (b > a) { T.score2 += 1; T.lastWinner = 2; T.lastDelta = b - a; roundWinner = 2; }
   else { T.lastWinner = 3; T.lastDelta = 0; }
 
   const matchWinner = evaluateMatchWinner(true);
