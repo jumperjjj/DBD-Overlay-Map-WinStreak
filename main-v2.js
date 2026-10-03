@@ -17,7 +17,7 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 229,
+  schema: 230,
   enabled: true,
   locked: true,
   x: 70,
@@ -56,6 +56,7 @@ const TIMER_DEF = {
   audioEventId: 0,
   audioEventType: '',
   soundEnabled: true,
+  victoryEffectEnabled: true,
   lastWinner: 0,
   lastDelta: 0,
   round: 1,
@@ -198,8 +199,9 @@ function normalizeTimer() {
   T.audioEventId = Math.max(0, Math.floor(Number(T.audioEventId) || 0));
   T.audioEventType = ['start','stop','victory'].includes(String(T.audioEventType || '')) ? String(T.audioEventType) : '';
   T.soundEnabled = T.soundEnabled !== false;
+  T.victoryEffectEnabled = T.victoryEffectEnabled !== false;
   T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
-  T.schema = 229;
+  T.schema = 230;
 }
 
 function loadTimer() {
@@ -511,13 +513,20 @@ function evaluateMatchWinner(triggerCelebration = false) {
   if (triggerCelebration && changed) {
     const now = Date.now();
     if (now >= Number(T.victoryCooldownUntil || 0)) {
-      T.celebrationWinner = winner;
-      // Keep the victory state visible until Reset Match/F3 without a long-running timeout.
-      T.celebrationUntil = 0;
-      T.celebrationPersistent = true;
-      T.celebrationId = (Number(T.celebrationId) || 0) + 1;
+      // Audio and visual effect are separate controls. The visual celebration
+      // lasts only 3 seconds; final times remain preserved afterwards.
       T.victoryCooldownUntil = now + 10000;
       setTimerAudioEvent('victory');
+      if (T.victoryEffectEnabled !== false) {
+        T.celebrationWinner = winner;
+        T.celebrationUntil = now + 3000;
+        T.celebrationPersistent = false;
+        T.celebrationId = (Number(T.celebrationId) || 0) + 1;
+      } else {
+        T.celebrationWinner = 0;
+        T.celebrationUntil = 0;
+        T.celebrationPersistent = false;
+      }
     }
   }
   return winner;
@@ -588,6 +597,7 @@ function resetTimerMatch() {
     hotkeySwap: T.hotkeySwap,
     hotkeyReset: T.hotkeyReset,
     soundEnabled: T.soundEnabled,
+    victoryEffectEnabled: T.victoryEffectEnabled,
     autoSwap: T.autoSwap,
     bestOf: T.bestOf,
     victoryCooldownUntil: T.victoryCooldownUntil,
@@ -718,6 +728,7 @@ ipcMain.handle('timer-patch', (_, patch) => {
   let nextPatch = { ...(patch || {}) };
   const lockChanged = Object.prototype.hasOwnProperty.call(nextPatch, 'locked');
   const enabledChanged = Object.prototype.hasOwnProperty.call(nextPatch, 'enabled');
+  const victoryFxChanged = Object.prototype.hasOwnProperty.call(nextPatch, 'victoryEffectEnabled');
   let bestOfChanged = Object.prototype.hasOwnProperty.call(nextPatch, 'bestOf');
   if (bestOfChanged) {
     const requestedBestOf = Number(nextPatch.bestOf);
@@ -729,6 +740,11 @@ ipcMain.handle('timer-patch', (_, patch) => {
   }
   T = { ...T, ...nextPatch };
   normalizeTimer();
+  if (victoryFxChanged && T.victoryEffectEnabled === false) {
+    T.celebrationWinner = 0;
+    T.celebrationUntil = 0;
+    T.celebrationPersistent = false;
+  }
   if (bestOfChanged) evaluateMatchWinner(false);
   if (T.style !== prevStyle || T.scaleUi !== prevScaleUi) applyTimerGeometry(true);
   if (lockChanged) applyTimerInteractivity();

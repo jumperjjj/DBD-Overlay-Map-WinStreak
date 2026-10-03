@@ -15,14 +15,14 @@
     if(!root||!s||!s.running)return;
     const current=Number(now||Date.now()),p=Number(s.runningPlayer)===2?2:1;
     const el=root.querySelector(`[data-time="${p}"]`);
-    if(el&&!el.classList.contains('victory-text'))el.textContent=format(elapsed(s,p,current));
+    if(el)el.textContent=format(elapsed(s,p,current));
   }
   function apply(root,s,now){
     if(!root||!s)return;ensure(root);
     const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e',shadowStrength=clamp(s.textShadow??28,0,100)/100;
     const [br,bg,bb]=rgb(s.backgroundColor||'#0d0e13'),sr=Math.min(255,br+28),sg=Math.min(255,bg+29),sb=Math.min(255,bb+32);
     const current=Number(now||Date.now());
-    const celebrating=(!!s.celebrationPersistent||Number(s.celebrationUntil)>current)&&[1,2].includes(Number(s.celebrationWinner));
+    const celebrating=s.victoryEffectEnabled!==false&&Number(s.celebrationUntil)>current&&[1,2].includes(Number(s.celebrationWinner));
     const winner=celebrating?Number(s.celebrationWinner):0;
     root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}${celebrating?' celebrating':''}`;
     root.style.setProperty('--accent',accent);
@@ -36,9 +36,10 @@
     root.querySelector('[data-score="1"]').textContent=Math.max(0,Number(s.score1)||0);
     root.querySelector('[data-score="2"]').textContent=Math.max(0,Number(s.score2)||0);
     const time1=root.querySelector('[data-time="1"]'),time2=root.querySelector('[data-time="2"]');
-    time1.classList.toggle('victory-text',winner===1);time2.classList.toggle('victory-text',winner===2);
-    time1.textContent=winner===1?victoryWord(s.language):format(elapsed(s,1,current));
-    time2.textContent=winner===2?victoryWord(s.language):format(elapsed(s,2,current));
+    time1.classList.toggle('victory-winner',winner===1);time2.classList.toggle('victory-winner',winner===2);
+    time1.dataset.victoryLabel=victoryWord(s.language);time2.dataset.victoryLabel=victoryWord(s.language);
+    time1.textContent=format(elapsed(s,1,current));
+    time2.textContent=format(elapsed(s,2,current));
     const p1=root.querySelector('.p1'),p2=root.querySelector('.p2');
     const active=Number(s.active)===2?2:1;
     p1.classList.toggle('active',active===1);p2.classList.toggle('active',active===2);
