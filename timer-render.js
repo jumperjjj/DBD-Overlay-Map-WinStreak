@@ -19,17 +19,18 @@
   }
   function apply(root,s,now){
     if(!root||!s)return;ensure(root);
-    const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e';
+    const style=clamp(s.style,0,5)|0,opacity=clamp(s.opacity,0,1),accent=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#22c55e',shadowStrength=clamp(s.textShadow??28,0,100)/100;
     const [br,bg,bb]=rgb(s.backgroundColor||'#0d0e13'),sr=Math.min(255,br+28),sg=Math.min(255,bg+29),sb=Math.min(255,bb+32);
     const current=Number(now||Date.now());
     const celebrating=(!!s.celebrationPersistent||Number(s.celebrationUntil)>current)&&[1,2].includes(Number(s.celebrationWinner));
     const winner=celebrating?Number(s.celebrationWinner):0;
-    root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}${opacity<=.4?' low-opacity':''}${celebrating?' celebrating':''}`;
+    root.className=`timer-widget style-${style}${opacity<=.001?' zero-opacity':''}${celebrating?' celebrating':''}`;
     root.style.setProperty('--accent',accent);
     root.style.setProperty('--panel',`rgba(${br},${bg},${bb},${(opacity*.94).toFixed(3)})`);
     root.style.setProperty('--panel-soft',`rgba(${sr},${sg},${sb},${(opacity*.54).toFixed(3)})`);
     root.style.setProperty('--border',`rgba(255,255,255,${(opacity*.18).toFixed(3)})`);
     root.style.setProperty('--shadow',opacity<=.001?'none':`0 10px 28px rgba(0,0,0,${(.12+.22*opacity).toFixed(3)})`);
+    root.style.setProperty('--text-shadow-filter',shadowStrength<=0?'none':`drop-shadow(0 1px ${(0.8+2.2*shadowStrength).toFixed(2)}px rgba(0,0,0,${(0.12+0.38*shadowStrength).toFixed(3)}))`);
     root.querySelector('[data-name="1"]').innerHTML=esc(s.player1??'PLAYER 1');
     root.querySelector('[data-name="2"]').innerHTML=esc(s.player2??'PLAYER 2');
     root.querySelector('[data-score="1"]').textContent=Math.max(0,Number(s.score1)||0);

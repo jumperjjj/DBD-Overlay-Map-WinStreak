@@ -17,7 +17,7 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 228,
+  schema: 229,
   enabled: true,
   locked: true,
   x: 70,
@@ -41,6 +41,7 @@ const TIMER_DEF = {
   accentMode: 'solid',
   backgroundColor: '#0d0e13',
   opacity: 0.88,
+  textShadow: 28,
   hotkeyAction: 'F1',
   hotkeySwap: 'F2',
   hotkeyReset: 'F3',
@@ -166,6 +167,7 @@ function normalizeTimer() {
   T.scale = scaleFactorFromUi(T.scaleUi);
   T.style = clampInt(T.style, 0, 5);
   T.opacity = clamp(T.opacity, 0, 1);
+  T.textShadow = Number.isFinite(Number(T.textShadow)) ? clampInt(T.textShadow, 0, 100) : 28;
   T.locked = !!T.locked;
   T.backgroundColor = /^#[0-9a-f]{6}$/i.test(String(T.backgroundColor || '')) ? T.backgroundColor : '#0d0e13';
   T.score1 = Math.max(0, Math.floor(Number(T.score1) || 0));
@@ -197,7 +199,7 @@ function normalizeTimer() {
   T.audioEventType = ['start','stop','victory'].includes(String(T.audioEventType || '')) ? String(T.audioEventType) : '';
   T.soundEnabled = T.soundEnabled !== false;
   T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
-  T.schema = 228;
+  T.schema = 229;
 }
 
 function loadTimer() {
@@ -469,6 +471,15 @@ function stopRunningTimer() {
   return true;
 }
 
+function timerSeriesStarted() {
+  return !!(
+    T.running || T.done1 || T.done2 ||
+    Number(T.time1) > 0 || Number(T.time2) > 0 ||
+    Number(T.score1) > 0 || Number(T.score2) > 0 ||
+    Number(T.matchWinner) > 0 || Number(T.round) > 1
+  );
+}
+
 function winsNeeded() {
   return Math.floor((Number(T.bestOf) || 3) / 2) + 1;
 }
@@ -571,6 +582,7 @@ function resetTimerMatch() {
     accentMode: T.accentMode,
     backgroundColor: T.backgroundColor,
     opacity: T.opacity,
+    textShadow: T.textShadow,
     locked: T.locked,
     hotkeyAction: T.hotkeyAction,
     hotkeySwap: T.hotkeySwap,
@@ -703,10 +715,19 @@ ipcMain.handle('timer-get', () => ({ state: timerSnapshot(), url: `http://127.0.
 ipcMain.handle('timer-patch', (_, patch) => {
   const prevStyle = T.style;
   const prevScaleUi = T.scaleUi;
-  const lockChanged = Object.prototype.hasOwnProperty.call(patch || {}, 'locked');
-  const enabledChanged = Object.prototype.hasOwnProperty.call(patch || {}, 'enabled');
-  const bestOfChanged = Object.prototype.hasOwnProperty.call(patch || {}, 'bestOf');
-  T = { ...T, ...(patch || {}) };
+  let nextPatch = { ...(patch || {}) };
+  const lockChanged = Object.prototype.hasOwnProperty.call(nextPatch, 'locked');
+  const enabledChanged = Object.prototype.hasOwnProperty.call(nextPatch, 'enabled');
+  let bestOfChanged = Object.prototype.hasOwnProperty.call(nextPatch, 'bestOf');
+  if (bestOfChanged) {
+    const requestedBestOf = Number(nextPatch.bestOf);
+    const changingFormat = requestedBestOf !== Number(T.bestOf);
+    if (changingFormat && timerSeriesStarted()) {
+      delete nextPatch.bestOf;
+      bestOfChanged = false;
+    }
+  }
+  T = { ...T, ...nextPatch };
   normalizeTimer();
   if (bestOfChanged) evaluateMatchWinner(false);
   if (T.style !== prevStyle || T.scaleUi !== prevScaleUi) applyTimerGeometry(true);
