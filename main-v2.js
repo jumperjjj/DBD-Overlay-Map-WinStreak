@@ -17,7 +17,7 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 230,
+  schema: 231,
   enabled: true,
   locked: true,
   x: 70,
@@ -50,6 +50,7 @@ const TIMER_DEF = {
   matchWinner: 0,
   celebrationWinner: 0,
   celebrationUntil: 0,
+  celebrationIntroUntil: 0,
   celebrationPersistent: false,
   celebrationId: 0,
   victoryCooldownUntil: 0,
@@ -148,17 +149,19 @@ function readLegacyLanguageOnce() {
 function timerSnapshot() { return { ...T }; }
 function baseFor(style = T?.style ?? 2) { return TIMER_BASES[clampInt(style, 0, 5)] || TIMER_BASES[2]; }
 
-// Timer Test 3: compact scale range. 70% is reduced but still readable;
-// 100% is now the true maximum requested for the 1v1 Timer.
+// UI remains 70–100%, but Beta 2.0.3 makes the actual overlay about 20% larger.
+// 100% in the app maps to 1.20x while preserving the same simple slider.
 function scaleFactorFromUi(value) {
   const ui = clamp(Number(value) || 100, TIMER_SCALE_UI.min, TIMER_SCALE_UI.max);
-  return 0.78 + ((ui - 70) / 30) * 0.22;
+  const previousScale = 0.78 + ((ui - 70) / 30) * 0.22;
+  return previousScale * 1.20;
 }
 
 function migrateOldScale(oldScale) {
   const s = Number(oldScale);
   if (!Number.isFinite(s) || s <= 0) return 100;
-  return clampInt(70 + ((Math.min(1, s) - 0.78) / 0.22) * 30, 70, 100);
+  const previousScale = s / 1.20;
+  return clampInt(70 + ((Math.min(1, previousScale) - 0.78) / 0.22) * 30, 70, 100);
 }
 
 function normalizeTimer() {
@@ -193,6 +196,7 @@ function normalizeTimer() {
   T.matchWinner = [1,2].includes(Number(T.matchWinner)) ? Number(T.matchWinner) : 0;
   T.celebrationWinner = [1,2].includes(Number(T.celebrationWinner)) ? Number(T.celebrationWinner) : 0;
   T.celebrationUntil = Math.max(0, Number(T.celebrationUntil) || 0);
+  T.celebrationIntroUntil = Math.max(0, Number(T.celebrationIntroUntil) || 0);
   T.celebrationPersistent = !!T.celebrationPersistent;
   T.celebrationId = Math.max(0, Math.floor(Number(T.celebrationId) || 0));
   T.victoryCooldownUntil = Math.max(0, Number(T.victoryCooldownUntil) || 0);
@@ -201,7 +205,7 @@ function normalizeTimer() {
   T.soundEnabled = T.soundEnabled !== false;
   T.victoryEffectEnabled = T.victoryEffectEnabled !== false;
   T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
-  T.schema = 230;
+  T.schema = 231;
 }
 
 function loadTimer() {
@@ -498,6 +502,7 @@ function evaluateMatchWinner(triggerCelebration = false) {
     T.matchWinner = 0;
     T.celebrationWinner = 0;
     T.celebrationUntil = 0;
+    T.celebrationIntroUntil = 0;
     T.celebrationPersistent = false;
     return 0;
   }
@@ -513,17 +518,19 @@ function evaluateMatchWinner(triggerCelebration = false) {
   if (triggerCelebration && changed) {
     const now = Date.now();
     if (now >= Number(T.victoryCooldownUntil || 0)) {
-      // Audio and visual effect are separate controls. The visual celebration
-      // lasts only 3 seconds; final times remain preserved afterwards.
+      // Audio and visual effect are separate controls. The center "victory"
+      // transition lasts 4 seconds, followed by a light 10-second winner afterglow.
       T.victoryCooldownUntil = now + 10000;
       setTimerAudioEvent('victory');
       if (T.victoryEffectEnabled !== false) {
         T.celebrationWinner = winner;
-        T.celebrationUntil = now + 3000;
+        T.celebrationIntroUntil = now + 4000;
+        T.celebrationUntil = now + 14000;
         T.celebrationPersistent = false;
         T.celebrationId = (Number(T.celebrationId) || 0) + 1;
       } else {
         T.celebrationWinner = 0;
+        T.celebrationIntroUntil = 0;
         T.celebrationUntil = 0;
         T.celebrationPersistent = false;
       }
@@ -742,6 +749,7 @@ ipcMain.handle('timer-patch', (_, patch) => {
   normalizeTimer();
   if (victoryFxChanged && T.victoryEffectEnabled === false) {
     T.celebrationWinner = 0;
+    T.celebrationIntroUntil = 0;
     T.celebrationUntil = 0;
     T.celebrationPersistent = false;
   }

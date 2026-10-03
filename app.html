@@ -76,7 +76,7 @@ body[data-ui-theme="midnight"] .danger{background:#762337!important;border-color
 body[data-ui-theme="violet"] .danger{background:#7b2441!important;border-color:#c45276!important;color:#ffffff!important}
 
 </style></head><body>
-<header class="appbar"><h1 class="brandTitle"><img class="logoImg" src="assets/icon.png" alt=""><span class="brandName">DBD Overlay Studio</span><span class="brandVersion">Beta 2.0.2</span><span class="brandDivider">|</span><span class="brandBy">By Jumper</span></h1><div class="spacer"></div><div class="headerTools"><select id="language" class="lang"><option value="pt">Português</option><option value="en">English</option><option value="es">Español</option></select><button id="quitApp" class="danger headerQuit" data-i18n="quitApp">Fechar aplicativo</button></div></header>
+<header class="appbar"><h1 class="brandTitle"><img class="logoImg" src="assets/icon.png" alt=""><span class="brandName">DBD Overlay Studio</span><span class="brandVersion">Beta 2.0.3</span><span class="brandDivider">|</span><span class="brandBy">By Jumper</span></h1><div class="spacer"></div><div class="headerTools"><select id="language" class="lang"><option value="pt">Português</option><option value="en">English</option><option value="es">Español</option></select><button id="quitApp" class="danger headerQuit" data-i18n="quitApp">Fechar aplicativo</button></div></header>
 <nav class="tabs"><button data-tab="streak" class="active">WinStreak</button><button data-tab="match" data-i18n="matchTab">Confronto</button><button data-tab="settings" data-i18n="settingsTab">Configuração</button><button data-tab="obs">OBS</button></nav>
 
 <section id="streak" class="page active">
@@ -106,7 +106,6 @@ body[data-ui-theme="violet"] .danger{background:#7b2441!important;border-color:#
  <div class="card"><h3 data-i18n="interfaceSettings">Interface do aplicativo</h3>
   <div class="settingsGrid settingsGrid2">
    <div class="field"><label data-i18n="appWindowSize">Tamanho da janela</label><select id="cfg_windowSize"></select><div class="small" data-i18n="fixedWindowHint">A janela fica fixa no tamanho escolhido e não pode ser redimensionada pelas bordas.</div></div>
-   <div class="field"><label data-i18n="colorModeTitle">Modo de cores</label><label class="toggleLine bigToggle compactToggle"><input id="cfg_customColors" type="checkbox"><span data-i18n="customColorsEnable">Usar seletor personalizado</span></label><div class="small" data-i18n="customColorsHint">Desativado (padrão): mostra cores prontas. Ativado: usa o seletor de cor completo.</div></div>
   </div>
  </div>
  <div class="card"><h3 data-i18n="themePreview">Temas disponíveis</h3><div class="grid4 themeChoices">
@@ -145,7 +144,6 @@ function applyUISettings(){
   document.body.dataset.uiTheme=S.uiTheme||'dark';
   document.body.classList.toggle('paletteMode',!!S.quickPalette);
   setVal('cfg_windowSize',S.uiSize||'standard');
-  setVal('cfg_customColors',!S.quickPalette);
   document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('active',b.dataset.themeChoice===(S.uiTheme||'dark')));
   if(!S.quickPalette)closePalette();
 }
@@ -192,7 +190,6 @@ function rowPatch(i,p){S.match.rows[i]={...S.match.rows[i],...p};api.patch('matc
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=async()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab))});
 language.onchange=async()=>{S.language=language.value;const next=await api.patch('root',{language:language.value});S=next;populate();sync(next)};
 cfg_windowSize.onchange=async()=>sync(await api.patch('root',{uiSize:cfg_windowSize.value}));
-cfg_customColors.onchange=async()=>sync(await api.patch('root',{quickPalette:!cfg_customColors.checked}));
 document.querySelectorAll('[data-theme-choice]').forEach(b=>b.onclick=async()=>sync(await api.patch('root',{uiTheme:b.dataset.themeChoice})));
 ['enabled','bold','shadow','recordShow','record2Show'].forEach(k=>bindCheck('st_'+k,'streak',k));['title','recordTitle','record2Title'].forEach(k=>bindText('st_'+k,'streak',k));['style','fontName','fontValue'].forEach(k=>bindSelect('st_'+k,'streak',k));['recordValue','record2Value'].forEach(k=>bindNum('st_'+k,'streak',k));['nameSize','valueSize','recordX','recordY','record2X','record2Y','glow'].forEach(k=>bindRange('st_'+k,'streak',k));bindRange('st_scale','streak','scale',v=>+v/100);bindRange('st_opacity','streak','opacity',v=>+v/100);
 ['enabled','showKillerName','killerLeft','edgeBorder','footerShow','showSetText'].forEach(k=>bindCheck('m_'+k,'match',k));['teamA','teamB','setText','killerName','footer'].forEach(k=>bindText('m_'+k,'match',k));['style','fontName','fontNumber','fontSet','killerImage'].forEach(k=>bindSelect('m_'+k,'match',k));bindRange('m_scale','match','scale',v=>+v/100);bindRange('m_glow','match','glow');bindRange('m_setTextSize','match','setTextSize');

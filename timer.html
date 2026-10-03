@@ -41,8 +41,9 @@ function stopTimers(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}if(c
 function scheduleRenderWork(){
   stopTimers();
   if(T?.running)tickTimer=setInterval(()=>{if(T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},100);
-  const remain=Number(T?.celebrationUntil||0)-Date.now();
-  if(!T?.celebrationPersistent&&remain>0&&remain<2147483000)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null},remain+40);
+  const now=Date.now(),intro=Number(T?.celebrationIntroUntil||0)-now,end=Number(T?.celebrationUntil||0)-now;
+  let next=0;if(intro>0)next=intro;else if(end>0)next=end;
+  if(!T?.celebrationPersistent&&next>0&&next<2147483000)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null;scheduleRenderWork()},next+35);
 }
 function applyState(next,allowAudio=true){
   if(!next)return;T=next;applyLock();renderFull();scheduleRenderWork();

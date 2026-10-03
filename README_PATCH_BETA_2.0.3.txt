@@ -1,13 +1,9 @@
-DBD Overlay Studio — Beta 2.0.3
+DBD Overlay Studio — Beta 2.0.3 TEST PATCH
 
-Substitua os arquivos deste patch no repositório.
-
-Alterações principais:
-- Center Beam, Corner Rail e Glass Ribbon: players afastados do placar e conteúdo centralizado.
-- Side Stack reformulado, mais estreito e com duas áreas independentes.
-- Placar do aplicativo compactado e números maiores.
-- Resetar partida seleciona sempre o Player 1.
-- Vitória da série mostra VITÓRIA / WIN / VICTORIA no lugar do cronômetro vencedor por cerca de 4 segundos.
-- Efeito visual de vitória reforçado.
-- Som de início, som de parada e som de vitória.
-- OBS sincronizado com os novos tamanhos.
+- Novo efeito de vitória em duas fases: VITÓRIA/WIN/VICTORIA substitui visualmente o placar por 4s e depois o placar retorna.
+- Afterglow leve no vencedor por mais 10s, sem fogos em loop infinito.
+- Botão Efeito de Vitória agora tem texto e continua ligado por padrão.
+- Sombreamento preto ficou ~20% mais forte mantendo a barra 0–100%.
+- Escala real da overlay ficou ~20% maior mantendo a barra 70–100%.
+- Removido o controle antigo “Modo de cores / Usar seletor personalizado” da Configuração.
+- Esta é uma atualização de teste, não um release.
