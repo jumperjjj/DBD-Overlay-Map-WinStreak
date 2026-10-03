@@ -7,35 +7,9 @@
 <body><div id="stage"><div id="timerRoot" class="timer-widget"></div></div>
 <script src="/timer-render.js"></script>
 <script>
-const BASES={0:[248,264],1:[258,292],2:[506,110],3:[510,112],4:[526,118],5:[524,110]};
-let T=null,lastGeometry='',tickTimer=null,celebrationTimer=null,fallbackTimer=null,es=null;
-function stopRenderTimers(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}if(celebrationTimer){clearTimeout(celebrationTimer);celebrationTimer=null}}
-function applyGeometry(){
-  if(!T)return;
-  const style=Math.max(0,Math.min(5,+T.style||0)),b=BASES[style]||BASES[2],scale=Math.max(.858,Math.min(1.10,+T.scale||1.10));
-  const g=[T.enabled,+T.x||0,+T.y||0,b[0],b[1],scale].join('|');
-  if(g!==lastGeometry){
-    lastGeometry=g;stage.style.display=T.enabled?'block':'none';stage.style.left=(+T.x||0)+'px';stage.style.top=(+T.y||0)+'px';stage.style.width=b[0]+'px';stage.style.height=b[1]+'px';stage.style.transform=`scale(${scale})`;
-  }
-}
-function renderFull(){if(!T)return;applyGeometry();if(T.enabled)TimerRenderer.apply(timerRoot,T,Date.now())}
-function scheduleRenderWork(){
-  stopRenderTimers();
-  if(T?.enabled&&T?.running)tickTimer=setInterval(()=>TimerRenderer.tick(timerRoot,T,Date.now()),100);
-  const now=Date.now(),intro=Number(T?.celebrationIntroUntil||0)-now,end=Number(T?.celebrationUntil||0)-now;
-  let next=0;if(intro>0)next=intro;else if(end>0)next=end;
-  if(T?.enabled&&!T?.celebrationPersistent&&next>0&&next<2147483000)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null;scheduleRenderWork()},next+35);
-}
-function applyState(next){if(!next)return;T=next;renderFull();scheduleRenderWork()}
-async function refresh(){try{applyState(await fetch('/state',{cache:'no-store'}).then(r=>r.json()))}catch{}}
-function startFallback(){if(fallbackTimer)return;fallbackTimer=setInterval(refresh,1000)}
-function stopFallback(){if(fallbackTimer){clearInterval(fallbackTimer);fallbackTimer=null}}
-function connectEvents(){
-  try{
-    es=new EventSource('/events');
-    es.onmessage=e=>{try{applyState(JSON.parse(e.data));stopFallback()}catch{}};
-    es.onerror=()=>startFallback();
-  }catch{startFallback()}
-}
-refresh();connectEvents();
+const BASES={0:[226,274],1:[258,292],2:[506,110],3:[510,112],4:[526,118],5:[524,110]};
+let T=null,lastGeometry='';
+async function refresh(){try{const next=await fetch('/state',{cache:'no-store'}).then(r=>r.json());T=next;render(true)}catch{}}
+function render(force=false){if(!T)return;const style=Math.max(0,Math.min(5,+T.style||0)),b=BASES[style]||BASES[2],scale=Math.max(.78,Math.min(1,+T.scale||1));const g=[T.enabled,+T.x||0,+T.y||0,b[0],b[1],scale].join('|');if(force||g!==lastGeometry){lastGeometry=g;stage.style.display=T.enabled?'block':'none';stage.style.left=(+T.x||0)+'px';stage.style.top=(+T.y||0)+'px';stage.style.width=b[0]+'px';stage.style.height=b[1]+'px';stage.style.transform=`scale(${scale})`}if(T.enabled)TimerRenderer.apply(timerRoot,T,Date.now())}
+refresh();setInterval(refresh,160);setInterval(()=>{if(T?.enabled&&T?.running)render(false)},100);
 </script></body></html>

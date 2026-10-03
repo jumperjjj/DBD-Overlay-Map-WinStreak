@@ -10,7 +10,7 @@
 
 /* Victory state — winner timer transition.
    Stage 1 (5s): the winner's timer is visually replaced by VITÓRIA/WIN/VICTORIA.
-   Stage 2 (10s): the final timer returns and both winner name + timer pulse gently. */
+   Stage 2 (15s): the final timer returns and both winner name + timer pulse more visibly. */
 .celebrating .timer-player.loser .active-mark{opacity:0!important}
 .celebrating .timer-player.loser .timer-name{font-size:20px!important;color:#868a93!important;text-shadow:0 2px 7px #000a!important}
 .celebrating .timer-player.loser .timer-time{color:#868a93!important;text-shadow:0 2px 8px #000a!important}
@@ -20,18 +20,23 @@
 
 /* Keep the real final time in layout, but hide it while the victory label is on top. */
 .victory-intro .timer-player.winner .timer-time{color:transparent!important;text-shadow:none!important;filter:none!important}
-.victory-intro .timer-player.winner .timer-time:after{content:attr(data-victory-label);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.28);opacity:0;z-index:20;white-space:nowrap;pointer-events:none;font-size:26px;line-height:1;font-weight:1000;letter-spacing:1.4px;color:color-mix(in srgb,var(--accent) 88%,white 12%);text-shadow:0 0 7px color-mix(in srgb,var(--accent) 96%,white),0 0 18px color-mix(in srgb,var(--accent) 68%,transparent),0 2px 7px #000;animation:victory-over-timer 5s cubic-bezier(.2,.82,.2,1) both}
+.victory-intro .timer-player.winner .timer-time:after{content:attr(data-victory-label);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.28);opacity:0;z-index:20;white-space:nowrap;pointer-events:none;font-size:30px;line-height:1;font-weight:1000;letter-spacing:1.4px;color:color-mix(in srgb,var(--accent) 88%,white 12%);text-shadow:0 0 7px color-mix(in srgb,var(--accent) 96%,white),0 0 18px color-mix(in srgb,var(--accent) 68%,transparent),0 2px 7px #000;animation:victory-over-timer 5s ease-in-out both}
 .victory-intro .timer-player.winner .timer-time:before{content:'';position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:18;box-shadow:-45px -22px 0 var(--accent),-30px -37px 0 #fff,-7px -44px 0 var(--accent),18px -39px 0 #fff,40px -25px 0 var(--accent),48px -2px 0 #fff,40px 23px 0 var(--accent),17px 39px 0 #fff,-9px 43px 0 var(--accent),-35px 30px 0 #fff,-47px 8px 0 var(--accent);animation:winner-burst-a 1.22s ease-out .16s 4 both}
 .victory-intro .timer-player.winner{--burst-2:1}
 .victory-intro .timer-player.winner .timer-time{animation:winner-intro-anchor 5s linear both}
+
+/* While the victory word is shown, accent rails/underlines disappear. They return with the real timer. */
+.victory-intro .timer-player.winner .active-mark{opacity:0!important}
+.victory-intro.style-2 .timer-player.winner .timer-time,
+.victory-intro.style-5 .timer-player.winner .timer-time{background:none!important}
 .victory-intro .timer-player.winner .timer-time span{pointer-events:none}
 
 .victory-afterglow .timer-player.winner .timer-name{animation:winner-name-afterglow 1.8s ease-in-out infinite}
 .victory-afterglow .timer-player.winner .timer-time{animation:winner-time-afterglow 1.45s ease-in-out infinite}
-@keyframes victory-over-timer{0%{opacity:0;transform:translate(-50%,-50%) scale(.25)}8%{opacity:1;transform:translate(-50%,-50%) scale(1.13)}16%{opacity:1;transform:translate(-50%,-50%) scale(1)}78%{opacity:1;transform:translate(-50%,-50%) scale(1)}92%{opacity:1;transform:translate(-50%,-50%) scale(1.045)}100%{opacity:0;transform:translate(-50%,-50%) scale(.72)}}
+@keyframes victory-over-timer{0%{opacity:0;transform:translate(-50%,-50%) scale(.28)}8%{opacity:1;transform:translate(-50%,-50%) scale(1.16)}16%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.09)}44%{opacity:1;transform:translate(-50%,-50%) scale(1.01)}58%{opacity:1;transform:translate(-50%,-50%) scale(1.09)}72%{opacity:1;transform:translate(-50%,-50%) scale(1.01)}86%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}94%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-50%) scale(.74)}}
 @keyframes winner-intro-anchor{0%,100%{transform:scale(1)}}
-@keyframes winner-name-afterglow{0%,100%{transform:scale(1)}50%{transform:scale(1.022)}}
-@keyframes winner-time-afterglow{0%,100%{transform:scale(1)}50%{transform:scale(1.058)}}
+@keyframes winner-name-afterglow{0%,100%{transform:scale(1)}50%{transform:scale(1.038)}}
+@keyframes winner-time-afterglow{0%,100%{transform:scale(1)}50%{transform:scale(1.078)}}
 @keyframes winner-burst-a{0%{opacity:0;transform:translate(-50%,-50%) scale(.16)}14%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.36)}}
 
 /* 1 — Side Stack: redesigned continuous vertical card */

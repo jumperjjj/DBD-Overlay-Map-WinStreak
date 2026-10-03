@@ -17,7 +17,7 @@ const TIMER_BASES = {
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 232,
+  schema: 233,
   enabled: true,
   locked: true,
   x: 70,
@@ -205,7 +205,7 @@ function normalizeTimer() {
   T.soundEnabled = T.soundEnabled !== false;
   T.victoryEffectEnabled = T.victoryEffectEnabled !== false;
   T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
-  T.schema = 232;
+  T.schema = 233;
 }
 
 function loadTimer() {
@@ -525,7 +525,7 @@ function evaluateMatchWinner(triggerCelebration = false) {
       if (T.victoryEffectEnabled !== false) {
         T.celebrationWinner = winner;
         T.celebrationIntroUntil = now + 5000;
-        T.celebrationUntil = now + 15000;
+        T.celebrationUntil = now + 20000;
         T.celebrationPersistent = false;
         T.celebrationId = (Number(T.celebrationId) || 0) + 1;
       } else {

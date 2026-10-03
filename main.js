@@ -345,7 +345,6 @@ function hotkey(k) {
   if (global.__dbdUnregisterMouseShortcut) global.__dbdUnregisterMouseShortcut('streak.hotkey');
   globalShortcut.unregisterAll();
   const action = () => {
-    if (global.__dbdHotkeyCaptureActive) return;
     const now = Date.now();
     if (now - lastHotkey < 1000) return;
     lastHotkey = now;

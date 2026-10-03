@@ -9,50 +9,10 @@ body.overlayLocked,body.overlayLocked #timerRoot{cursor:default;-webkit-app-regi
 <body><div id="timerRoot" class="timer-widget"></div>
 <script src="timer-render.js"></script>
 <script>
-let T=null,lastAudioEventId=0,tickTimer=null,celebrationTimer=null;
-const AUDIO={
-  start:{src:'assets/timer-start.wav',volume:1.0},
-  stop:{src:'assets/timer-stop.wav',volume:.88},
-  victory:{src:'assets/timer-victory.wav',volume:1.0}
-};
-const audioBank={},audioCursor={};
-function ensureAudioPool(kind){
-  const cfg=AUDIO[kind];if(!cfg)return[];
-  if(!audioBank[kind]){
-    audioBank[kind]=Array.from({length:4},()=>{const a=new Audio(cfg.src);a.preload='auto';a.volume=cfg.volume;try{a.load()}catch{}return a});
-    audioCursor[kind]=0;
-  }
-  return audioBank[kind];
-}
-Object.keys(AUDIO).forEach(ensureAudioPool);
-function stopAllSounds(){for(const pool of Object.values(audioBank))for(const a of pool){try{a.pause();a.currentTime=0}catch{}}}
-function playSound(kind){
-  if(T?.soundEnabled===false)return;
-  try{
-    const pool=ensureAudioPool(kind);if(!pool.length)return;
-    const idx=(audioCursor[kind]||0)%pool.length;audioCursor[kind]=idx+1;
-    const a=pool[idx];try{a.pause();a.currentTime=0}catch{}a.volume=AUDIO[kind].volume;
-    const p=a.play();if(p?.catch)p.catch(()=>setTimeout(()=>{if(T?.soundEnabled!==false){try{a.currentTime=0;a.play().catch(()=>{})}catch{}}},35));
-  }catch{}
-}
+let T=null,lastSecond=-1,lastCelebration=0;
+function render(force=false){if(!T)return;const now=Date.now(),second=Math.floor(now/100);const celeb=Number(T.celebrationId)||0;if(force||T.running||second!==lastSecond||celeb!==lastCelebration){lastSecond=second;lastCelebration=celeb;TimerRenderer.apply(timerRoot,T,now)}}
 function applyLock(){document.body.classList.toggle('overlayLocked',!!T?.locked)}
-function renderFull(){if(T)TimerRenderer.apply(timerRoot,T,Date.now())}
-function stopTimers(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}if(celebrationTimer){clearTimeout(celebrationTimer);celebrationTimer=null}}
-function scheduleRenderWork(){
-  stopTimers();
-  if(T?.running)tickTimer=setInterval(()=>{if(T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},100);
-  const now=Date.now(),intro=Number(T?.celebrationIntroUntil||0)-now,end=Number(T?.celebrationUntil||0)-now;
-  let next=0;if(intro>0)next=intro;else if(end>0)next=end;
-  if(!T?.celebrationPersistent&&next>0&&next<2147483000)celebrationTimer=setTimeout(()=>{renderFull();celebrationTimer=null;scheduleRenderWork()},next+35);
-}
-function applyState(next,allowAudio=true){
-  if(!next)return;T=next;applyLock();renderFull();scheduleRenderWork();
-  const id=Number(T.audioEventId)||0;
-  if(T.soundEnabled===false)stopAllSounds();
-  if(allowAudio&&T.soundEnabled!==false&&id&&id!==lastAudioEventId)playSound(String(T.audioEventType||''));
-  lastAudioEventId=id;
-}
-api.onTimerState(s=>applyState(s,true));
+api.onTimerState(s=>{T=s;applyLock();render(true)});
 api.onTimerEdit?.(()=>{});
-(async()=>{const x=await api.timerGet();T=x.state;lastAudioEventId=Number(T?.audioEventId)||0;applyState(T,false)})();
+(async()=>{const x=await api.timerGet();T=x.state;applyLock();render(true);setInterval(()=>render(false),100)})();
 </script></body></html>
