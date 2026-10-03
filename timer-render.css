@@ -44,6 +44,12 @@
   filter:drop-shadow(0 0 1px rgba(0,0,0,.82)) drop-shadow(0 0 2px rgba(0,0,0,.50));
 }
 
+/* Split Tower already has its own readable contour; do not thicken it below 40% opacity. */
+.style-1.low-opacity .timer-name,
+.style-1.low-opacity .timer-time,
+.style-1.low-opacity .timer-score,
+.style-1.low-opacity .timer-score .dash{filter:none;-webkit-text-stroke:0 transparent}
+
 /* Keep the victory badge alive until the operator resets the match.
    Particles still burst only a few times, so the persistent state stays light. */
 .celebrating .timer-player.winner .timer-name{animation:winner-name-hold 1.9s ease-in-out infinite}

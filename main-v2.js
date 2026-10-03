@@ -73,12 +73,61 @@ let saveMoveTimer = null;
 let timerWriteTimer = null;
 let pendingRoundTimer = null;
 const timerSseClients = new Set();
-// Beta 2.1.0 safety build: native global mouse hooks remain removed.
-// Electron's built-in globalShortcut remains for keyboard shortcuts only.
+let uIOhook = null;
+let mouseHookStarted = false;
+const mouseShortcuts = new Map();
+let hotkeyInputGuard = false;
+
 function isMouseAccel(v) { return /^MOUSE[3-5]$/i.test(String(v || '').trim()); }
-global.__dbdRegisterMouseShortcut = () => false;
-global.__dbdUnregisterMouseShortcut = () => {};
+function normalizeMouseAccel(v) { const m=String(v||'').trim().toUpperCase(); return isMouseAccel(m)?m:''; }
+function buttonToMouseAccel(button) {
+  const b = Number(button);
+  if (b === 3) return 'MOUSE3';
+  if (b === 4) return 'MOUSE4';
+  if (b === 5) return 'MOUSE5';
+  return '';
+}
+function ensureMouseHook() {
+  if (mouseHookStarted) return true;
+  try {
+    if (!uIOhook) ({ uIOhook } = require('uiohook-napi'));
+    uIOhook.on('mousedown', e => {
+      if (hotkeyInputGuard) return;
+      const key = buttonToMouseAccel(e?.button);
+      if (!key) return;
+      for (const entry of mouseShortcuts.values()) {
+        if (entry?.key === key) { try { entry.cb(); } catch {} }
+      }
+    });
+    uIOhook.start();
+    mouseHookStarted = true;
+    return true;
+  } catch { return false; }
+}
+function registerMouseShortcut(owner, accel, cb) {
+  const key = normalizeMouseAccel(accel);
+  mouseShortcuts.delete(owner);
+  if (!key) return true;
+  if (!ensureMouseHook()) return false;
+  mouseShortcuts.set(owner, { key, cb });
+  return true;
+}
+function unregisterMouseShortcut(owner) {
+  mouseShortcuts.delete(owner);
+  if (mouseHookStarted && mouseShortcuts.size === 0) {
+    try { uIOhook?.stop(); } catch {}
+    mouseHookStarted = false;
+  }
+}
+function setHotkeyInputGuard(active) {
+  hotkeyInputGuard = !!active;
+  global.__dbdHotkeyCaptureActive = hotkeyInputGuard;
+  return hotkeyInputGuard;
+}
+global.__dbdRegisterMouseShortcut = registerMouseShortcut;
+global.__dbdUnregisterMouseShortcut = unregisterMouseShortcut;
 global.__dbdIsMouseAccel = isMouseAccel;
+global.__dbdHotkeyCaptureActive = false;
 
 const rawUnregisterAll = globalShortcut.unregisterAll.bind(globalShortcut);
 const rawUnregister = globalShortcut.unregister.bind(globalShortcut);
@@ -136,11 +185,6 @@ function normalizeTimer() {
   T.hotkeyAction = String(T.hotkeyAction || 'F1');
   T.hotkeySwap = String(T.hotkeySwap || 'F2');
   T.hotkeyReset = String(T.hotkeyReset || 'F3');
-  // Older test builds allowed MOUSE3/4/5 through a native low-level hook.
-  // Migrate those saved values back to the safe keyboard defaults.
-  if (isMouseAccel(T.hotkeyAction)) T.hotkeyAction = 'F1';
-  if (isMouseAccel(T.hotkeySwap)) T.hotkeySwap = 'F2';
-  if (isMouseAccel(T.hotkeyReset)) T.hotkeyReset = 'F3';
   T.autoSwap = !!T.autoSwap;
   T.bestOf = [1,3,5,7].includes(Number(T.bestOf)) ? Number(T.bestOf) : 3;
   T.matchWinner = [1,2].includes(Number(T.matchWinner)) ? Number(T.matchWinner) : 0;
@@ -572,6 +616,9 @@ function unregisterTimerHotkeys() {
   if (registeredAction && !isMouseAccel(registeredAction)) { try { rawUnregister(registeredAction); } catch {} }
   if (registeredSwap && registeredSwap !== registeredAction && !isMouseAccel(registeredSwap)) { try { rawUnregister(registeredSwap); } catch {} }
   if (registeredReset && registeredReset !== registeredAction && registeredReset !== registeredSwap && !isMouseAccel(registeredReset)) { try { rawUnregister(registeredReset); } catch {} }
+  unregisterMouseShortcut('timer.action');
+  unregisterMouseShortcut('timer.swap');
+  unregisterMouseShortcut('timer.reset');
   registeredAction = '';
   registeredSwap = '';
   registeredReset = '';
@@ -584,18 +631,18 @@ function registerTimerHotkeys() {
   let swapOk = true;
   let resetOk = true;
   if (T.hotkeyAction && !hotkeyConflict(T.hotkeyAction, 'timer.action')) {
-    if (isMouseAccel(T.hotkeyAction)) actionOk = false;
-    else { try { actionOk = globalShortcut.register(T.hotkeyAction, timerAction); } catch { actionOk = false; } }
+    if (isMouseAccel(T.hotkeyAction)) actionOk = registerMouseShortcut('timer.action', T.hotkeyAction, () => { if (!hotkeyInputGuard) timerAction(); });
+    else { try { actionOk = globalShortcut.register(T.hotkeyAction, () => { if (!hotkeyInputGuard) timerAction(); }); } catch { actionOk = false; } }
     if (actionOk) registeredAction = T.hotkeyAction;
   } else if (T.hotkeyAction) actionOk = false;
   if (T.hotkeySwap && !hotkeyConflict(T.hotkeySwap, 'timer.swap')) {
-    if (isMouseAccel(T.hotkeySwap)) swapOk = false;
-    else { try { swapOk = globalShortcut.register(T.hotkeySwap, timerSwap); } catch { swapOk = false; } }
+    if (isMouseAccel(T.hotkeySwap)) swapOk = registerMouseShortcut('timer.swap', T.hotkeySwap, () => { if (!hotkeyInputGuard) timerSwap(); });
+    else { try { swapOk = globalShortcut.register(T.hotkeySwap, () => { if (!hotkeyInputGuard) timerSwap(); }); } catch { swapOk = false; } }
     if (swapOk) registeredSwap = T.hotkeySwap;
   } else if (T.hotkeySwap) swapOk = false;
   if (T.hotkeyReset && !hotkeyConflict(T.hotkeyReset, 'timer.reset')) {
-    if (isMouseAccel(T.hotkeyReset)) resetOk = false;
-    else { try { resetOk = globalShortcut.register(T.hotkeyReset, resetTimerMatch); } catch { resetOk = false; } }
+    if (isMouseAccel(T.hotkeyReset)) resetOk = registerMouseShortcut('timer.reset', T.hotkeyReset, () => { if (!hotkeyInputGuard) resetTimerMatch(); });
+    else { try { resetOk = globalShortcut.register(T.hotkeyReset, () => { if (!hotkeyInputGuard) resetTimerMatch(); }); } catch { resetOk = false; } }
     if (resetOk) registeredReset = T.hotkeyReset;
   } else if (T.hotkeyReset) resetOk = false;
   return { action: actionOk, swap: swapOk, reset: resetOk };
@@ -651,6 +698,7 @@ ipcMain.handle('hotkey-conflict-check', (_, accel, owner) => {
   const c = hotkeyConflict(accel, String(owner || ''));
   return c ? { conflict: true, label: c.label } : { conflict: false };
 });
+ipcMain.handle('hotkey-input-guard', (_, active) => setHotkeyInputGuard(active));
 ipcMain.handle('timer-get', () => ({ state: timerSnapshot(), url: `http://127.0.0.1:${TIMER_PORT}/obs-timer`, editing: false }));
 ipcMain.handle('timer-patch', (_, patch) => {
   const prevStyle = T.style;
@@ -664,7 +712,7 @@ ipcMain.handle('timer-patch', (_, patch) => {
   if (T.style !== prevStyle || T.scaleUi !== prevScaleUi) applyTimerGeometry(true);
   if (lockChanged) applyTimerInteractivity();
   saveTimer();
-  if (enabledChanged || T.enabled) timerVisibility();
+  if (enabledChanged) timerVisibility();
   return timerSnapshot();
 });
 ipcMain.handle('timer-action', () => timerAction());

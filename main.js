@@ -106,8 +106,6 @@ function normalizeState() {
   S.streak.recordValue = Math.max(0, Number(S.streak.recordValue) || 0);
   S.streak.record2Value = Math.max(0, Number(S.streak.record2Value) || 0);
   S.streak.style = clampInt(S.streak.style, 0, 13);
-  // Beta 2.0.9: native global mouse hooks were removed for the safety build.
-  if (/^MOUSE[3-5]$/i.test(String(S.streak.hotkey || ''))) S.streak.hotkey = '';
   S.match.style = clampInt(S.match.style, 0, 15);
   if (S.match.style === 12) S.match.style = 14;
   if (!['dark','light','midnight','violet'].includes(S.uiTheme)) S.uiTheme = 'dark';
@@ -347,6 +345,7 @@ function hotkey(k) {
   if (global.__dbdUnregisterMouseShortcut) global.__dbdUnregisterMouseShortcut('streak.hotkey');
   globalShortcut.unregisterAll();
   const action = () => {
+    if (global.__dbdHotkeyCaptureActive) return;
     const now = Date.now();
     if (now - lastHotkey < 1000) return;
     lastHotkey = now;
