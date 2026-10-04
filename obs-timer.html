@@ -5,7 +5,7 @@
 <body><div id="stage"><div id="timerRoot" class="timer-widget"></div></div>
 <script src="/timer-render.js"></script>
 <script>
-const BASES={0:[226,274],1:[258,292],2:[506,110],3:[510,112],4:[526,118],5:[524,110]};
+const BASES={0:[226,274],1:[258,292],2:[516,110],3:[520,112],4:[526,118],5:[534,110]};
 let T=null,lastGeometry='',tickTimer=null,celebrationPhaseTimer=null,celebrationEndTimer=null,fallbackTimer=null,es=null;
 function stopRenderWork(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}if(celebrationPhaseTimer){clearTimeout(celebrationPhaseTimer);celebrationPhaseTimer=null}if(celebrationEndTimer){clearTimeout(celebrationEndTimer);celebrationEndTimer=null}}
 function applyGeometry(){if(!T)return;const style=Math.max(0,Math.min(5,+T.style||0)),b=BASES[style]||BASES[2],scale=Math.max(.78,Math.min(1.10,+T.scale||1));const g=[T.enabled,+T.x||0,+T.y||0,b[0],b[1],scale].join('|');if(g!==lastGeometry){lastGeometry=g;stage.style.display=T.enabled?'block':'none';stage.style.left=(+T.x||0)+'px';stage.style.top=(+T.y||0)+'px';stage.style.width=b[0]+'px';stage.style.height=b[1]+'px';stage.style.transform=`scale(${scale})`}}

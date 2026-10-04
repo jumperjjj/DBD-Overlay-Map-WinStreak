@@ -9,15 +9,15 @@ const TIMER_PORT = 17385;
 const TIMER_BASES = {
   0: { w: 248, h: 264 }, // Side Stack — redesigned compact vertical card
   1: { w: 258, h: 292 }, // Split Tower
-  2: { w: 506, h: 110 }, // Center Beam
-  3: { w: 510, h: 112 }, // Corner Rail
+  2: { w: 516, h: 110 }, // Center Beam — +5px per side for longer names
+  3: { w: 520, h: 112 }, // Corner Rail — +5px per side for longer names
   4: { w: 526, h: 118 }, // Glass Wings
-  5: { w: 524, h: 110 }  // Glass Ribbon
+  5: { w: 534, h: 110 }  // Glass Ribbon — +5px per side for longer names
 };
 const TIMER_SCALE_UI = { min: 70, max: 100 };
 
 const TIMER_DEF = {
-  schema: 233,
+  schema: 234,
   enabled: true,
   locked: true,
   x: 70,
@@ -205,7 +205,7 @@ function normalizeTimer() {
   T.soundEnabled = T.soundEnabled !== false;
   T.victoryEffectEnabled = T.victoryEffectEnabled !== false;
   T.language = ['pt','en','es'].includes(String(T.language || '')) ? String(T.language) : 'pt';
-  T.schema = 233;
+  T.schema = 234;
 }
 
 function loadTimer() {
