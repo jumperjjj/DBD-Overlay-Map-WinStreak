@@ -3,13 +3,13 @@
   function clamp(v,min,max){return Math.max(min,Math.min(max,Number(v)||0))}
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function elapsed(s,p,now){if(s?.running&&Number(s.runningPlayer)===p)return Math.max(0,(now||Date.now())-(Number(s.startedAt)||Date.now()));return Math.max(0,Number(p===1?s?.time1:s?.time2)||0)}
-  function format(ms){ms=Math.max(0,Number(ms)||0);const total=Math.floor(ms/1000),min=Math.floor(total/60),sec=total%60;return String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+  function format(ms){ms=Math.max(0,Number(ms)||0);const totalSec=Math.floor(ms/1000),min=Math.floor(totalSec/60),sec=totalSec%60,centi=Math.floor((ms%1000)/10);return min>0?`${min}:${String(sec).padStart(2,'0')}.${String(centi).padStart(2,'0')}`:`${sec}.${String(centi).padStart(2,'0')}`}
   function victoryWord(lang){return lang==='en'?'WIN':lang==='es'?'VICTORIA':'VITÓRIA'}
   function rgb(hex){const m=/^#([0-9a-f]{6})$/i.exec(String(hex||''));if(!m)return[13,14,19];const n=parseInt(m[1],16);return[(n>>16)&255,(n>>8)&255,n&255]}
   function ensure(root){
     if(root.dataset.built==='1')return;
     root.dataset.built='1';
-    root.innerHTML=`<div class="timer-shell"><div class="timer-player p1"><i class="active-mark"></i><div class="timer-name" data-name="1"></div><div class="timer-time" data-time="1">00:00</div></div><div class="score-wrap"><div class="timer-score"><span data-score="1">0</span><span class="dash">–</span><span data-score="2">0</span></div></div><div class="timer-player p2"><i class="active-mark"></i><div class="timer-name" data-name="2"></div><div class="timer-time" data-time="2">00:00</div></div></div>`
+    root.innerHTML=`<div class="timer-shell"><div class="timer-player p1"><i class="active-mark"></i><div class="timer-name" data-name="1"></div><div class="timer-time" data-time="1">0.00</div></div><div class="score-wrap"><div class="timer-score"><span data-score="1">0</span><span class="dash">–</span><span data-score="2">0</span></div></div><div class="timer-player p2"><i class="active-mark"></i><div class="timer-name" data-name="2"></div><div class="timer-time" data-time="2">0.00</div></div></div>`
   }
   function phaseInfo(s,now){
     const current=Number(now||Date.now()),until=Number(s?.celebrationUntil)||0,winner=Number(s?.celebrationWinner)||0;

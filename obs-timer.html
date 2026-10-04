@@ -12,7 +12,7 @@ function applyGeometry(){if(!T)return;const style=Math.max(0,Math.min(5,+T.style
 function renderFull(){if(!T)return;applyGeometry();if(T.enabled)TimerRenderer.apply(timerRoot,T,Date.now())}
 function scheduleRenderWork(){
   stopRenderWork();
-  if(T?.enabled&&T?.running)tickTimer=setInterval(()=>{if(T?.enabled&&T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},100);
+  if(T?.enabled&&T?.running)tickTimer=setInterval(()=>{if(T?.enabled&&T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},50);
   const now=Date.now(),phaseAt=Number(T?.celebrationIntroUntil||0),endAt=Number(T?.celebrationUntil||0);
   if(T?.enabled&&phaseAt>now)celebrationPhaseTimer=setTimeout(()=>{celebrationPhaseTimer=null;renderFull()},Math.max(0,phaseAt-now)+24);
   if(T?.enabled&&endAt>now)celebrationEndTimer=setTimeout(()=>{celebrationEndTimer=null;renderFull()},Math.max(0,endAt-now)+32);

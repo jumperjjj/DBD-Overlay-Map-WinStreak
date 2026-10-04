@@ -1,9 +1,13 @@
-DBD Overlay Studio — Beta 2.0.3 TEST PATCH
+DBD Overlay Studio — Beta 2.0.3 (TEST PATCH)
 
-- Novo efeito de vitória em duas fases: VITÓRIA/WIN/VICTORIA substitui visualmente o placar por 4s e depois o placar retorna.
-- Afterglow leve no vencedor por mais 10s, sem fogos em loop infinito.
-- Botão Efeito de Vitória agora tem texto e continua ligado por padrão.
-- Sombreamento preto ficou ~20% mais forte mantendo a barra 0–100%.
-- Escala real da overlay ficou ~20% maior mantendo a barra 70–100%.
-- Removido o controle antigo “Modo de cores / Usar seletor personalizado” da Configuração.
-- Esta é uma atualização de teste, não um release.
+Alterações:
+- Cronômetro da overlay agora mostra centésimos (00–99).
+- Abaixo de 1 minuto: S.CC (ex.: 8.34).
+- A partir de 1 minuto: M:SS.CC (ex.: 1:02.52).
+- A precisão interna continua em milissegundos para comparação/pontuação.
+- Fonte geral da overlay alterada para Bahnschrift (nomes, cronômetros, placar e efeito de vitória).
+- Tipografia numérica ligeiramente menor/menos pesada e com números tabulares.
+- Centralização preservada quando o cronômetro cresce ao atingir 1 minuto.
+- Efeito de vitória não teve lógica/áudio alterados.
+
+Aplicação: substitua os arquivos mantendo a estrutura de pastas.

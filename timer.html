@@ -25,7 +25,7 @@ function renderFull(){if(T)TimerRenderer.apply(timerRoot,T,Date.now())}
 function stopRenderWork(){if(tickTimer){clearInterval(tickTimer);tickTimer=null}if(celebrationPhaseTimer){clearTimeout(celebrationPhaseTimer);celebrationPhaseTimer=null}if(celebrationEndTimer){clearTimeout(celebrationEndTimer);celebrationEndTimer=null}}
 function scheduleRenderWork(){
   stopRenderWork();
-  if(T?.running)tickTimer=setInterval(()=>{if(T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},100);
+  if(T?.running)tickTimer=setInterval(()=>{if(T?.running)TimerRenderer.tick(timerRoot,T,Date.now())},50);
   const now=Date.now(),phaseAt=Number(T?.celebrationIntroUntil||0),endAt=Number(T?.celebrationUntil||0);
   if(phaseAt>now)celebrationPhaseTimer=setTimeout(()=>{celebrationPhaseTimer=null;renderFull()},Math.max(0,phaseAt-now)+24);
   if(endAt>now)celebrationEndTimer=setTimeout(()=>{celebrationEndTimer=null;renderFull()},Math.max(0,endAt-now)+32);
