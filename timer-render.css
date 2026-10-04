@@ -100,3 +100,23 @@
 
 
 /* Beta 2.0.4 — numeric sizing + Side Stack width + mirrored Glass Wings background. */
+
+
+/* Beta 2.0.5 — micro positioning pass requested for styles 3–6. */
+/* 3 — Center Beam: name 1px up, timer 2px down. */
+.style-2 .timer-name{position:relative;top:-1px}
+.style-2 .timer-time{position:relative;top:2px}
+
+/* 4 — Corner Rail: name 1px up, timer 3px down; accent rail nudged upward toward the name. */
+.style-3 .timer-name{position:relative;top:-1px}
+.style-3 .timer-time{position:relative;top:3px}
+.style-3 .active-mark{top:1px;bottom:9px}
+
+/* 5 — Glass Wings: name 1px up, timer 3px down; active line stays where it was. */
+.style-4 .timer-name{position:relative;top:-1px}
+.style-4 .timer-time{position:relative;top:3px}
+
+/* 6 — Glass Ribbon: name 1px up, timer/underline 3px down, plus +2px on name and timer only. */
+.style-5 .timer-name{position:relative;top:-1px;font-size:21px}
+.style-5 .timer-player.active .timer-name,.style-5 .timer-player.running .timer-name{font-size:22px}
+.style-5 .timer-time{position:relative;top:3px;font-size:38px}
