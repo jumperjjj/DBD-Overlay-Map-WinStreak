@@ -1,10 +1,8 @@
-DBD Overlay Studio — Beta 2.0.7 TEST PATCH
+DBD Overlay Studio — Beta 2.0.7 PATCH
 
-Ajuste do efeito de vitória:
-- sequência simplificada para 14 segundos;
-- 0–7s: VITÓRIA / WIN / VICTORIA pulsando + partículas leves;
-- 7–14s: cronômetro final pulsando;
-- removida a alternância de 5 em 5 segundos que causava piscadas;
-- transição mais suave entre VITÓRIA e cronômetro;
-- linha de destaque fica oculta durante o texto de vitória e volta apenas com o cronômetro;
-- render do efeito encerra sozinho ao final para evitar trabalho desnecessário.
+Alterações:
+- Center Beam, Corner Rail e Glass Ribbon: +10 px de largura total.
+- Nomes um pouco menores nesses três estilos para reduzir truncamento.
+- Glass Ribbon: tipografia reduzida e linha horizontal central removida.
+- Glass Wings e Glass Ribbon: hífen do placar em branco.
+- Nenhuma alteração em áudio ou lógica do 1v1 Timer.

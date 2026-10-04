@@ -70,7 +70,7 @@
 /* 5 — Glass Wings */
 .style-4 .timer-shell{background:transparent;border:0;box-shadow:none;padding:5px 6px;display:grid;grid-template-columns:minmax(0,1fr) 90px minmax(0,1fr);align-items:center;gap:10px}.style-4 .timer-player{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:104px;padding:8px 10px;border:1px solid var(--border);box-shadow:none;background-clip:padding-box}.style-4 .p1{border-radius:18px 6px 6px 18px;background:linear-gradient(110deg,color-mix(in srgb,var(--panel) 86%,transparent),color-mix(in srgb,var(--panel-soft) 62%,transparent))}.style-4 .p2{border-radius:6px 18px 18px 6px;background:linear-gradient(250deg,color-mix(in srgb,var(--panel) 86%,transparent),color-mix(in srgb,var(--panel-soft) 62%,transparent))}.style-4 .timer-time{font-size:36px;margin-top:1px}.style-4 .active-mark{height:3px;bottom:7px;border-radius:99px;width:96px;left:50%;transform:translateX(-50%)}.style-4 .timer-score{font-size:40px;text-shadow:0 1px 3px rgba(0,0,0,.72),0 0 2px rgba(0,0,0,.55),0 0 3px rgba(255,255,255,.18)}
 /* 6 — Glass Ribbon */
-.style-5 .timer-shell{background:linear-gradient(90deg,color-mix(in srgb,var(--panel) 75%,transparent),color-mix(in srgb,var(--panel-soft) 58%,transparent),color-mix(in srgb,var(--panel) 75%,transparent));border:1px solid #ffffff20;box-shadow:var(--shadow);clip-path:polygon(11px 0,100% 0,calc(100% - 11px) 100%,0 100%);padding:7px 12px;display:grid;grid-template-columns:minmax(0,1fr) 96px minmax(0,1fr);align-items:center;gap:7px}.style-5 .timer-shell:after{content:'';position:absolute;left:13px;right:13px;top:50%;height:1px;background:linear-gradient(90deg,transparent,#ffffff12 30%,#ffffff12 70%,transparent);pointer-events:none}.style-5 .timer-player{display:flex;flex-direction:column;justify-content:center}.style-5 .p1{align-items:flex-end;text-align:right;padding-right:12px}.style-5 .p2{align-items:flex-start;text-align:left;padding-left:12px}.style-5 .timer-name{display:block}.style-5 .timer-time{display:inline-block;font-size:36px;margin-top:1px;padding-bottom:6px}.style-5 .active-mark{display:none}.style-5 .timer-player.active .timer-time{background:linear-gradient(var(--accent),var(--accent)) left bottom/100% 3px no-repeat}.style-5 .timer-score{font-size:40px}
+.style-5 .timer-shell{background:linear-gradient(90deg,color-mix(in srgb,var(--panel) 75%,transparent),color-mix(in srgb,var(--panel-soft) 58%,transparent),color-mix(in srgb,var(--panel) 75%,transparent));border:1px solid #ffffff20;box-shadow:var(--shadow);clip-path:polygon(11px 0,100% 0,calc(100% - 11px) 100%,0 100%);padding:7px 12px;display:grid;grid-template-columns:minmax(0,1fr) 96px minmax(0,1fr);align-items:center;gap:7px}.style-5 .timer-shell:after{display:none!important;content:none!important}.style-5 .timer-player{display:flex;flex-direction:column;justify-content:center}.style-5 .p1{align-items:flex-end;text-align:right;padding-right:12px}.style-5 .p2{align-items:flex-start;text-align:left;padding-left:12px}.style-5 .timer-name{display:block}.style-5 .timer-time{display:inline-block;font-size:36px;margin-top:1px;padding-bottom:6px}.style-5 .active-mark{display:none}.style-5 .timer-player.active .timer-time{background:linear-gradient(var(--accent),var(--accent)) left bottom/100% 3px no-repeat}.style-5 .timer-score{font-size:40px}
 
 /* Optional black text shadow slider. Active white/accent glow remains independent. */
 .timer-name,.timer-time,.timer-score{filter:var(--text-shadow-filter,none)}
@@ -124,3 +124,23 @@
 /* Beta 2.0.6 — Corner Rail underline + Glass Wings line spacing.
    Center Beam, Corner Rail and Glass Ribbon also gained 5px per side at the window level. */
 .style-3 .timer-player.active .timer-time{background-position:center bottom}
+
+
+/* Beta 2.0.7 — final width/readability pass for long player names. */
+/* Give Center Beam, Corner Rail and Glass Ribbon a little more usable name room. */
+.style-2 .timer-player,.style-3 .timer-player,.style-5 .timer-player{padding-left:10px;padding-right:10px}
+.style-2 .p1,.style-2 .p2,.style-3 .p1,.style-3 .p2,.style-5 .p1,.style-5 .p2{padding-left:10px;padding-right:10px}
+
+/* Slightly smaller names on the three horizontal styles that were truncating first. */
+.style-2 .timer-name,.style-3 .timer-name,.style-5 .timer-name{font-size:18px}
+.style-2 .timer-player.active .timer-name,.style-2 .timer-player.running .timer-name,
+.style-3 .timer-player.active .timer-name,.style-3 .timer-player.running .timer-name,
+.style-5 .timer-player.active .timer-name,.style-5 .timer-player.running .timer-name{font-size:19px}
+
+/* Glass Ribbon: undo the previous oversized typography and keep it compact. */
+.style-5 .timer-time{font-size:35px}
+.style-5 .timer-score{font-size:38px}
+.style-5 .timer-shell:after{display:none!important;content:none!important}
+
+/* Glass styles use a white separator to match the score digits. */
+.style-4 .timer-score .dash,.style-5 .timer-score .dash{color:#fff}

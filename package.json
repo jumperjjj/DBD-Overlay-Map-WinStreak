@@ -1,7 +1,7 @@
 {
   "name": "dbd-overlay-studio",
-  "version": "2.0.6-beta.1",
-  "description": "DBD Overlay Studio - Beta 2.0.6",
+  "version": "2.0.7-beta.1",
+  "description": "DBD Overlay Studio - Beta 2.0.7",
   "main": "main-v2.js",
   "author": "Jumper",
   "license": "MIT",
@@ -44,7 +44,7 @@
           ]
         }
       ],
-      "artifactName": "DBD-Overlay-Studio-Beta-2.0.6-Windows-x64-Setup.${ext}",
+      "artifactName": "DBD-Overlay-Studio-Beta-2.0.7-Windows-x64-Setup.${ext}",
       "executableName": "DBD Overlay Studio",
       "icon": "assets/icon.ico"
     },
